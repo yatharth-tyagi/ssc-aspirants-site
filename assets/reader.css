@@ -1,0 +1,39 @@
+/* Notes reader */
+.reader-wrap{max-width:860px;margin:0 auto;padding:28px 20px 10px;font-family:'Hind',system-ui,sans-serif;color:#1B2550;line-height:1.65;font-size:17px}
+.protected{position:relative;margin-top:16px;background:#FFFFFF;border:1px solid #E8DDC4;border-radius:18px;padding:28px 26px;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* repeating watermark over the whole note */
+.protected::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:18px;z-index:2;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='340' height='200'><text x='20' y='120' transform='rotate(-24 170 100)' font-family='Arial,sans-serif' font-size='22' font-weight='700' fill='%231B2550' fill-opacity='0.07'>sscaspirants_official</text></svg>");
+  background-repeat:repeat}
+.protected img{pointer-events:none;-webkit-user-drag:none}
+.protected h1{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:34px;line-height:1.2;margin:4px 0 10px}
+.protected h2{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:23px;margin:30px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.chip{background:#E6E9F3;color:#1B2550;border-radius:999px;padding:3px 12px;font-size:14px;font-weight:600}
+.tl{list-style:none;margin:0;padding:0}
+.tl>li{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;padding:14px 0;border-top:1px solid #EFE6D2}
+.tl .yr{font-weight:700;color:#8A6114}
+.tl h3{margin:0 0 2px;font-size:18px}
+.tl small{display:block;color:#4A5068;font-size:15px;margin-bottom:4px}
+.tl ul{margin:0;padding-left:18px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:420px;font-size:16px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #EFE6D2}
+th{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:#4A5068}
+.tricks{background:#F3E6C6;border-radius:14px;padding:16px 18px;margin:22px 0}
+.tricks b{display:block;font-size:13px;letter-spacing:.08em;color:#6B4A0E;margin-bottom:6px}
+.tricks ul{margin:0;padding-left:18px}
+.q{border:1px solid #E8DDC4;border-radius:14px;padding:14px;margin:12px 0;position:relative;z-index:3;background:#FFFFFF}
+.q p{margin:0 0 8px;font-weight:600}
+.q p small{display:block;font-weight:400;color:#4A5068;font-size:13px}
+.q button{display:block;width:100%;text-align:left;margin:6px 0;padding:9px 12px;border:1.5px solid #E8DDC4;background:#FBF6EA;border-radius:10px;font:inherit;color:#1B2550;cursor:pointer}
+.q button.right{border-color:#2E7D4F;background:#E3F2E8;color:#1F6B3E;font-weight:600}
+.q button.wrong{border-color:#B3261E;opacity:.75}
+.q .why{font-size:15px;color:#4A5068;margin-top:8px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:26px;flex-wrap:wrap}
+.pager a{border:1px solid #E8DDC4;border-radius:12px;padding:10px 14px;background:#FFFDF7;font-weight:600}
+/* hidden when the page loses focus (screenshot tools, app switching) */
+body.shield .protected{filter:blur(14px)}
+@media print{body *{display:none!important}body::before{content:"Printing is disabled – sscaspirants_official";display:block!important}}
+@media (max-width:600px){.tl>li{grid-template-columns:1fr;gap:4px}.protected{padding:20px 16px}.protected h1{font-size:27px}}

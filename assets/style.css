@@ -1,0 +1,12 @@
+/* SSC Aspirants Official – shared styles */
+*{box-sizing:border-box}
+body{margin:0;background:#FBF6EA}
+img{max-width:100%}
+a{color:#1B2550;text-decoration:none}
+a:hover{color:#8A6114}
+:focus-visible{outline:2px solid #B8862B;outline-offset:2px;border-radius:6px}
+@media (max-width:760px){
+  h1{font-size:34px!important}
+  nav{margin-left:0!important;width:100%;order:3;overflow-x:auto;flex-wrap:nowrap!important}
+  nav a{white-space:nowrap}
+}
