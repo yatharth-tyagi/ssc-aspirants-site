@@ -2,7 +2,7 @@
 // Later the Admin Panel will write this data for you.
 window.NOTES = {
   "historical-background": {
-    subject:"polity", read:"12 min read", exams:["SSC CGL","CHSL","MTS","UPPCS"],
+    subject:"polity", read:"12 min read", exams:["SSC CGL","CHSL","MTS"],
     title:"Historical Background of the Indian Constitution",
     intro:"Our Constitution did not appear in 1950 from nothing. Many of its features grew out of laws passed by the British Parliament between 1773 and 1947. These Acts are asked again and again in SSC and State PCS exams, mostly as \"which Act introduced what\". Learn them in order and the questions become easy.",
     phases:[
@@ -81,13 +81,13 @@ window.NOTES = {
     quiz:[
       {q:"Which Act introduced dyarchy in the provinces?", tag:"Asked in SSC CGL", opts:["Indian Councils Act 1909","Government of India Act 1919","Government of India Act 1935","Charter Act 1853"], a:1, why:"The Montagu-Chelmsford Reforms (1919) split provincial subjects into transferred and reserved. The 1935 Act removed it from provinces and brought it to the Centre."},
       {q:"Who was the first Governor-General of India?", tag:"Asked in SSC CHSL", opts:["Warren Hastings","Lord Canning","Lord William Bentinck","Lord Cornwallis"], a:2, why:"The Charter Act of 1833 changed the title to Governor-General of India. Warren Hastings was Governor-General of Bengal under the 1773 Act."},
-      {q:"Separate electorate for Muslims was introduced by", tag:"Asked in UPPCS", opts:["Morley-Minto Reforms 1909","Indian Councils Act 1892","Pitt's India Act 1784","Indian Independence Act 1947"], a:0, why:"The Indian Councils Act 1909 brought communal representation, which is why Lord Minto is called the Father of Communal Electorate."},
+      {q:"Separate electorate for Muslims was introduced by", tag:"Practice", opts:["Morley-Minto Reforms 1909","Indian Councils Act 1892","Pitt's India Act 1784","Indian Independence Act 1947"], a:0, why:"The Indian Councils Act 1909 brought communal representation, which is why Lord Minto is called the Father of Communal Electorate."},
       {q:"The Reserve Bank of India was set up under which Act?", tag:"Practice", opts:["Government of India Act 1919","Government of India Act 1935","Government of India Act 1858","Charter Act 1833"], a:1, why:"The 1935 Act provided for the RBI, which began working in 1935."}
     ]
   },
 
   "making": {
-    subject:"polity", read:"11 min read", exams:["SSC CGL","CHSL","MTS","UPPCS"],
+    subject:"polity", read:"11 min read", exams:["SSC CGL","CHSL","MTS"],
     title:"Making of the Constitution",
     intro:"The Constitution of India was framed by a Constituent Assembly that worked from December 1946 to January 1950. Exams love the dates, the numbers (389, 299, 284) and the committees with their chairmen. This note puts all of them in one place.",
     phases:[
@@ -164,14 +164,14 @@ window.NOTES = {
     quiz:[
       {q:"Who first put forward the idea of a Constituent Assembly for India?", tag:"Asked in SSC CGL", opts:["Jawaharlal Nehru","M.N. Roy","Mahatma Gandhi","B.R. Ambedkar"], a:1, why:"M.N. Roy gave the idea in 1934. Congress made it an official demand in 1935."},
       {q:"Who was the temporary President of the Constituent Assembly?", tag:"Asked in SSC CHSL", opts:["Dr Rajendra Prasad","H.C. Mukherjee","Dr Sachchidananda Sinha","G.V. Mavalankar"], a:2, why:"As the oldest member, Dr Sachchidananda Sinha presided over the first meeting on 9 December 1946. Rajendra Prasad became permanent President on 11 December."},
-      {q:"The Objectives Resolution was moved by", tag:"Asked in UPPCS", opts:["Sardar Patel","B.R. Ambedkar","Jawaharlal Nehru","Rajendra Prasad"], a:2, why:"Nehru moved it on 13 December 1946 and it was adopted on 22 January 1947. It later became the Preamble."},
+      {q:"The Objectives Resolution was moved by", tag:"Practice", opts:["Sardar Patel","B.R. Ambedkar","Jawaharlal Nehru","Rajendra Prasad"], a:2, why:"Nehru moved it on 13 December 1946 and it was adopted on 22 January 1947. It later became the Preamble."},
       {q:"Who chaired the Provincial Constitution Committee?", tag:"Asked in SSC CGL", opts:["Jawaharlal Nehru","Sardar Vallabhbhai Patel","J.B. Kripalani","B.R. Ambedkar"], a:1, why:"Patel chaired the Provincial Constitution Committee and the Advisory Committee. Nehru chaired the Union Powers and Union Constitution Committees."},
       {q:"How many Articles did the original Constitution have?", tag:"Practice", opts:["395","448","390","365"], a:0, why:"The original Constitution had 395 Articles in 22 Parts and 8 Schedules."}
     ]
   },
 
   "preamble": {
-    subject:"polity", read:"9 min read", exams:["SSC CGL","CHSL","MTS","UPPCS"],
+    subject:"polity", read:"9 min read", exams:["SSC CGL","CHSL","MTS"],
     title:"Preamble of the Indian Constitution",
     intro:"The Preamble is the introduction to the Constitution. It tells us who gave the Constitution, what kind of state India is, what it wants to achieve and when it was adopted. It is based on Nehru's Objectives Resolution and has been amended only once.",
     phases:[
@@ -217,7 +217,7 @@ window.NOTES = {
     ],
     quiz:[
       {q:"Which words were added to the Preamble by the 42nd Amendment?", tag:"Asked in SSC CGL", opts:["Sovereign, Socialist, Secular","Socialist, Secular, Integrity","Secular, Democratic, Unity","Socialist, Republic, Integrity"], a:1, why:"The 42nd Amendment Act, 1976 added Socialist, Secular and Integrity. It is the only amendment to the Preamble so far."},
-      {q:"In which case did the Supreme Court hold that the Preamble is a part of the Constitution?", tag:"Asked in UPPCS", opts:["Berubari Union case","Golaknath case","Kesavananda Bharati case","Minerva Mills case"], a:2, why:"In Kesavananda Bharati (1973) the Court said the Preamble is a part of the Constitution, reversing its 1960 Berubari opinion."},
+      {q:"In which case did the Supreme Court hold that the Preamble is a part of the Constitution?", tag:"Practice", opts:["Berubari Union case","Golaknath case","Kesavananda Bharati case","Minerva Mills case"], a:2, why:"In Kesavananda Bharati (1973) the Court said the Preamble is a part of the Constitution, reversing its 1960 Berubari opinion."},
       {q:"Who called the Preamble the \"identity card of the Constitution\"?", tag:"Asked in SSC CHSL", opts:["K.M. Munshi","N.A. Palkhivala","B.R. Ambedkar","Ernest Barker"], a:1, why:"N.A. Palkhivala used this phrase. K.M. Munshi called it the horoscope of our sovereign democratic republic."},
       {q:"The ideals of Liberty, Equality and Fraternity in the Preamble are taken from", tag:"Asked in SSC MTS", opts:["American Revolution","Russian Revolution","French Revolution","Irish Constitution"], a:2, why:"They come from the French Revolution. The ideal of social, economic and political justice comes from the Russian Revolution."},
       {q:"The date of adoption mentioned in the Preamble is", tag:"Practice", opts:["26 January 1950","15 August 1947","26 November 1949","9 December 1946"], a:2, why:"The Preamble says the Constitution was adopted on 26 November 1949. It came into force on 26 January 1950."}
