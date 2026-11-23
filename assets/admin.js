@@ -35,14 +35,14 @@
   const api = path => `https://api.github.com/repos/${encodeURIComponent(cfg.own)}/${encodeURIComponent(cfg.rep)}${path}`;
   const H = (extra = {}) => ({ Authorization: "Bearer " + cfg.tok, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...extra });
   async function gh(path, opt = {}) {
-    const r = await fetch(api(path), { ...opt, headers: H(opt.headers) });
-    if (!r.ok) { const t = await r.text(); const e = new Error(r.status + " " + (JSON.parse(t || "{}").message || t)); e.status = r.status; throw e; }
+    const r = await fetch(api(path), { cache: "no-store", ...opt, headers: H(opt.headers) });
+    if (!r.ok) { const t = await r.text(); let m = t; try { m = JSON.parse(t || "{}").message || t; } catch (x) {} const e = new Error(r.status + " " + m); e.status = r.status; throw e; }
     return r;
   }
   const b64FromBytes = bytes => { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); };
   const b64FromText = t => b64FromBytes(new TextEncoder().encode(t));
   async function sha(path) {
-    try { const r = await gh(`/contents/${path}?ref=${encodeURIComponent(cfg.brn)}`); return (await r.json()).sha; }
+    try { const r = await gh(`/contents/${path}?ref=${encodeURIComponent(cfg.brn)}&meta=1`); return (await r.json()).sha; }
     catch (e) { if (e.status === 404) return null; throw e; }
   }
   async function readText(path) {
