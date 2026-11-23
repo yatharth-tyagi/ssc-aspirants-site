@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- ssc-build 6/7 eWE= -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test – SSC Aspirants Official</title>
+<meta name="description" content="SSC mock tests in the Eduquity CBT style: sectional timer, question palette, mark for review, English and Hindi, result with rank and percentile.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
+<style>
+/* Test screen in the style of SSC's Eduquity CBT */
+body{display:flex;flex-direction:column;min-height:100vh}
+.tbar{position:sticky;top:0;z-index:20;background:var(--side);color:#fff;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:10px 18px}
+.tbar img{width:44px;height:44px;border-radius:50%;border:2px solid #F5C451}
+.tbar .name{font:600 1rem "Poppins",sans-serif;margin-right:auto;min-width:0}
+.tbar .name small{display:block;font:500 .8rem "Inter",sans-serif;color:var(--side-ink)}
+.timer{font:700 1.1rem "Inter",sans-serif;background:#ffffff1f;border-radius:10px;padding:6px 12px;font-variant-numeric:tabular-nums;text-align:center;line-height:1.2}
+.timer small{display:block;font-size:.68rem;font-weight:600;color:var(--side-ink)}
+.timer.low{background:#B42318}
+.tbar select{min-height:40px;border-radius:10px;border:1px solid #ffffff40;background:transparent;color:#fff;font:inherit;padding:0 10px}
+.tbar select option{color:#1E2433}
+.tread{display:flex;gap:8px;flex-wrap:wrap}
+.aa{display:none;background:transparent;color:#fff;border-color:#ffffff40;font-weight:700}
+.secbar{display:flex;gap:6px;overflow-x:auto;padding:8px 18px;background:var(--surface);border-bottom:1px solid var(--line)}
+.secbar button{flex:none;min-height:40px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:600;font-size:.9rem}
+.secbar button[aria-current="true"]{background:var(--pri);color:var(--pri-ink);border-color:var(--pri)}
+.secbar button:disabled{opacity:.55;cursor:not-allowed}
+.secbar .done::after{content:" ✓"}
+.wrap{flex:1;display:flex;flex-wrap:wrap;gap:16px;padding:16px;max-width:1320px;width:100%;margin:0 auto}
+.qpane{flex:999 1 560px;display:flex;flex-direction:column;gap:14px;position:relative;isolation:isolate}
+.qpane::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.06;background:url("assets/logo-mark.png") no-repeat center / min(70%,380px)}
+.qhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px}
+.qhead b{font:700 1.08rem "Poppins",sans-serif}
+.qhead .mk{font-size:.85rem;color:var(--muted)}
+.qhead .mk b{font:inherit;color:var(--ok)} .qhead .mk i{font-style:normal;color:var(--bad)}
+.qtext{font-size:1.1rem;line-height:1.75;max-width:75ch;margin:0;white-space:pre-line}
+.qtext.hi,.opt.hi{font-family:"Hind","Inter",sans-serif}
+.opt{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface);cursor:pointer;min-height:48px}
+.opt:hover{border-color:var(--pri)}
+.opt input{width:20px;height:20px;margin-top:3px;accent-color:var(--pri);flex:none}
+.opt.sel{border-color:var(--pri);background:var(--pri-soft)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
+.actions .btn{flex:1 1 150px}
+.btn-mark{background:var(--mark-soft);color:var(--mark);border-color:var(--mark)}
+.btn-go{background:var(--ok);color:#fff}
+.palette{flex:1 1 300px;max-width:360px;display:flex;flex-direction:column;gap:14px;align-self:flex-start}
+.cand{display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px}
+.cand .av{width:44px;height:44px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;font-weight:700}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.84rem}
+.legend span{display:flex;gap:8px;align-items:center}
+.dot{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:.85rem;border:1.5px solid transparent;font-style:normal}
+.st-nv{background:var(--bg);border-color:var(--line);color:var(--muted)}
+.st-na{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.st-a{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.st-m{background:var(--mark-soft);border-color:var(--mark);color:var(--mark);border-radius:50%}
+.st-am{background:var(--mark-soft);border-color:var(--mark);color:var(--mark);border-radius:50%;box-shadow:inset 0 -5px 0 var(--ok)}
+.nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:8px;max-height:320px;overflow-y:auto;padding:2px}
+.nums button{height:44px;border-radius:8px;font-weight:700;border:1.5px solid transparent}
+.nums button.cur{outline:3px solid var(--pri);outline-offset:2px}
+.screen{max-width:900px;width:100%;margin:24px auto;padding:0 16px}
+.screen h1{font-size:1.7rem;margin-bottom:10px}
+.screen ul,.screen ol{padding-left:20px}
+.ptab{overflow-x:auto}
+.ptab table{border-collapse:collapse;width:100%;min-width:520px}
+.ptab th,.ptab td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}
+.ptab th{font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.ptab td:nth-child(n+2),.ptab th:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
+.ptab tfoot td{font-weight:700}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin:16px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.stat b{display:block;font:700 1.55rem "Poppins",sans-serif}
+.stat span{color:var(--muted);font-size:.9rem}
+.stat.big{background:linear-gradient(135deg,#1F3A93,#141B38);color:#fff;border:0}
+.stat.big span{color:#C9D3FF}
+.bars{display:flex;flex-direction:column;gap:10px}
+.barrow{display:grid;grid-template-columns:110px minmax(0,1fr) 70px;gap:10px;align-items:center;font-size:.92rem}
+.track{height:12px;border-radius:6px;background:var(--line);overflow:hidden}
+.fill{height:100%;border-radius:6px}
+.sol{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0;background:var(--surface)}
+.sol p{margin:0 0 8px}
+.sol .o{padding:6px 10px;border-radius:8px;margin:4px 0;border:1px solid transparent}
+.sol .o.c{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:600}
+.sol .o.w{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.sol .why{color:var(--muted);font-size:.95rem;margin-top:8px}
+.ok-t{color:var(--ok);font-weight:600}.bad-t{color:var(--bad);font-weight:600}
+dialog{border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface);color:var(--ink);max-width:440px}
+dialog::backdrop{background:rgba(10,14,30,.5)}
+.check{display:flex;gap:10px;align-items:flex-start;margin:14px 0;font-weight:600}
+.check input{width:22px;height:22px;flex:none;margin-top:2px}
+@media(max-width:899px){.palette{max-width:none}.nums{max-height:none}}
+@media(max-width:760px){
+  .tbar{padding:8px 12px;gap:8px}
+  .tbar img{width:36px;height:36px}
+  .tbar .name{font-size:.9rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tbar .name small{display:none!important}
+  .timer{font-size:.98rem;padding:5px 9px}
+  .aa{display:grid}
+  .tread{display:none;flex:1 1 100%}
+  body.show-read .tread{display:flex}
+  .tread .seg{flex:1 1 auto}.tread .seg button{flex:1}
+  .secbar{padding:6px 10px}
+  .wrap{padding:10px;gap:10px}
+  .actions .btn{flex:1 1 100%}
+  .barrow{grid-template-columns:80px minmax(0,1fr) 56px}
+}
+</style>
+</head>
+<body data-shell="off">
+<header class="tbar">
+  <img src="assets/logo.png" alt="">
+  <div class="name" id="tname">Test<small>SSC Aspirants Official</small></div>
+  <select id="lang" aria-label="Question language" hidden><option value="en">English</option><option value="hi">हिन्दी</option></select>
+  <div class="timer" id="timer" aria-live="off"><small id="timerLbl">Time left</small><span id="timerVal">00:00</span></div>
+  <button class="icon-btn aa" id="aaBtn" type="button" aria-label="Theme and text size" aria-expanded="false">Aa</button>
+  <div class="tread">
+    <div class="seg" role="group" aria-label="Theme"><button type="button" data-read="light">Light</button><button type="button" data-read="dark">Dark</button></div>
+    <div class="seg" role="group" aria-label="Text size"><button type="button" id="smaller" aria-label="Smaller text">A−</button><button type="button" id="bigger" aria-label="Bigger text">A+</button></div>
+  </div>
+</header>
+
+<!-- instructions -->
+<section class="screen" id="intro">
+  <h1 id="introTitle">Before you start</h1>
+  <div class="card">
+    <div class="ptab" id="introTable"></div>
+    <ul id="introRules" style="margin-top:14px"></ul>
+    <div class="legend" style="margin:14px 0">
+      <span><i class="dot st-nv">1</i>Not visited</span><span><i class="dot st-na">2</i>Not answered</span>
+      <span><i class="dot st-a">3</i>Answered</span><span><i class="dot st-m">4</i>Marked for review</span>
+      <span><i class="dot st-am">5</i>Answered and marked (will be evaluated)</span>
+    </div>
+    <label class="f" for="introLang" id="introLangWrap" hidden style="display:flex;flex-direction:column;gap:6px;font-weight:600;max-width:280px">Default language
+      <select id="introLang" style="min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;padding:0 12px"><option value="en">English</option><option value="hi">हिन्दी</option></select></label>
+    <label class="check" for="agree"><input type="checkbox" id="agree"> I have read the instructions and I am ready to begin.</label>
+    <div style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn btn-pri" id="begin" type="button" disabled>I am ready to begin</button><a class="btn btn-out" href="mock-tests.html">Back to mock tests</a></div>
+  </div>
+</section>
+
+<!-- exam -->
+<nav class="secbar" id="secbar" aria-label="Sections" hidden></nav>
+<div class="wrap" id="test" hidden>
+  <section class="qpane card" aria-live="polite">
+    <div class="qhead"><b id="qno">Question 1</b><span class="mk" id="qmk"></span></div>
+    <p class="qtext" id="qtext"></p>
+    <div id="opts" style="display:flex;flex-direction:column;gap:10px" role="radiogroup" aria-labelledby="qtext"></div>
+    <div class="actions">
+      <button class="btn btn-mark" type="button" id="markNext">Mark for Review &amp; Next</button>
+      <button class="btn btn-out" type="button" id="clear">Clear Response</button>
+      <button class="btn btn-out" type="button" id="prev">Back</button>
+      <button class="btn btn-pri" type="button" id="saveNext">Save &amp; Next</button>
+    </div>
+  </section>
+  <aside class="palette card" aria-label="Question palette">
+    <div class="cand"><span class="av">You</span><span><b id="secName">Section</b><br><span class="muted" style="font-size:.85rem" id="secInfo"></span></span></div>
+    <div class="legend" id="counts"></div>
+    <div class="nums" id="nums"></div>
+    <button class="btn btn-go" type="button" id="submit">Submit</button>
+  </aside>
+</div>
+
+<section class="screen" id="result" hidden></section>
+
+<dialog id="confirm">
+  <h2 style="font-size:1.2rem" id="confirmTitle">Submit?</h2>
+  <p id="confirmText" class="muted"></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-out" type="button" id="cancel">Keep working</button><button class="btn btn-pri" type="button" id="yes">Submit</button></div>
+</dialog>
+
+<script src="data/notes.js"></script>
+<script src="data/subjects.js"></script>
+<script src="data/tests.js"></script>
+<script src="assets/site.js"></script>
+<script>
+{
+const $ = id => document.getElementById(id), E = SSC.esc;
+// ---------------- the test ----------------
+// test.html?id=<id> opens a test from data/tests.js; without an id it is the Indian Polity chapter test.
+const tid = new URLSearchParams(location.search).get("id");
+let T = tid && window.TESTS && TESTS[tid];
+if (!T) {
+  const order = SUBJECTS.find(s => s.id === "polity").chapters.map(c => c.id).filter(id => NOTES[id]);
+  const qs = []; order.forEach(id => (NOTES[id].quiz || []).forEach(q => qs.push({ ...q, section: "Indian Polity", topic: NOTES[id].title })));
+  T = { title: "Indian Polity – Chapters 1 to 4", type: "Subject-wise test", minutes: 15, plus: 2, minus: 0.5, sectional: false, questions: qs };
+}
+const KEY = tid || "polity-ch1-4";
+const PLUS = +T.plus || 2, MINUS = +T.minus || 0;
+const SECS = T.sectional && T.sections && T.sections.length ? T.sections : [{ name: (T.questions[0] && T.questions[0].section) || "All questions", minutes: +T.minutes || 15 }];
+const Q = T.questions.map(q => ({ ...q, sec: Math.max(0, SECS.findIndex(s => s.name === q.section)) }));
+if (!T.sectional) Q.forEach(q => q.sec = 0);
+const inSec = s => Q.map((q, i) => i).filter(i => Q[i].sec === s);
+const hasHindi = Q.some(q => q.qh);
+const ans = Array(Q.length).fill(null), mark = Array(Q.length).fill(false), seen = Array(Q.length).fill(false), spent = Array(Q.length).fill(0);
+let cur = 0, curSec = 0, left = 0, tick = null, pick = null, lang = "en", started = 0, done = false;
+const doneSecs = new Set();
+
+document.title = T.title + " – SSC Aspirants Official";
+$("tname").innerHTML = E(T.title) + "<small>SSC Aspirants Official · " + E(T.type || "Test") + "</small>";
+
+// ---------------- instructions ----------------
+const totalMin = T.sectional ? SECS.reduce((a, s) => a + (+s.minutes), 0) : (+T.minutes || 15);
+$("introTitle").textContent = T.title;
+$("introTable").innerHTML = `<table><thead><tr><th>Section</th><th>Questions</th><th>Marks</th>${T.sectional ? "<th>Time</th>" : ""}</tr></thead><tbody>
+  ${SECS.map((s, i) => { const n = inSec(i).length; return `<tr><td>${E(s.name)}</td><td>${n}</td><td>${n * PLUS}</td>${T.sectional ? `<td>${s.minutes} min</td>` : ""}</tr>`; }).join("")}</tbody>
+  <tfoot><tr><td>Total</td><td>${Q.length}</td><td>${Q.length * PLUS}</td>${T.sectional ? `<td>${totalMin} min</td>` : ""}</tr></tfoot></table>`;
+$("introRules").innerHTML = [
+  `<b>+${PLUS}</b> for a correct answer, <b>${MINUS ? "−" + MINUS.toFixed(2) : "no minus"}</b> for a wrong one, 0 for unattempted.`,
+  T.sectional ? `<b>Sectional timing:</b> each section has its own timer. When a section's time ends, the next section opens automatically. You cannot go back to a finished section.` : `Total time: <b>${totalMin} minutes</b>. The test submits itself when the timer reaches 0.`,
+  `Click an option, then <b>Save &amp; Next</b>. <b>Mark for Review &amp; Next</b> keeps a question to see again. Answered-and-marked questions are counted.`,
+  hasHindi ? `You can switch any question between <b>English</b> and <b>हिन्दी</b> from the top bar. The English section is in English only.` : null,
+  `Use <b>Dark</b> and <b>A+</b> at the top if the screen is hard on your eyes.`
+].filter(Boolean).map(x => `<li>${x}</li>`).join("");
+if (hasHindi) { $("introLangWrap").hidden = false; $("introLangWrap").style.display = "flex"; $("lang").hidden = false; }
+$("agree").addEventListener("change", e => $("begin").disabled = !e.target.checked);
+
+// ---------------- theme + text size ----------------
+const root = document.documentElement, modeBtns = document.querySelectorAll("[data-read]");
+const paint = () => modeBtns.forEach(b => b.setAttribute("aria-pressed", b.dataset.read === root.dataset.read));
+modeBtns.forEach(b => b.addEventListener("click", () => { root.dataset.read = b.dataset.read; SSC.store.set("ssc-read", b.dataset.read); paint(); }));
+paint();
+let scale = parseFloat(SSC.store.get("ssc-scale", "1")) || 1;
+const size = d => { scale = Math.min(1.3, Math.max(0.9, Math.round((scale + d) * 100) / 100)); root.style.setProperty("--scale", scale); SSC.store.set("ssc-scale", scale); };
+$("smaller").onclick = () => size(-0.05); $("bigger").onclick = () => size(0.05);
+$("aaBtn").onclick = () => $("aaBtn").setAttribute("aria-expanded", document.body.classList.toggle("show-read"));
+$("lang").addEventListener("change", e => { lang = e.target.value; if (!$("test").hidden) show(cur); });
+
+// ---------------- question status ----------------
+const status = i => !seen[i] ? "nv" : mark[i] ? (ans[i] !== null ? "am" : "m") : ans[i] !== null ? "a" : "na";
+const LABEL = { nv: "Not visited", na: "Not answered", a: "Answered", m: "Marked", am: "Answered & marked" };
+const txt = q => (lang === "hi" && q.qh) ? { q: q.qh, o: q.optsh || q.opts, hi: true } : { q: q.q, o: q.opts, hi: false };
+
+function drawSecbar() {
+  $("secbar").innerHTML = SECS.map((s, i) => `<button type="button" data-s="${i}" aria-current="${i === curSec}" class="${doneSecs.has(i) ? "done" : ""}" ${T.sectional && i !== curSec ? "disabled" : ""}>${E(s.name)}</button>`).join("");
+}
+function show(i) {
+  if (i !== cur && started) { spent[cur] += Math.round((Date.now() - started) / 1000); }
+  started = Date.now();
+  cur = i; seen[i] = true; pick = ans[i];
+  const q = Q[i], t = txt(q), list = inSec(curSec);
+  $("qno").textContent = `Question ${list.indexOf(i) + 1} of ${list.length}`;
+  $("qmk").innerHTML = `${E(SECS[curSec].name)} · Marks <b>+${PLUS}</b> / <i>−${MINUS}</i>`;
+  $("qtext").textContent = t.q; $("qtext").className = "qtext" + (t.hi ? " hi" : "");
+  $("opts").innerHTML = t.o.map((o, k) => `<label class="opt${t.hi ? " hi" : ""}${pick === k ? " sel" : ""}"><input type="radio" name="o" value="${k}"${pick === k ? " checked" : ""}><span>${String.fromCharCode(65 + k)}. ${E(o)}</span></label>`).join("");
+  $("opts").querySelectorAll("input").forEach(r => r.addEventListener("change", () => { pick = +r.value; $("opts").querySelectorAll(".opt").forEach(l => l.classList.toggle("sel", l.contains(r))); }));
+  $("prev").disabled = list.indexOf(i) === 0;
+  palette();
+}
+function palette() {
+  const list = inSec(curSec);
+  $("secName").textContent = SECS[curSec].name;
+  $("secInfo").textContent = T.sectional ? `Section ${curSec + 1} of ${SECS.length}` : `${list.length} questions`;
+  $("nums").innerHTML = list.map(i => `<button type="button" class="st-${status(i)}${i === cur ? " cur" : ""}" data-i="${i}" aria-label="Question ${list.indexOf(i) + 1}: ${LABEL[status(i)]}">${list.indexOf(i) + 1}</button>`).join("");
+  const c = { nv: 0, na: 0, a: 0, m: 0, am: 0 }; list.forEach(i => c[status(i)]++);
+  $("counts").innerHTML = Object.keys(c).map(k => `<span><i class="dot st-${k}">${c[k]}</i>${LABEL[k]}</span>`).join("");
+  const last = T.sectional && curSec < SECS.length - 1;
+  $("submit").textContent = last ? "Submit section & next" : "Submit test";
+  drawSecbar();
+}
+const step = d => { const list = inSec(curSec), k = list.indexOf(cur) + d; if (k >= 0 && k < list.length) show(list[k]); else palette(); };
+$("nums").addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (b) show(+b.dataset.i); });
+$("secbar").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (!b || T.sectional) return; });
+$("saveNext").onclick = () => { ans[cur] = pick; mark[cur] = false; step(1); };
+$("markNext").onclick = () => { ans[cur] = pick; mark[cur] = true; step(1); };
+$("clear").onclick = () => { pick = null; ans[cur] = null; show(cur); };
+$("prev").onclick = () => step(-1);
+
+// ---------------- timer ----------------
+const fmt = s => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+function paintTimer() { $("timerVal").textContent = fmt(Math.max(left, 0)); $("timer").classList.toggle("low", left <= 60); $("timerLbl").textContent = T.sectional ? "Section time left" : "Time left"; }
+function clock() { left--; paintTimer(); if (left <= 0) { if (T.sectional && curSec < SECS.length - 1) openSection(curSec + 1); else finish(); } }
+function openSection(s) {
+  if (started) { spent[cur] += Math.round((Date.now() - started) / 1000); started = 0; }
+  doneSecs.add(curSec); curSec = s; left = Math.round(+SECS[s].minutes * 60); paintTimer(); show(inSec(s)[0]);
+}
+$("begin").onclick = () => {
+  lang = hasHindi ? $("introLang").value : "en"; $("lang").value = lang;
+  $("intro").hidden = true; $("test").hidden = false; $("secbar").hidden = false;
+  curSec = 0; left = Math.round((T.sectional ? +SECS[0].minutes : totalMin) * 60); paintTimer(); show(inSec(0)[0]);
+  tick = setInterval(clock, 1000);
+};
+
+// ---------------- submit ----------------
+let nextAction = null;
+$("submit").onclick = () => {
+  const list = inSec(curSec), done_ = list.filter(i => ans[i] !== null).length, sec = T.sectional && curSec < SECS.length - 1;
+  $("confirmTitle").textContent = sec ? `Finish ${SECS[curSec].name}?` : "Submit the test?";
+  $("confirmText").textContent = sec ? `You answered ${done_} of ${list.length} questions in this section. You cannot come back to it.` :
+    `You answered ${ans.filter(a => a !== null).length} of ${Q.length} questions.`;
+  $("yes").textContent = sec ? "Go to next section" : "Submit";
+  nextAction = sec ? () => openSection(curSec + 1) : finish;
+  $("confirm").showModal();
+};
+$("cancel").onclick = () => $("confirm").close();
+$("yes").onclick = () => { $("confirm").close(); if (nextAction) nextAction(); };
+
+// ---------------- result ----------------
+const short = n => /reason|intelligence/i.test(n) ? "Reasoning" : /awareness|knowledge/i.test(n) ? "GA" : /quant|math|numerical/i.test(n) ? "Quant" : /english/i.test(n) ? "English" : n.slice(0, 12);
+async function finish() {
+  if (done) return; done = true; clearInterval(tick); $("timer").hidden = true; $("lang").hidden = true;
+  if (started) spent[cur] += Math.round((Date.now() - started) / 1000);
+  const S = SECS.map((s, si) => { const list = inSec(si); let r = 0, w = 0, t = 0;
+    list.forEach(i => { t += spent[i]; if (ans[i] === null) return; ans[i] === Q[i].a ? r++ : w++; });
+    return { name: s.name, n: list.length, r, w, sk: list.length - r - w, score: r * PLUS - w * MINUS, t }; });
+  const R = S.reduce((a, s) => a + s.r, 0), W = S.reduce((a, s) => a + s.w, 0), SK = Q.length - R - W;
+  const score = +(R * PLUS - W * MINUS).toFixed(2), max = Q.length * PLUS, used = spent.reduce((a, b) => a + b, 0);
+  const acc = R + W ? Math.round(R / (R + W) * 100) : 0;
+  $("test").hidden = true; $("secbar").hidden = true; const r = $("result"); r.hidden = false;
+  r.innerHTML = `<h1>Your result</h1><p class="muted" style="margin:0">${E(T.title)}</p>
+    <div class="stats">
+      <div class="stat big"><b>${score} / ${max}</b><span>Score</span></div>
+      <div class="stat big" id="rankBox"><b>…</b><span>All India rank</span></div>
+      <div class="stat big" id="pctBox"><b>…</b><span>Percentile</span></div>
+      <div class="stat"><b class="ok-t">${R}</b><span>Correct</span></div>
+      <div class="stat"><b class="bad-t">${W}</b><span>Wrong</span></div>
+      <div class="stat"><b>${SK}</b><span>Unattempted</span></div>
+      <div class="stat"><b>${acc}%</b><span>Accuracy</span></div>
+      <div class="stat"><b>${Math.floor(used / 60)}m ${used % 60}s</b><span>Time taken</span></div>
+    </div>
+    <p class="muted" id="rankNote" style="margin:-4px 0 14px"></p>
+    <div class="card" style="margin-bottom:16px"><h2 style="font-size:1.2rem;margin-bottom:10px">Section-wise analysis</h2><div class="ptab"><table>
+      <thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Score</th><th>Accuracy</th><th>Time</th></tr></thead>
+      <tbody>${S.map(s => `<tr><td>${E(s.name)}</td><td>${s.r + s.w}/${s.n}</td><td>${s.r}</td><td>${s.w}</td><td>${+s.score.toFixed(2)}</td><td>${s.r + s.w ? Math.round(s.r / (s.r + s.w) * 100) : 0}%</td><td>${Math.floor(s.t / 60)}m ${s.t % 60}s</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td>Total</td><td>${R + W}/${Q.length}</td><td>${R}</td><td>${W}</td><td>${score}</td><td>${acc}%</td><td>${Math.floor(used / 60)}m ${used % 60}s</td></tr></tfoot></table></div></div>
+    <div class="card" style="margin-bottom:16px"><h2 style="font-size:1.2rem;margin-bottom:12px">Score by section</h2><div class="bars">
+      ${S.map(s => { const m = s.n * PLUS, p = Math.max(0, s.score) / m * 100; return `<div class="barrow"><span>${E(short(s.name))}</span><span class="track"><span class="fill" style="display:block;width:${p}%;background:${p >= 60 ? "var(--ok)" : p >= 35 ? "var(--gold)" : "var(--bad)"}"></span></span><span style="text-align:right">${+s.score.toFixed(2)}/${m}</span></div>`; }).join("")}
+    </div><div id="compare" style="margin-top:14px"></div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px"><a class="btn btn-pri" href="${location.pathname.split("/").pop() + location.search}">Retake test</a><a class="btn btn-out" href="mock-tests.html">More tests</a></div>
+    <h2 style="font-size:1.3rem;margin:26px 0 8px">Solutions</h2>
+    <div class="chips" id="solF">${[["all", "All"], ["w", "Wrong"], ["r", "Correct"], ["s", "Unattempted"], ["m", "Marked"]].map(([k, n], i) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${i === 0}">${n}</button>`).join("")}
+      ${hasHindi ? `<button class="chip" type="button" id="solLang">${lang === "hi" ? "English" : "हिन्दी"}</button>` : ""}</div>
+    <div id="sols"></div>`;
+  let filt = "all";
+  const drawSols = () => { $("sols").innerHTML = Q.map((q, i) => ({ q, i })).filter(({ q, i }) => filt === "all" || (filt === "w" && ans[i] !== null && ans[i] !== q.a) || (filt === "r" && ans[i] === q.a) || (filt === "s" && ans[i] === null) || (filt === "m" && mark[i])).map(({ q, i }) => {
+    const t = txt(q), why = lang === "hi" && q.whyh ? q.whyh : q.why;
+    return `<div class="sol"><p><b>Q${i + 1}.</b> <span class="${t.hi ? "hi" : ""}">${E(t.q)}</span> <span class="muted" style="font-size:.85rem">· ${E(SECS[q.sec].name)} · ${spent[i]}s</span></p>
+      ${t.o.map((o, k) => `<div class="o ${k === q.a ? "c" : k === ans[i] ? "w" : ""}">${String.fromCharCode(65 + k)}. ${E(o)}${k === q.a ? " ✓" : k === ans[i] ? " (your answer)" : ""}</div>`).join("")}
+      ${ans[i] === null ? `<p class="muted" style="margin:6px 0 0">Not attempted</p>` : ""}${why ? `<p class="why">${E(why)}</p>` : ""}</div>`; }).join("") || `<p class="muted">No questions here.</p>`; };
+  $("solF").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (b) { filt = b.dataset.f; $("solF").querySelectorAll("[data-f]").forEach(c => c.setAttribute("aria-pressed", c === b)); drawSols(); }
+    if (e.target.id === "solLang") { lang = lang === "hi" ? "en" : "hi"; e.target.textContent = lang === "hi" ? "English" : "हिन्दी"; drawSols(); } });
+  drawSols(); window.scrollTo(0, 0);
+  try { const h = JSON.parse(SSC.store.get("ssc-attempts", "{}")); (h[KEY] = h[KEY] || []).unshift({ d: Date.now(), score, max }); h[KEY] = h[KEY].slice(0, 10); SSC.store.set("ssc-attempts", JSON.stringify(h)); } catch (e) {}
+
+  // rank and percentile from the server (works on the live site)
+  try {
+    const res = await fetch("/api/attempts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ test: KEY, score, max, sections: S.map(s => +s.score.toFixed(2)) }) });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    $("rankBox").innerHTML = `<b>${d.rank} <small style="font-size:.9rem;font-weight:500">/ ${d.total}</small></b><span>All India rank</span>`;
+    $("pctBox").innerHTML = `<b>${d.percentile.toFixed(2)}</b><span>Percentile</span>`;
+    $("rankNote").textContent = `Based on ${d.total} attempts of this test on SSC Aspirants Official.`;
+    $("compare").innerHTML = `<div class="ptab"><table><thead><tr><th>Compare</th><th>Score</th></tr></thead><tbody>
+      <tr><td>You</td><td>${score}</td></tr><tr><td>Topper</td><td>${d.top}</td></tr><tr><td>Average</td><td>${d.avg.toFixed(2)}</td></tr></tbody></table></div>`;
+  } catch (e) {
+    $("rankBox").innerHTML = `<b>–</b><span>All India rank</span>`; $("pctBox").innerHTML = `<b>–</b><span>Percentile</span>`;
+    $("rankNote").textContent = "Rank and percentile show on sscaspirants-official.in, where every student's score is counted.";
+  }
+}
+window.addEventListener("beforeunload", e => { if (!$("test").hidden && !done) { e.preventDefault(); e.returnValue = ""; } });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin – SSC Aspirants Official</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light"}catch(e){}</script>
+<style>
+.atabs{display:flex;gap:6px;overflow-x:auto;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.atabs button{flex:none;min-height:44px;padding:8px 16px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-weight:600}
+.atabs button[aria-selected="true"]{background:var(--pri);color:var(--pri-ink)}
+.atabs button:disabled{opacity:.45;cursor:not-allowed}
+.form{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.form .wide{grid-column:1/-1}
+.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:.92rem}
+.f small{font-weight:400;color:var(--muted)}
+.f input,.f select,.f textarea{font:inherit;font-size:16px;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+.f textarea{min-height:140px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;line-height:1.5}
+.f textarea.tall{min-height:300px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.status{position:sticky;bottom:12px;z-index:30;padding:12px 16px;border-radius:12px;font-weight:600;display:none;box-shadow:var(--shadow)}
+.status.show{display:block}
+.status.ok{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok)}
+.status.err{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad)}
+.status.info{background:var(--pri-soft);color:var(--pri);border:1px solid var(--pri)}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.item .t{flex:1 1 240px}
+.item .t b{display:block}
+.item .t span{font-size:.88rem;color:var(--muted)}
+.btn-sm{min-height:38px;padding:6px 12px;font-size:.9rem}
+.btn-del{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.seg2{display:flex;gap:8px;flex-wrap:wrap}
+.seg2 label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--bg);font-weight:600;cursor:pointer}
+.preview{border:1px dashed var(--line);border-radius:12px;padding:16px;max-height:420px;overflow:auto;background:var(--bg)}
+.preview img{max-width:100%}
+.help{background:var(--gold-soft);border-radius:12px;padding:12px 16px;font-size:.92rem}
+.help code{background:var(--surface);padding:1px 6px;border-radius:6px}
+.lock{max-width:640px}
+</style>
+</head>
+<body data-page="admin" data-title="Admin">
+<main id="content" class="content">
+
+<div class="atabs" role="tablist" aria-label="Admin sections" id="atabs">
+  <button type="button" role="tab" data-t="connect">1. Connect</button>
+  <button type="button" role="tab" data-t="notes">Notes</button>
+  <button type="button" role="tab" data-t="tests">Tests</button>
+  <button type="button" role="tab" data-t="live">Live tests</button>
+  <button type="button" role="tab" data-t="news">What's new</button>
+  <button type="button" role="tab" data-t="files">Files</button>
+</div>
+
+<!-- CONNECT -->
+<section class="card lock" data-p="connect">
+  <div class="sec-head"><h2>Connect to your website</h2></div>
+  <p class="muted">The admin page saves your changes straight into your website files on GitHub. Cloudflare then puts them live in about a minute. Only someone with your secret GitHub key can save, so keep the key private.</p>
+  <div class="form">
+    <label class="f wide" for="tok">GitHub key (token)<small>Made once on GitHub. Stays only in this browser.</small><input id="tok" type="password" autocomplete="off" placeholder="github_pat_…"></label>
+    <label class="f" for="own">GitHub username<input id="own" value="yatharth-tyagi"></label>
+    <label class="f" for="rep">Repository<input id="rep" value="ssc-aspirants-site"></label>
+    <label class="f" for="brn">Branch<input id="brn" value="main"></label>
+  </div>
+  <div class="bar" style="margin-top:14px"><button class="btn btn-pri" id="connectBtn" type="button">Connect and load data</button><button class="btn btn-out" id="forgetBtn" type="button">Forget key on this device</button></div>
+  <p class="muted" id="connInfo" style="margin:12px 0 0"></p>
+</section>
+
+<!-- NOTES -->
+<section class="card" data-p="notes" hidden>
+  <div class="sec-head"><h2>Add or edit notes</h2><p>Pick a chapter, write or upload, then Publish</p></div>
+  <div class="form">
+    <label class="f" for="nSub">Subject<select id="nSub"></select></label>
+    <label class="f" for="nChap">Chapter<select id="nChap"></select></label>
+    <label class="f" for="nTitle">Chapter title<input id="nTitle"></label>
+    <label class="f" for="nDesc">Short line under the title (chapter list)<input id="nDesc"></label>
+    <label class="f" for="nRead">Reading time<input id="nRead" placeholder="10 min read"></label>
+    <label class="f" for="nExams">Exam tags<small>Separate with commas</small><input id="nExams" placeholder="SSC CGL, CHSL, MTS"></label>
+    <label class="f wide" for="nIntro">Introduction<textarea id="nIntro" style="min-height:80px;font-family:inherit"></textarea></label>
+    <div class="f wide">How do you want to add the notes?
+      <div class="seg2"><label><input type="radio" name="nMode" value="form" checked> Write here</label><label><input type="radio" name="nMode" value="docx"> Upload Word file (.docx)</label></div>
+    </div>
+  </div>
+
+  <div id="nFormBox" class="form" style="margin-top:14px">
+    <div class="help wide">Write sections like this: <code>## Section heading</code>, then each point as <code>### Label | Title | small line</code> with lines starting <code>- </code> under it. Example:<br><code>## Company Rule</code> → <code>### 1773 | Regulating Act | First step</code> → <code>- Governor of Bengal became Governor-General</code></div>
+    <label class="f wide" for="nBody">Notes<textarea id="nBody" class="tall"></textarea></label>
+    <label class="f" for="nTblTitle">Table title (optional)<input id="nTblTitle" placeholder="Important facts"></label>
+    <label class="f wide" for="nTbl">Table<small>First line = headings. Separate columns with | </small><textarea id="nTbl" placeholder="Year | Post | Person&#10;1773 | First Governor-General of Bengal | Warren Hastings"></textarea></label>
+    <label class="f wide" for="nTricks">Memory tricks<small>One per line</small><textarea id="nTricks" style="min-height:100px"></textarea></label>
+    <label class="f wide" for="nQuiz">Quick check questions<small>Blank line between questions. Line 1 = question, next 4 lines = options (put * before the correct one), then "Why: …" and optional "Tag: …"</small><textarea id="nQuiz" class="tall" placeholder="Which Act introduced dyarchy in the provinces?&#10;Indian Councils Act 1909&#10;*Government of India Act 1919&#10;Government of India Act 1935&#10;Charter Act 1853&#10;Why: The 1919 Act split provincial subjects into transferred and reserved.&#10;Tag: Asked in SSC CGL"></textarea></label>
+  </div>
+
+  <div id="nDocxBox" class="form" style="margin-top:14px" hidden>
+    <label class="f wide" for="nDocx">Word file (.docx)<small>Headings, bold, lists, tables and pictures are kept. The watermark and copy protection are added on the site.</small><input id="nDocx" type="file" accept=".docx"></label>
+    <div class="f wide">Preview<div class="preview" id="nDocxPrev">No file chosen yet.</div></div>
+  </div>
+
+  <div class="bar" style="margin-top:16px">
+    <button class="btn btn-pri" id="nSave" type="button">Publish chapter</button>
+    <a class="btn btn-out" id="nView" href="notes.html" target="_blank" rel="noopener">Open notes page</a>
+    <button class="btn btn-del" id="nDel" type="button">Delete chapter notes</button>
+  </div>
+</section>
+
+<!-- TESTS -->
+<section class="card" data-p="tests" hidden>
+  <div class="sec-head"><h2>Tests</h2><p>Make a test, add questions, publish</p></div>
+  <div class="list" id="tList"></div>
+  <h3 style="font:700 1.1rem Poppins,sans-serif;margin:22px 0 10px" id="tFormTitle">New test</h3>
+  <div class="form">
+    <label class="f wide" for="tTitle">Test name<input id="tTitle" placeholder="SSC CGL Tier 1 – Full Mock 1"></label>
+    <label class="f" for="tExam">Exam<select id="tExam"></select></label>
+    <label class="f" for="tType">Type<select id="tType"><option>Full mock test</option><option>Section-wise test</option><option>Subject-wise test</option><option>Chapter test</option><option>PYQ paper</option></select></label>
+    <label class="f" for="tMin">Time (minutes)<input id="tMin" type="number" min="1" value="60"></label>
+    <label class="f" for="tPlus">Marks for correct<input id="tPlus" type="number" step="0.25" value="2"></label>
+    <label class="f" for="tMinus">Minus for wrong<input id="tMinus" type="number" step="0.25" value="0.5"></label>
+    <label class="f" for="tLive" style="flex-direction:row;align-items:center;gap:10px"><input id="tLive" type="checkbox" checked style="width:22px;height:22px;min-height:0"> Show in Live tests on Home</label>
+    <label class="f" for="tSect" style="flex-direction:row;align-items:center;gap:10px"><input id="tSect" type="checkbox" style="width:22px;height:22px;min-height:0"> Sectional timing (each section has its own timer)</label>
+    <label class="f" for="tSecMin">Minutes per section<small>Used when sectional timing is on</small><input id="tSecMin" type="number" min="1" value="15"></label>
+    <div class="f wide">Add questions
+      <div class="seg2"><label><input type="radio" name="tMode" value="file" checked> Upload Excel / CSV</label><label><input type="radio" name="tMode" value="text"> Type here</label></div>
+    </div>
+    <div class="f wide" id="tFileBox">
+      <div class="help">Excel columns: <code>Section</code>, <code>Question</code>, <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>Answer</code> (A/B/C/D), <code>Explanation</code>. For Hindi, also fill <code>Question (Hindi)</code>, <code>A (Hindi)</code> … <code>D (Hindi)</code>, <code>Explanation (Hindi)</code>; leave them empty for English-only questions. <button class="btn btn-out btn-sm" id="tTpl" type="button">Download template</button></div>
+      <input id="tFile" type="file" accept=".xlsx,.xls,.csv" style="margin-top:10px">
+    </div>
+    <label class="f wide" for="tText" id="tTextBox" hidden>Questions<small>Same format as Quick check. Add a line "Section: Reasoning" above questions to set their section. Typing here keeps English only; use Excel for Hindi.</small><textarea id="tText" class="tall"></textarea></label>
+    <div class="f wide">Questions loaded<div class="preview" id="tPrev">None yet.</div></div>
+  </div>
+  <div class="bar" style="margin-top:16px">
+    <button class="btn btn-pri" id="tSave" type="button">Publish test</button>
+    <button class="btn btn-out" id="tNew" type="button">Start a new test</button>
+  </div>
+</section>
+
+<!-- LIVE -->
+<section class="card" data-p="live" hidden>
+  <div class="sec-head"><h2>Live tests on Home</h2><p>Order, add or remove</p></div>
+  <div class="list" id="lList"></div>
+  <h3 style="font:700 1.05rem Poppins,sans-serif;margin:20px 0 10px">Add a test to Live tests</h3>
+  <div class="bar"><select id="lPick" class="f" style="min-height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--bg);color:var(--ink);font:inherit"></select><button class="btn btn-out" id="lAdd" type="button">Add</button></div>
+  <div class="bar" style="margin-top:16px"><button class="btn btn-pri" id="lSave" type="button">Publish Live tests</button></div>
+</section>
+
+<!-- NEWS -->
+<section class="card" data-p="news" hidden>
+  <div class="sec-head"><h2>What's new on Home</h2><p>Newest first</p></div>
+  <div class="form">
+    <label class="f" for="wDate">Date<input id="wDate" type="date"></label>
+    <label class="f wide" for="wText">What changed<input id="wText" placeholder="Indian Polity chapter 5 notes are ready"></label>
+    <label class="f wide" for="wLink">Link (optional)<input id="wLink" placeholder="note.html?id=union-territory"></label>
+  </div>
+  <div class="bar" style="margin-top:12px"><button class="btn btn-out" id="wAdd" type="button">Add to list</button></div>
+  <div class="list" id="wList" style="margin-top:16px"></div>
+  <div class="bar" style="margin-top:16px"><button class="btn btn-pri" id="wSave" type="button">Publish What's new</button></div>
+</section>
+
+<!-- FILES -->
+<section class="card" data-p="files" hidden>
+  <div class="sec-head"><h2>Files</h2><p>PDFs and pictures for PYQs, notes or posts</p></div>
+  <label class="f" for="fFile">Upload a file<small>Saved in assets/uploads/. Up to about 20 MB.</small><input id="fFile" type="file"></label>
+  <div class="bar" style="margin-top:12px"><button class="btn btn-pri" id="fUp" type="button">Upload</button></div>
+  <div class="list" id="fList" style="margin-top:16px"></div>
+</section>
+
+<div class="status" id="status" role="status" aria-live="polite"></div>
+</main>
+<script src="data/subjects.js"></script>
+<script src="data/exams.js"></script>
+<script src="assets/site.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>

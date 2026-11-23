@@ -2,133 +2,124 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- ssc-build 1/7 WWE= -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SSC Aspirants Official – SSC Mock Tests, Notes & PYQs (Eduquity Pattern)</title>
-<meta name="description" content="Mock tests on the latest Eduquity CBT pattern, subject-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
+<meta name="description" content="Mock tests on the latest Eduquity CBT pattern, chapter-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Hind:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
 </head>
-<body>
-<div style="font-family: 'Hind', system-ui, sans-serif; color: #1B2550; background: #FBF6EA; font-size: 16px; line-height: 1.55">
-
-<div style="background: #1B2550; color: #F3E6C6; font-size: 14px">
-<div style="max-width: 1240px; margin: 0 auto; padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
-<span>Notes, mock tests and PYQs for all SSC exams</span>
-<a href="https://www.instagram.com/sscaspirants_official/" style="color: #F3E6C6; display: flex; gap: 8px; align-items: center; font-weight: 600">
-<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>
-@sscaspirants_official</a>
+<body data-page="home" data-title="Home">
+<main id="content" class="content">
+<style>
+.hero{position:relative;overflow:hidden;border-radius:24px;padding:clamp(24px,5vw,56px);color:#fff;
+  background:radial-gradient(circle at 15% 25%,#2D4FB8 0,transparent 55%),radial-gradient(circle at 90% 110%,#C9962E55 0,transparent 45%),linear-gradient(135deg,#1F3A93 0%,#141B38 100%);
+  display:flex;flex-wrap:wrap;gap:clamp(20px,4vw,48px);align-items:center;box-shadow:0 18px 40px rgba(20,27,56,.28)}
+.hero::after{content:"";position:absolute;right:-90px;bottom:-110px;width:420px;height:420px;border-radius:50%;border:2px solid #ffffff1a;box-shadow:0 0 0 40px #ffffff08,0 0 0 90px #ffffff05}
+.hero-logo{flex:0 1 280px;display:flex;justify-content:center;position:relative;z-index:1}
+.hero-logo img{width:min(280px,62vw);border-radius:50%;border:6px solid #F5C451;box-shadow:0 0 0 10px #F5C45133,0 20px 50px rgba(0,0,0,.35);background:#FBF6EA}
+.hero-text{flex:999 1 420px;position:relative;z-index:1}
+.hero-text .tag{display:inline-flex;gap:8px;align-items:center;background:#ffffff1f;border:1px solid #ffffff33;border-radius:999px;padding:6px 14px;font-size:.88rem;font-weight:600}
+.hero-text .tag i{width:8px;height:8px;border-radius:50%;background:#5BE3A8;display:inline-block}
+.hero-text h2{font-size:clamp(2rem,4.4vw,3.2rem);margin:16px 0 6px;color:#fff}
+.hero-text h2 span{color:#F5C451}
+.hero-text .brand-line{font:600 1.05rem "Poppins",sans-serif;color:#C9D3FF;margin:0 0 12px}
+.hero-text p{color:#DDE3FF;font-size:1.08rem;max-width:56ch;margin:0 0 24px}
+.btn-gold{background:#F5C451;color:#16203F}
+.btn-ghost{background:transparent;color:#fff;border-color:#ffffff66}
+.btn-ghost:hover{background:#ffffff14}
+.quick-row{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));margin-top:-44px;padding:0 clamp(12px,3vw,32px);position:relative;z-index:2}
+.quick{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;color:var(--ink);box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
+.quick:hover{border-color:var(--pri);text-decoration:none;transform:translateY(-3px)}
+.quick .qi{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:#fff}
+.quick b{display:block} .quick span span{font-size:.9rem;color:var(--muted)}
+.exam{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;color:var(--ink);transition:transform .15s,border-color .15s,box-shadow .15s}
+.exam:hover{border-color:var(--pri);text-decoration:none;transform:translateY(-3px);box-shadow:var(--shadow)}
+.exam-ic{flex:none;width:54px;height:54px;border-radius:14px;color:#fff;display:grid;place-items:center;font:700 .8rem "Poppins",sans-serif;box-shadow:inset 0 -3px 0 #0000002a}
+.exam b{display:block} .exam span span{font-size:.88rem;color:var(--muted)}
+.live{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.live .card{display:flex;flex-direction:column;gap:10px}
+.live .pill{align-self:flex-start}
+.live .meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:.92rem}
+.live .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px;box-shadow:0 0 0 4px var(--ok-soft)}
+.live{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.live .card{display:flex;flex-direction:column;gap:10px}
+.live .pill{align-self:flex-start}
+.live .meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:.92rem}
+.ldot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px;box-shadow:0 0 0 4px var(--ok-soft);animation:pulse 1.8s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px transparent}}
+@media (prefers-reduced-motion:reduce){.ldot{animation:none}}
+.news{padding:6px 20px}
+.news a,.news div.item{display:flex;gap:16px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);color:var(--ink)}
+.news a:last-child,.news div.item:last-child{border-bottom:0}
+.news a:hover{text-decoration:none;color:var(--pri)}
+.news time{flex:none;width:112px;white-space:nowrap;font-weight:700;color:var(--acc);font-size:.92rem}
+@media(max-width:520px){.news a,.news div.item{flex-direction:column;gap:2px}}
+.why{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.why .card{position:relative;overflow:hidden;border-top:3px solid var(--gold)}
+.why-ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--pri-soft);color:var(--pri)}
+.why .card b{display:block;font-size:1.05rem;margin:10px 0 4px}
+.why .card p{margin:0;color:var(--muted)}
+.ig{position:relative;overflow:hidden;display:flex;flex-wrap:wrap;gap:18px;align-items:center;border-radius:22px;padding:26px 28px;color:#16203F;
+  background:linear-gradient(120deg,#F5C451,#F7D98A)}
+.ig img{width:76px;height:76px;border-radius:50%;border:3px solid #16203F}
+.ig div{flex:1 1 260px} .ig b{font:700 1.35rem "Poppins",sans-serif;display:block}
+.ig a{background:#16203F;color:#fff}
+@media(max-width:600px){.hero{text-align:center;justify-content:center}.hero-text .acts{justify-content:center}.quick-row{margin-top:-28px}}
+</style>
+<section style="display:flex;flex-direction:column">
+<div class="hero">
+<div class="hero-logo"><img src="assets/logo.png" alt="SSC Aspirants Official logo"></div>
+<div class="hero-text">
+<span class="tag"><i></i>New Eduquity CBT pattern</span>
+<h2>No excuses. <span>Only selection.</span></h2>
+<p class="brand-line">SSC Aspirants Official</p>
+<p style="margin:0">Mock tests in the real exam interface, chapter-wise notes and previous year papers for CGL, CHSL, MTS, GD, CPO and more.</p>
 </div>
 </div>
-
-<div style="background: #FFFDF7; border-bottom: 1px solid #E8DDC4">
-<div style="max-width: 1240px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center">
-<a href="index.html" style="display: flex; gap: 12px; align-items: center">
-<img src="assets/logo.png" alt="SSC Aspirants Official logo" style="width: 52px; height: 52px; border-radius: 50%">
-<span style="display: flex; flex-direction: column; line-height: 1.1"><span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 20px">SSC Aspirants</span><span style="font-size: 12px; letter-spacing: 2px; font-weight: 600; color: #8A6114">OFFICIAL</span></span>
-</a>
-<nav style="display: flex; flex-wrap: wrap; gap: 4px; margin-left: 24px; flex-grow: 1; font-weight: 500">
-<a href="#top" style="padding: 10px 14px; border-radius: 8px; background: #F3E6C6; font-weight: 600">Home</a>
-<a href="mock-tests.html" style="padding: 10px 14px; border-radius: 8px">Mock Tests</a>
-<a href="notes.html" style="padding: 10px 14px; border-radius: 8px">Notes</a>
-<a href="pyq.html" style="padding: 10px 14px; border-radius: 8px">PYQ Papers</a>
-<a href="#about" style="padding: 10px 14px; border-radius: 8px">About</a>
-</nav>
-<div style="display: flex; gap: 10px">
-<a href="https://www.instagram.com/sscaspirants_official/" style="display: flex; gap: 8px; align-items: center; padding: 11px 18px; background: #1B2550; color: #FFFFFF; border-radius: 10px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>Follow</a>
-</div>
-</div>
-</div>
-
-<div id="top" style="max-width: 1240px; margin: 0 auto; padding: 56px 24px 40px; display: flex; flex-wrap: wrap; gap: 40px; align-items: center">
-<div style="flex: 999 1 520px; min-width: 0">
-<div style="display: inline-flex; gap: 8px; align-items: center; background: #F3E6C6; color: #6B4A0E; font-weight: 600; font-size: 14px; padding: 6px 14px; border-radius: 999px">No excuses. Only selection.</div>
-<div style="display: inline-flex; margin-left: 8px; gap: 8px; align-items: center; background: #1B2550; color: #FFFFFF; font-weight: 600; font-size: 14px; padding: 6px 14px; border-radius: 999px">New Eduquity pattern</div>
-<h1 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 52px; line-height: 1.1; margin: 18px 0 16px; letter-spacing: -1px">Crack SSC exams with <span style="color: #9A6B12">mock tests</span>, notes and PYQs</h1>
-<p style="font-size: 19px; color: #4A5068; margin: 0 0 28px; max-width: 600px">Practise mock tests on the latest Eduquity CBT pattern, read short revision notes, solve previous year papers, all in one place.</p>
-<div style="display: flex; flex-wrap: wrap; gap: 12px">
-<a href="mock-tests.html" style="padding: 15px 26px; background: #E9B949; color: #1B2550; border-radius: 12px; font-weight: 700; font-size: 17px">Explore mock tests</a>
-</div>
-<div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 28px; font-size: 15px; color: #4A5068">
-<span style="display: flex; gap: 8px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E7D4F" stroke-width="2.5" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>English &amp; Hindi</span>
-<span style="display: flex; gap: 8px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E7D4F" stroke-width="2.5" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Eduquity CBT interface</span>
-<span style="display: flex; gap: 8px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E7D4F" stroke-width="2.5" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Detailed solutions</span>
-</div>
-</div>
-<div style="flex: 1 1 280px; display: flex; justify-content: center"><img src="assets/logo.png" alt="SSC Aspirants Official logo" style="width: 300px; max-width: 100%; border-radius: 50%"></div>
-</div>
-
-<div id="tests" style="max-width: 1240px; margin: 0 auto; padding: 32px 24px">
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 20px">
-<div><h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 32px; margin: 0">Choose your exam</h2><p style="margin: 4px 0 0; color: #4A5068">Mock tests, notes and PYQs for every SSC exam</p></div>
-
-</div>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px">
-<a href="mock-tests.html" style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px"><span style="width: 52px; height: 52px; border-radius: 12px; background: #F3E6C6; color: #8A6114; display: grid; place-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px">CGL</span><span style="font-weight: 700; font-size: 17px">SSC CGL</span><span style="font-size: 14px; color: #4A5068">Graduate level · Tier 1 &amp; 2</span></a>
-<a href="mock-tests.html" style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px"><span style="width: 52px; height: 52px; border-radius: 12px; background: #E6E9F3; color: #1B2550; display: grid; place-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px">CHSL</span><span style="font-weight: 700; font-size: 17px">SSC CHSL</span><span style="font-size: 14px; color: #4A5068">10+2 level · Tier 1 &amp; 2</span></a>
-<a href="mock-tests.html" style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px"><span style="width: 52px; height: 52px; border-radius: 12px; background: #F3E6C6; color: #8A6114; display: grid; place-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px">MTS</span><span style="font-weight: 700; font-size: 17px">SSC MTS</span><span style="font-size: 14px; color: #4A5068">MTS &amp; Havaldar</span></a>
-<a href="mock-tests.html" style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px"><span style="width: 52px; height: 52px; border-radius: 12px; background: #E6E9F3; color: #1B2550; display: grid; place-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px">GD</span><span style="font-weight: 700; font-size: 17px">SSC GD</span><span style="font-size: 14px; color: #4A5068">Constable (GD)</span></a>
-<a href="mock-tests.html" style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px"><span style="width: 52px; height: 52px; border-radius: 12px; background: #F3E6C6; color: #8A6114; display: grid; place-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px">CPO</span><span style="font-weight: 700; font-size: 17px">SSC CPO</span><span style="font-size: 14px; color: #4A5068">SI in Delhi Police &amp; CAPFs</span></a>
-<a href="mock-tests.html" style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px"><span style="width: 52px; height: 52px; border-radius: 12px; background: #E6E9F3; color: #1B2550; display: grid; place-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 13px">STENO</span><span style="font-weight: 700; font-size: 17px">SSC Stenographer</span><span style="font-size: 14px; color: #4A5068">Grade C &amp; D</span></a>
-<a href="mock-tests.html" style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px"><span style="width: 52px; height: 52px; border-radius: 12px; background: #F3E6C6; color: #8A6114; display: grid; place-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px">SP</span><span style="font-weight: 700; font-size: 17px">Selection Post</span><span style="font-size: 14px; color: #4A5068">Matric, 12th &amp; Graduate</span></a>
-<a href="mock-tests.html" style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px"><span style="width: 52px; height: 52px; border-radius: 12px; background: #E6E9F3; color: #1B2550; display: grid; place-items: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px">JE</span><span style="font-weight: 700; font-size: 17px">SSC JE</span><span style="font-size: 14px; color: #4A5068">Junior Engineer</span></a>
-</div>
-</div>
-
-<div id="pyq" style="max-width: 1240px; margin: 0 auto; padding: 24px">
-<div style="background: #1B2550; border-radius: 24px; padding: 32px; color: #FFFFFF; display: flex; flex-wrap: wrap; gap: 28px; align-items: center">
-<div style="flex: 1 1 380px; min-width: 0">
-<div style="font-size: 13px; font-weight: 700; letter-spacing: 1px; color: #E9B949">PREVIOUS YEAR PAPERS</div>
-<h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 32px; margin: 8px 0 10px">Solve real papers, shift by shift</h2>
-<p style="margin: 0 0 20px; color: #C9CFE6">Attempt PYQs as a timed test or download them as PDF, with answer keys and solutions.</p>
-<a href="pyq.html" style="display: inline-block; padding: 13px 24px; background: #E9B949; color: #1B2550; border-radius: 10px; font-weight: 700">Browse PYQ papers</a>
-</div>
-<div style="flex: 1 1 380px; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
-<a href="pyq.html" style="background: #26326A; color: #FFFFFF; border-radius: 12px; padding: 14px 16px"><b style="display: block">SSC CGL</b><span style="font-size: 14px; color: #C9CFE6">Shift-wise papers</span></a>
-<a href="pyq.html" style="background: #26326A; color: #FFFFFF; border-radius: 12px; padding: 14px 16px"><b style="display: block">SSC CHSL</b><span style="font-size: 14px; color: #C9CFE6">Shift-wise papers</span></a>
-<a href="pyq.html" style="background: #26326A; color: #FFFFFF; border-radius: 12px; padding: 14px 16px"><b style="display: block">SSC MTS</b><span style="font-size: 14px; color: #C9CFE6">Shift-wise papers</span></a>
-<a href="pyq.html" style="background: #26326A; color: #FFFFFF; border-radius: 12px; padding: 14px 16px"><b style="display: block">SSC GD</b><span style="font-size: 14px; color: #C9CFE6">Shift-wise papers</span></a>
-<a href="pyq.html" style="background: #26326A; color: #FFFFFF; border-radius: 12px; padding: 14px 16px"><b style="display: block">SSC CPO</b><span style="font-size: 14px; color: #C9CFE6">Shift-wise papers</span></a>
-<a href="pyq.html" style="background: #26326A; color: #FFFFFF; border-radius: 12px; padding: 14px 16px"><b style="display: block">Selection Post</b><span style="font-size: 14px; color: #C9CFE6">Shift-wise papers</span></a>
-</div>
-</div>
-</div>
-
-<div style="max-width: 1240px; margin: 0 auto; padding: 40px 24px">
-<h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 32px; margin: 0 0 20px; text-align: center">Everything you need to prepare, in one place</h2>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px">
-<div style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 22px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8A6114" stroke-width="2" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2M9 2h6"></path></svg><div style="font-weight: 700; font-size: 18px; margin: 10px 0 4px">Eduquity exam interface</div><div style="color: #4A5068; font-size: 15px">The same screen SSC uses now with Eduquity: timer, question palette, mark for review and section switching.</div></div>
-<div style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 22px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8A6114" stroke-width="2" aria-hidden="true"><path d="M4 20V14M10 20V8M16 20V11M22 20V4"></path></svg><div style="font-weight: 700; font-size: 18px; margin: 10px 0 4px">Detailed solutions</div><div style="color: #4A5068; font-size: 15px">Every question comes with a clear explanation and a shortcut trick where possible.</div></div>
-<div style="background: #FFFFFF; border: 1px solid #E8DDC4; border-radius: 16px; padding: 22px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8A6114" stroke-width="2" aria-hidden="true"><path d="M4 5h7v14H4zM13 5h7v14h-7z"></path></svg><div style="font-weight: 700; font-size: 18px; margin: 10px 0 4px">Notes in English &amp; Hindi</div><div style="color: #4A5068; font-size: 15px">Made from NCERT and standard books, with diagrams and memory tricks.</div></div>
-</div>
-</div>
-
-<div style="max-width: 1240px; margin: 0 auto; padding: 8px 24px 40px">
-<div style="border: 2px dashed #C9962E; background: #F3E6C6; border-radius: 22px; padding: 28px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center">
-<img src="assets/logo.png" alt="" style="width: 88px; height: 88px; border-radius: 50%">
-<div style="flex: 1 1 320px; min-width: 0">
-<div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 26px">Get daily notes on Instagram</div>
-<div style="color: #4A5068">Polity series, current affairs and exam updates every day. Follow @sscaspirants_official.</div>
-</div>
-<a href="https://www.instagram.com/sscaspirants_official/" style="display: flex; gap: 10px; align-items: center; padding: 14px 24px; background: #1B2550; color: #FFFFFF; border-radius: 12px; font-weight: 700">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>
-Follow on Instagram</a>
-</div>
-</div>
-
-<div id="about" style="background: #1B2550; color: #C9CFE6">
-<div style="max-width: 1240px; margin: 0 auto; padding: 44px 24px 24px; display: flex; flex-wrap: wrap; gap: 32px">
-<div style="flex: 2 1 280px; min-width: 0">
-<div style="display: flex; gap: 12px; align-items: center"><img src="assets/logo.png" alt="" style="width: 48px; height: 48px; border-radius: 50%"><span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 20px; color: #FFFFFF">SSC Aspirants Official</span></div>
-<p style="margin: 14px 0 0; max-width: 360px">Notes, mock tests and previous year papers for SSC aspirants. No excuses. Only selection.</p>
-</div>
-<div style="flex: 1 1 160px; display: flex; flex-direction: column; gap: 8px"><b style="color: #FFFFFF">Prepare</b><a href="mock-tests.html" style="color: #C9CFE6">Mock Tests</a><a href="notes.html" style="color: #C9CFE6">Notes</a><a href="pyq.html" style="color: #C9CFE6">PYQ Papers</a></div>
-<div style="flex: 1 1 160px; display: flex; flex-direction: column; gap: 8px"><b style="color: #FFFFFF">About</b><a href="#about" style="color: #C9CFE6">About us</a><a href="#about" style="color: #C9CFE6">Contact</a><a href="https://www.instagram.com/sscaspirants_official/" style="color: #C9CFE6">Instagram</a><a href="#about" style="color: #C9CFE6">Privacy policy</a></div>
-</div>
-<div style="max-width: 1240px; margin: 0 auto; padding: 16px 24px 28px; border-top: 1px solid #2E3A6E; font-size: 14px">© 2026 SSC Aspirants Official. All rights reserved.</div>
-</div>
-
-</div>
+</section>
+<section><div class="sec-head"><h2>Choose your exam</h2><p>Mock tests and PYQs for every SSC exam</p></div><div class="grid">
+<a class="exam" href="ssc-cgl.html"><span class="exam-ic" style="background:linear-gradient(135deg,#1F3A93,#3F62D1)">CGL</span><span><b>SSC CGL</b><span>Graduate level · Tier 1 &amp; 2</span></span></a>
+<a class="exam" href="ssc-chsl.html"><span class="exam-ic" style="background:linear-gradient(135deg,#9A6A12,#D4A23A)">CHSL</span><span><b>SSC CHSL</b><span>10+2 level · Tier 1 &amp; 2</span></span></a>
+<a class="exam" href="ssc-mts.html"><span class="exam-ic" style="background:linear-gradient(135deg,#0F6B5B,#25A386)">MTS</span><span><b>SSC MTS</b><span>MTS &amp; Havaldar</span></span></a>
+<a class="exam" href="ssc-gd.html"><span class="exam-ic" style="background:linear-gradient(135deg,#7A2448,#B8456F)">GD</span><span><b>SSC GD</b><span>Constable (GD)</span></span></a>
+<a class="exam" href="ssc-cpo.html"><span class="exam-ic" style="background:linear-gradient(135deg,#1F3A93,#3F62D1)">CPO</span><span><b>SSC CPO</b><span>SI in Delhi Police &amp; CAPFs</span></span></a>
+<a class="exam" href="ssc-stenographer.html"><span class="exam-ic" style="background:linear-gradient(135deg,#9A6A12,#D4A23A)">STENO</span><span><b>Stenographer</b><span>Grade C &amp; D</span></span></a>
+<a class="exam" href="ssc-selection-post.html"><span class="exam-ic" style="background:linear-gradient(135deg,#0F6B5B,#25A386)">SP</span><span><b>Selection Post</b><span>Matric, 12th &amp; Graduate</span></span></a>
+<a class="exam" href="ssc-je.html"><span class="exam-ic" style="background:linear-gradient(135deg,#7A2448,#B8456F)">JE</span><span><b>SSC JE</b><span>Junior Engineer</span></span></a>
+</div></section>
+<section><div class="sec-head"><h2>Live tests</h2><a href="mock-tests.html">All mock tests →</a></div>
+<div class="live" id="liveTests"></div></section>
+<section><div class="sec-head"><h2>What's new</h2></div>
+<div class="card news" id="whatsNew"></div></section>
+<section><div class="sec-head"><h2>Why SSC Aspirants</h2></div><div class="why">
+<div class="card"><span class="why-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></span><b>Same screen as the real exam</b><p>Timer, question palette, mark for review and section switching, like SSC's Eduquity CBT.</p></div>
+<div class="card"><span class="why-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></span><b>Easy on the eyes</b><p>Light and Dark themes and bigger or smaller text from the top bar. Your choice is remembered.</p></div>
+<div class="card"><span class="why-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/></svg></span><b>Chapter-wise notes</b><p>Made from NCERT and standard books, with tables, memory tricks and a quick check.</p></div>
+</div></section>
+<section class="ig"><img src="assets/logo.png" alt=""><div><b>Get daily notes on Instagram</b><span>Polity series, exam updates and quizzes: @sscaspirants_official</span></div><a class="btn" href="https://www.instagram.com/sscaspirants_official/" target="_blank" rel="noopener">Follow</a></section>
+</main>
+<script src="data/subjects.js"></script>
+<script src="data/exams.js"></script>
+<script src="data/live-tests.js"></script>
+<script src="data/whats-new.js"></script>
+<script src="assets/site.js"></script>
+<script>
+{
+const E=SSC.esc, L=window.LIVE_TESTS||[], N=window.WHATS_NEW||[];
+const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const day=d=>{const [y,m,dd]=d.split("-");return `${+dd} ${M[+m-1]} ${y}`;};
+document.getElementById("liveTests").innerHTML=L.length?L.map(t=>`<div class="card"><span class="pill ok"><span class="ldot"></span>Live now</span>
+<b style="font-size:1.08rem">${E(t.name)}</b><div class="meta"><span>${E(t.type)}</span><span>${E(t.exams)}</span></div>
+<div class="meta"><span>${t.questions} questions</span><span>${t.minutes} min</span><span>${E(t.marking)}</span></div>
+<a class="btn btn-pri" href="${t.link}">Start test</a></div>`).join(""):`<p class="muted">New tests are coming soon.</p>`;
+document.getElementById("whatsNew").innerHTML=N.map(n=>{const inner=`<time datetime="${n.date}">${day(n.date)}</time><span>${E(n.text)}</span>`;
+  return n.link?`<a href="${n.link}">${inner}</a>`:`<div class="item">${inner}</div>`;}).join("");
+}
+</script>
 </body>
 </html>
