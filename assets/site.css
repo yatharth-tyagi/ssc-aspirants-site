@@ -1,0 +1,154 @@
+/* SSC Aspirants Official – site styles
+   Look: clean white portal (Design B). Layout: side menu (Design E).
+   Eye-friendly: soft background, dark-grey text (not pure black), 1.7 line height,
+   two themes (light / dark) and text size (A- / A+). */
+
+:root{
+  /* Colours taken from the logo: deep navy, gold, warm cream */
+  --bg:#F8F5EE; --surface:#FFFFFF; --ink:#1E2433; --muted:#565D70; --line:#E9E2D2;
+  --pri:#1F3A93; --pri-ink:#FFFFFF; --pri-soft:#E7ECFA;
+  --gold:#C9962E; --gold-soft:#FBF1DC;
+  --acc:#9A5B0B; --acc-soft:#FBF0DD;
+  --ok:#0F7A5F; --ok-soft:#E3F4EE; --bad:#B42318; --bad-soft:#FDECEA; --mark:#6D3FC0; --mark-soft:#EFE8FB;
+  --side:#141B38; --side-ink:#CFD5EC; --side-active:#26306A;
+  --shadow:0 8px 26px rgba(20,27,56,.08);
+  --scale:1; --glow1:#E3E9FB; --glow2:#FBEFD6;
+}
+html[data-read="dark"]{
+  --gold:#E6B655; --gold-soft:#3A2F17;
+  --bg:#0C1222; --surface:#151D33; --ink:#E6EAF3; --muted:#A6AFC6; --line:#263155;
+  --pri:#93A8FF; --pri-ink:#0C1222; --pri-soft:#1F2A4F; --acc:#F2B45C; --acc-soft:#3A2B17;
+  --ok:#5FD3A8; --ok-soft:#12352B; --bad:#FF8A80; --bad-soft:#3A1D1D; --mark:#C3A6FF; --mark-soft:#2D2346;
+  --glow1:#1B2A5C; --glow2:#3A2E14; --side:#080D1A; --side-ink:#B9C0D8; --side-active:#1B2547; --shadow:0 8px 26px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;min-width:0}
+html{font-size:calc(16px * var(--scale));scroll-padding-top:80px}
+body{margin:0;background:radial-gradient(1200px 600px at 85% -10%,var(--glow1,#E7ECFA) 0,transparent 60%),radial-gradient(900px 500px at -10% 110%,var(--glow2,#FBF1DC) 0,transparent 60%) fixed,var(--bg);color:var(--ink);font:400 1rem/1.7 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Poppins","Inter",sans-serif;line-height:1.25;text-wrap:balance;margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+a{color:var(--pri);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--pri);outline-offset:2px;border-radius:8px}
+
+/* ---------- shell: side menu + main ---------- */
+.shell{display:flex;min-height:100vh}
+#side{overscroll-behavior:contain;width:264px;flex:none;background:var(--side);color:var(--side-ink);position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding:18px 14px;display:flex;flex-direction:column;gap:6px;transition:margin-left .25s ease}
+body.nav-closed #side{margin-left:-264px}
+.brand{display:flex;gap:10px;align-items:center;color:#fff;padding:2px 6px 16px}
+.brand:hover{text-decoration:none}
+.brand img{width:58px;height:58px;border-radius:50%;border:2px solid #F5C451}
+.brand b{font-family:"Poppins",sans-serif;font-size:1.05rem;line-height:1.15;display:block}
+.brand small{display:block;color:#F5C451;font-size:.72rem;font-weight:600;letter-spacing:.12em}
+.side-link{display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:10px;color:var(--side-ink);font-weight:500}
+.side-link:hover{background:var(--side-active);color:#fff;text-decoration:none}
+.side-link[aria-current="page"]{background:var(--side-active);color:#fff;font-weight:600;box-shadow:inset 3px 0 0 #F5C451}
+.side-link svg{flex:none}
+.side-label{margin:14px 14px 4px;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#F5C451}
+.side-link.small{padding:7px 14px;font-size:.92rem}
+.side-ab{flex:none;min-width:44px;font-size:.68rem;font-weight:700;text-align:center;border:1px solid #ffffff33;border-radius:6px;padding:2px 4px}
+.side-ig{margin-top:auto;display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:10px;background:#F5C451;color:#16203F;font-weight:700}
+.side-ig:hover{text-decoration:none;opacity:.9}
+.main{flex:1;display:flex;flex-direction:column;position:relative;isolation:isolate}
+/* logo watermark behind every page */
+.main::before{content:"";position:fixed;inset:0;z-index:15;pointer-events:none;background:url("logo-mark.png") no-repeat calc(50% + 132px) 58% / min(56vw,560px);opacity:.09;mix-blend-mode:multiply}
+body.nav-closed .main::before{background-position:50% 58%}
+html[data-read="dark"] .main::before{opacity:.045;mix-blend-mode:screen}
+.overlay{display:none}
+
+.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;padding:10px 18px;flex-wrap:wrap}
+.icon-btn{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center}
+.icon-btn:hover{background:var(--pri-soft)}
+.top h1{font-size:1.15rem;margin-right:auto}
+.search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:0 12px;min-width:220px;flex:0 1 320px}
+.search input{border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;padding:10px 0;width:100%;outline:none}
+.read-ctl{display:flex;gap:4px;align-items:center}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--ink);padding:0 12px;height:42px;font-weight:600;font-size:.9rem}
+.seg button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink)}
+.only-compact{display:none}
+.results{position:absolute;top:100%;right:18px;width:min(420px,calc(100vw - 36px));background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:none}
+.results.show{display:block}
+.results a{display:block;padding:10px 12px;border-radius:8px;color:var(--ink)}
+.results a:hover{background:var(--pri-soft);text-decoration:none}
+.results span{display:block;font-size:.85rem;color:var(--muted)}
+
+.content{width:100%;max-width:1180px;margin:0 auto;padding:28px clamp(16px,3vw,36px) 40px;display:flex;flex-direction:column;gap:28px}
+.foot{border-top:1px solid var(--line);color:var(--muted);font-size:.9rem;padding:22px clamp(16px,3vw,36px);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-top:auto}
+
+@media (max-width:719px){
+  #side{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%);transition:transform .25s ease}
+  body.nav-open #side{box-shadow:8px 0 30px rgba(0,0,0,.25)}
+  body.nav-closed #side{margin-left:0}
+  body.nav-open #side{transform:none}
+  body.nav-open{overflow:hidden}
+  body.nav-open .overlay{display:block;position:fixed;inset:0;background:rgba(10,14,30,.45);z-index:40}
+  .top h1{font-size:1rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- shared pieces ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:14px}
+.sec-head h2{font-size:1.45rem;display:flex;align-items:center;gap:10px}
+.sec-head h2::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--gold)}
+.sec-head p{margin:0;color:var(--muted)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;border-radius:10px;font-weight:600;border:1px solid transparent}
+.btn:hover{text-decoration:none;filter:brightness(1.05)}
+.btn-pri{background:var(--pri);color:var(--pri-ink)}
+.btn-out{background:var(--surface);color:var(--pri);border-color:var(--line)}
+.btn[disabled],.btn.off{background:var(--line);color:var(--muted);cursor:not-allowed;filter:none}
+.pill{display:inline-block;font-size:.8rem;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--pri-soft);color:var(--pri)}
+.pill.gold{background:var(--gold-soft);color:var(--acc)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.soon{background:var(--line);color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:40px;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:.92rem}
+.chip[aria-pressed="true"]{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+.row .t{flex:1 1 260px}
+.row .t b{display:block}
+.row .t span{font-size:.9rem;color:var(--muted)}
+.num{flex:none;width:42px;height:42px;border-radius:10px;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;font-weight:700;font-size:.8rem}
+
+@media (max-width:719px){.main::before{background-position:50% 55%;background-size:80vw}}
+
+/* ---------- compact header for phones and tablets (under 1100px) ---------- */
+@media (max-width:1099px){
+  .only-compact{display:grid}
+  .top{gap:8px;padding:10px 12px}
+  .top h1{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top .search,.top .read-ctl{display:none}
+  body.show-search .top .search{display:flex;order:5;flex:1 1 100%;min-width:0}
+  body.show-read .top .read-ctl{display:flex;order:6;flex:1 1 100%;flex-wrap:wrap;gap:8px}
+  body.show-read .top .read-ctl .seg{flex:1 1 auto}
+  body.show-read .top .read-ctl .seg button{flex:1}
+  .results{right:12px;left:12px;width:auto}
+}
+@media (max-width:480px){
+  .content{padding:18px 12px 32px;gap:22px}
+  .card{padding:16px}
+  .sec-head h2{font-size:1.25rem}
+  .row{padding:12px 14px}
+  .btn{padding:10px 16px}
+}
+@media (min-width:1600px){ .content{max-width:1320px} }
+
+/* tablets and narrow windows: keep the side menu visible, just slimmer */
+@media (min-width:720px) and (max-width:1099px){
+  #side{width:220px;padding:14px 10px}
+  body.nav-closed #side{margin-left:-220px}
+  .brand b{font-size:.95rem}
+  .side-link{padding:10px 12px;gap:10px}
+}
+/* the menu button also says "Menu" on phones so it is easy to find */
+.ham-label{display:none;font-weight:700;font-size:.9rem}
+@media (max-width:719px){
+  #ham{width:auto;padding:0 12px;gap:6px;display:flex;align-items:center}
+  .ham-label{display:inline}
+}
