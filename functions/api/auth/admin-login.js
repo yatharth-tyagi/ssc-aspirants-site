@@ -10,6 +10,7 @@ export async function onRequestPost({ request, env }) {
   const email = cleanEmail(b.email), password = String(b.password || "");
   if (!email || !password) return json({ error: "Enter your admin email and password." }, 400);
 
+  if (!env.ADMIN_EMAIL) return json({ error: "Cloudflare doesn't have ADMIN_EMAIL yet. Add it as a secret for Production, then Retry deployment." }, 503);
   await ensureTables(env.DB);
   const key = "admin:" + email;
   if (await tooMany(env, key)) return json({ error: "Too many wrong tries. Please wait 15 minutes." }, 429);
@@ -17,7 +18,7 @@ export async function onRequestPost({ request, env }) {
   let a = await env.DB.prepare("SELECT * FROM admins WHERE email = ?1").bind(email).first(), ok = false;
   if (isOwner(env, email)) {
     if (!env.ADMIN_PASSWORD) return json({ error: "Add ADMIN_PASSWORD in Cloudflare settings first (manual Step 9.2)." }, 503);
-    ok = same(await sha(password), await sha(String(env.ADMIN_PASSWORD)));
+    ok = same(await sha(password.trim()), await sha(String(env.ADMIN_PASSWORD).trim()));
     if (ok && !a) {
       const r = await env.DB.prepare("INSERT INTO admins (email, name, created) VALUES (?1, ?2, ?3)").bind(email, "Owner", Date.now()).run();
       a = { id: r.meta.last_row_id, email, name: "Owner" };
