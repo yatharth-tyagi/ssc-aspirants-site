@@ -148,6 +148,23 @@ async function rank(info,secs,manual){
   try{const r=await fetch("/api/rank",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({exam:$("rExam").value,tier:tier().id,score:+tot.toFixed(2),max,cat:$("rCat").value,date,shift})});
     const d=await r.json(); if(r.ok) show(info,secs,d); mine();}catch(e){}
 }
+// open the answer key through our server; new SSC sheets show one PART at a time, so press each PART button the same way
+async function grab(opts){ const r=await fetch("/api/rank"+(opts.form?"":"?url="+encodeURIComponent(opts.url)),opts.form?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({proxy:opts})}:{});
+  const raw=await r.text(); if(r.ok&&!/^\s*\{"error"/.test(raw)) return {html:raw,cookie:r.headers.get("X-SSC-Cookie")||""};
+  let d=null; try{d=JSON.parse(raw);}catch(e){}
+  throw new Error(d&&d.error?d.error:r.status===404?"The calculator's server file is missing on the website (functions/api/rank.js).":"SSC's website did not answer properly (error "+r.status+"). Please try again in a minute, or use Upload saved page / Enter manually."); }
+async function loadSheet(u){
+  let first; try{ first=await grab({url:u}); }catch(e){ fail(e.message); return null; }
+  const pages=[first.html];
+  if(!isCb(first.html)) return pages;
+  const d=new DOMParser().parseFromString(first.html,"text/html"), f=d.querySelector("form");
+  if(!f) return pages;
+  const action=new URL(f.getAttribute("action")||u,u).toString(), hidden=[...f.querySelectorAll("input[type=hidden][name]")].map(i=>[i.name,i.value]);
+  const seen=new Set(), btns=[...f.querySelectorAll("input[type=submit][name],button[name]")].filter(x=>!x.disabled&&/PART[\s-]?[A-Z0-9]+/i.test(x.value||x.textContent)).filter(x=>{const k=/PART[\s-]?([A-Z0-9]+)/i.exec(x.value||x.textContent)[1].toUpperCase();if(seen.has(k))return false;seen.add(k);return true;}).slice(0,8);
+  const w=$("rWait"); if(w) w.textContent=`⏳ Got PART-A. Opening ${btns.length} more PART${btns.length===1?"":"s"}…`;
+  const more=await Promise.all(btns.map(x=>grab({url:action,form:new URLSearchParams([...hidden,[x.name,x.value||x.textContent.trim()]]).toString(),cookie:first.cookie}).then(r=>r.html).catch(()=>null)));
+  more.forEach(h=>{if(h)pages.push(h);}); return pages;
+}
 const fail=m=>{$("rOut").innerHTML=`<p class="rc-err">${E(m)}</p>`;};
 $("rGo").addEventListener("click",async()=>{
   const b=$("rGo"); b.disabled=true; const old=b.textContent; b.textContent="Calculating…";
@@ -160,10 +177,8 @@ $("rGo").addEventListener("click",async()=>{
     if(mode==="file"){ const fs=[...$("rFile").files]; if(!fs.length) return fail("Choose the saved answer-key file first."); for(const f of fs) pages.push(await f.text()); }
     else { const u=$("rLink").value.trim(); if(!u) return fail("Paste your answer-key link first.");
       if(!/^https?:\/\//i.test(u)) return fail("Paste the full link, starting with https://");
-      $("rOut").innerHTML=`<p class="rc-mine">⏳ Opening your answer key on SSC's website… this can take up to a minute when SSC is busy.</p>`;
-      const r=await fetch("/api/rank?url="+encodeURIComponent(u)); const raw=await r.text(); let d=null; try{ d=JSON.parse(raw); }catch(e){}
-      if(!d) return fail(r.status===404?"The calculator's server file is missing on the website (functions/api/rank.js). Please upload it and try again.":"SSC's website did not answer properly (error "+r.status+"). Please try again in a minute, or use Upload saved page / Enter manually.");
-      if(!r.ok) return fail(d.error||"Could not open the link."); pages=d.pages||[d.html]; }
+      $("rOut").innerHTML=`<p class="rc-mine" id="rWait">⏳ Opening your answer key on SSC's website… this can take up to a minute when SSC is busy.</p>`;
+      pages=await loadSheet(u); if(!pages) return; }
     const cb=pages.some(isCb), p=cb?parseCb(pages):parseSheet(pages.join("\n"));
     if(!p.secs.length) return fail("We couldn't read questions from this page. Make sure it is your response sheet (the page with your answers), or enter your marks manually.");
     await rank(p.info,p.secs,false);
