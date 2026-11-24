@@ -129,7 +129,7 @@ dialog select,dialog input[type=text]{min-height:44px;border:1px solid var(--lin
 <input type="color" id="bg" hidden><select id="addShape" hidden></select><select id="addSlide" hidden></select>
 <div class="ebody">
   <aside class="thumbs" id="thumbs" aria-label="Slides"></aside>
-  <main class="cwrap"><div id="canvas"></div><div class="notesbox"><textarea id="spNotes" placeholder="Speaker notes for this slide (only you see them in Present)"></textarea></div></main>
+  <main class="cwrap"><div id="canvas"></div></main>
   <aside class="props" id="props" aria-label="Properties"></aside>
 </div>
 
@@ -188,7 +188,7 @@ const selEls = () => sels.map(elById).filter(Boolean);
 const clearSel = () => { sels = []; };
 Object.defineProperty(window, "__sel", { get: () => sels });
 function draw() { drawThumbs(); drawCanvas(); drawProps(); $("title").value = deck.title || ""; $("bg").value = /^#[0-9a-f]{6}$/i.test(slide().bg || "") ? slide().bg : "#ffffff";
-  $("undo").disabled = !hist.length; $("redo").disabled = !fut.length; $("spNotes").value = slide().notes || ""; }
+  $("undo").disabled = !hist.length; $("redo").disabled = !fut.length; }
 function drawThumbs() {
   const t = $("thumbs");
   t.innerHTML = deck.slides.map((s, i) => `<div class="th${i === cur ? " on" : ""}" data-i="${i}" draggable="true"><span class="n">${i + 1}</span><div class="mini"></div>
@@ -352,7 +352,6 @@ const addSlide = key => change(() => { deck.slides.splice(cur + 1, 0, K.TEMPLATE
 $("bg").oninput = e => { slide().bg = e.target.value; drawCanvas(); };
 $("bg").onchange = e => change(() => slide().bg = e.target.value);
 $("title").onchange = e => change(() => deck.title = e.target.value.trim());
-$("spNotes").onchange = e => change(() => { slide().notes = e.target.value; if (!slide().notes) delete slide().notes; });
 
 // pictures: shrink big photos, upload to assets/uploads, show at once from memory
 async function uploadPicture(file, prefix) {
@@ -558,7 +557,7 @@ $("pGo").onclick = async () => {
 };
 
 // ---------- present, PDF, PPTX ----------
-$("present").onclick = () => { stopEdit(); $("presentBox").hidden = false; K.viewer(deck, $("presentHost"), { onSlide: (i, sl) => $("pNotes").textContent = sl.notes || "" }); const v = $("presentHost").firstChild; v.querySelector(".sk-screen") && K.fit(v.querySelector(".sk-screen")); };
+$("present").onclick = () => { stopEdit(); $("presentBox").hidden = false; K.viewer(deck, $("presentHost"), {}); const v = $("presentHost").firstChild; v.querySelector(".sk-screen") && K.fit(v.querySelector(".sk-screen")); };
 $("presentClose").onclick = () => { $("presentBox").hidden = true; $("presentHost").innerHTML = ""; };
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("presentBox").hidden) $("presentClose").click(); });
 $("xpdf").onclick = () => { stopEdit(); deck.title = $("title").value.trim() || deck.title; K.printDeck(deck); };
