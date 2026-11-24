@@ -6,7 +6,11 @@
 import { currentUser, currentAdmin, json, safeNext } from "./_lib/auth.js";
 
 const OPEN = [/^\/login(\.html)?\/?$/, /^\/admin-login(\.html)?\/?$/, /^\/api\/auth\//, /^\/assets\/(?!uploads\/)/, /^\/favicon/, /^\/robots\.txt$/];
-const ADMIN = [/^\/admin(\.html)?\/?$/, /^\/admin-team(\.html)?\/?$/, /^\/api\/admin\//, /^\/api\/gh\//];
+// drafts of notes are only for admins
+const ADMIN_FILES = [/^\/data\/docs\//];
+// data files that can hold things scheduled for later: hidden from students until their time
+const SCHEDULED = { "/data/tests.js": "TESTS", "/data/notes.js": "NOTES", "/data/subjects.js": "SUBJECTS", "/data/live-tests.js": "LIVE_TESTS", "/data/daily.js": "DAILY" };
+const ADMIN = [...ADMIN_FILES, /^\/admin(\.html)?\/?$/, /^\/admin-team(\.html)?\/?$/, /^\/slide-editor(\.html)?\/?$/, /^\/docs-editor(\.html)?\/?$/, /^\/api\/admin\//, /^\/api\/gh\//];
 
 const page = (title, text, status) => new Response(
   `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>` +
@@ -46,8 +50,23 @@ export async function onRequest(context) {
   context.data.admin = admin;
 
   const res = await next();
+  if (!admin && SCHEDULED[path] && res.ok) { try { return await hideScheduled(res.clone(), SCHEDULED[path]); } catch (e) { /* file not in the expected shape: send as it is */ } }
   // logged-in pages must not be kept in shared caches
   const out = new Response(res.body, res);
   if (!/^\/assets\//.test(path)) out.headers.set("Cache-Control", "private, no-cache");
   return out;
+}
+
+// Removes anything whose publishAt time hasn't come yet (admins still see everything).
+async function hideScheduled(res, name) {
+  const text = await res.text(), mark = "window." + name + " = ", i = text.indexOf(mark);
+  if (i < 0) throw new Error("shape");
+  const body = text.slice(i + mark.length).trim().replace(/;\s*$/, "");
+  const data = JSON.parse(body), now = Date.now(), later = o => o && o.publishAt && +o.publishAt > now;
+  let out = data;
+  if (name === "TESTS" || name === "NOTES") { out = {}; for (const k in data) if (!later(data[k])) out[k] = data[k]; }
+  if (name === "LIVE_TESTS") out = data.filter(x => !later(x));
+  if (name === "SUBJECTS") out = data.map(s => ({ ...s, chapters: s.chapters.map(c => later(c) ? { ...c, ready: false } : c) }));
+  if (name === "DAILY") { const today = new Date(now + 5.5 * 3600e3).toISOString().slice(0, 10); out = {}; for (const d in data) if (d <= today) out[d] = data[d]; }
+  return new Response(text.slice(0, i) + mark + JSON.stringify(out) + ";\n", { status: 200, headers: { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "private, no-cache" } });
 }

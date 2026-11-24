@@ -1,7 +1,7 @@
-# SSC Aspirants Official – Website
+# SSCAspirants_Official – Website
 
 Mock tests (Eduquity pattern), chapter-wise notes and PYQ papers for SSC exams.
-Live: https://sscaspirants-official.in · Instagram: @sscaspirants_official
+Live: https://sscaspirants-official.in · Instagram: @SSCAspirants_Official
 
 ## Pages
 | File | Page |

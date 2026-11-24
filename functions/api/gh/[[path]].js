@@ -5,10 +5,11 @@ import { json, sameOrigin } from "../../_lib/auth.js";
 
 export async function onRequest({ request, env, params }) {
   if (!env.GITHUB_TOKEN) return json({ message: "Add the GITHUB_TOKEN secret in Cloudflare (manual Part 9)." }, 503);
-  if (!["GET", "PUT"].includes(request.method)) return json({ message: "Not allowed" }, 405);
+  if (!["GET", "PUT", "DELETE"].includes(request.method)) return json({ message: "Not allowed" }, 405);
   if (request.method !== "GET" && !sameOrigin(request)) return json({ message: "Bad request" }, 403);
   let parts = [].concat(params.path || []);
   if (parts[0] === "repo" && parts.length === 1) parts = []; // the repository itself
+  if (request.method === "DELETE" && parts[0] !== "contents") return json({ message: "Not allowed" }, 403);
   if (parts.length && (parts[0] !== "contents" || parts.some(p => p === ".." || p === ""))) return json({ message: "Not allowed" }, 403);
 
   const owner = env.GITHUB_OWNER || "yatharth-tyagi", repo = env.GITHUB_REPO || "ssc-aspirants-site";
@@ -19,9 +20,9 @@ export async function onRequest({ request, env, params }) {
     headers: {
       Authorization: "Bearer " + env.GITHUB_TOKEN, "User-Agent": "ssc-aspirants-admin", "X-GitHub-Api-Version": "2022-11-28",
       Accept: request.headers.get("Accept") || "application/vnd.github+json",
-      ...(request.method === "PUT" ? { "Content-Type": "application/json" } : {})
+      ...(request.method !== "GET" ? { "Content-Type": "application/json" } : {})
     },
-    body: request.method === "PUT" ? await request.text() : undefined
+    body: request.method !== "GET" ? await request.text() : undefined
   });
   return new Response(r.body, { status: r.status, headers: { "Content-Type": r.headers.get("Content-Type") || "application/json", "Cache-Control": "no-store" } });
 }

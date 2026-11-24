@@ -2,7 +2,7 @@
 .protected{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:clamp(20px,4vw,40px);
   max-width:820px;width:100%;margin:0 auto;font-size:1.06rem;line-height:1.8;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .protected::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:18px;z-index:2;background-repeat:repeat;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='340' height='200'><text x='20' y='120' transform='rotate(-24 170 100)' font-family='Arial,sans-serif' font-size='22' font-weight='700' fill='%23808080' fill-opacity='0.14'>sscaspirants_official</text></svg>")}
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='340' height='200'><text x='20' y='120' transform='rotate(-24 170 100)' font-family='Arial,sans-serif' font-size='22' font-weight='700' fill='%23808080' fill-opacity='0.14'>SSCAspirants_Official</text></svg>")}
 .protected::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:18px;z-index:2;opacity:.10;mix-blend-mode:multiply;
   background:url("logo-mark.png") repeat 30px 30px / 150px 150px}
 .protected img{pointer-events:none;-webkit-user-drag:none}
@@ -36,7 +36,8 @@
 .q .why{font-size:.98rem;color:var(--muted);margin-top:8px}
 .pager{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:28px;position:relative;z-index:3}
 body.shield .protected{filter:blur(14px)}
-@media print{body *{display:none!important}body::before{content:"Printing is disabled – sscaspirants_official";display:block!important}}
+/* printing is blocked unless the owner allowed "Download PDF" (the button adds sk-printing / note-printing) */
+@media print{body:not(.sk-printing):not(.note-printing) *{display:none!important}body:not(.sk-printing):not(.note-printing)::before{content:"Printing is disabled – SSCAspirants_Official";display:block!important}}
 @media (max-width:600px){.tl>li{grid-template-columns:1fr;gap:2px}}
 html[data-read="dark"] .protected::before{opacity:.10;mix-blend-mode:screen}
 .doc img{max-width:100%;height:auto;border-radius:8px}
@@ -44,3 +45,18 @@ html[data-read="dark"] .protected::before{opacity:.10;mix-blend-mode:screen}
 .doc td,.doc th{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
 .doc h1,.doc h2{font-size:1.3rem;margin:26px 0 8px}
 .doc h3{font-size:1.1rem;margin:20px 0 6px}
+
+/* boxes and styles from the Docs editor */
+.doc .callout{border-radius:12px;padding:12px 16px;margin:14px 0;border-left:5px solid}
+.doc .callout p{margin:.2em 0}
+.doc .callout.info{background:#EEF2FC;border-color:#1F3A93}
+.doc .callout.trick{background:#FBF1DC;border-color:#C9962E}
+.doc .callout.imp{background:#FDECEA;border-color:#B42318}
+.doc .callout.exam{background:#E8F5EC;border-color:#1E7A3C}
+[data-read="dark"] .doc .callout{background:#ffffff0d}
+.doc table{border-collapse:collapse;width:100%;margin:12px 0}
+.doc td,.doc th{border:1px solid var(--line);padding:8px 10px;vertical-align:top}
+.doc th{background:var(--pri-soft)}
+.doc img{max-width:100%;height:auto}
+.doc blockquote{border-left:4px solid var(--gold);margin:12px 0;padding:6px 16px;background:var(--gold-soft)}
+.doc hr{border:0;border-top:2px solid var(--line);margin:20px 0}

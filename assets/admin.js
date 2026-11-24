@@ -1,4 +1,4 @@
-// SSC Aspirants Official – admin page.
+// SSCAspirants_Official – admin page.
 // Saves straight into the website's files on GitHub (data/*.js and assets/uploads/).
 // Cloudflare Pages publishes every saved change in about a minute.
 (function () {
@@ -50,6 +50,10 @@
     if (s) body.sha = s;
     await gh(`/contents/${path}`, { method: "PUT", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } });
   }
+  async function removeFile(path, message) {
+    const s = await sha(path); if (!s) return;
+    await gh(`/contents/${path}`, { method: "DELETE", body: JSON.stringify({ message, sha: s, branch: cfg.brn }), headers: { "Content-Type": "application/json" } });
+  }
   // data files look like:  window.NAME = {...};
   async function readData(path, name, fallback) {
     const code = await readText(path);
@@ -61,14 +65,22 @@
     writeB64(path, b64FromText(`// ${note}\n// Saved from the admin page on ${new Date().toISOString().slice(0, 10)}.\nwindow.${name} = ${JSON.stringify(value, null, 1)};\n`), `Admin: update ${path}`);
 
   // ---------- data ----------
-  const D = { NOTES: {}, SUBJECTS: [], TESTS: {}, LIVE: [], NEWS: [] };
+  const D = { NOTES: {}, SUBJECTS: [], TESTS: {}, LIVE: [], NEWS: [], EXAMS: [], TOPICS: {}, SITE: {}, DAILY: {} };
   const FILES = {
     NOTES: ["data/notes.js", "NOTES", "All notes content."],
     SUBJECTS: ["data/subjects.js", "SUBJECTS", "Subjects and chapters. ready: true shows a chapter on the site."],
     TESTS: ["data/tests.js", "TESTS", "Tests made in the admin page. Each opens at test.html?id=<id>."],
     LIVE: ["data/live-tests.js", "LIVE_TESTS", "Tests shown in Live tests on the Home page."],
-    NEWS: ["data/whats-new.js", "WHATS_NEW", "What's new on the Home page, newest first."]
+    NEWS: ["data/whats-new.js", "WHATS_NEW", "What's new on the Home page, newest first."],
+    EXAMS: ["data/exams.js", "EXAMS", "One entry per exam. Each exam has its own page (e.g. ssc-cgl.html) built from this data. hide: true hides it from the lists."],
+    TOPICS: ["data/topics.js", "TOPICS", "Subject-wise (topic-wise) tests for each section. A topic with a link opens that test."],
+    DAILY: ["data/daily.js", "DAILY", "Daily quiz: one entry per date (YYYY-MM-DD). Students only see dates up to today."],
+    SITE: ["data/site.js", "SITE", "Website texts, pictures, menu and sections changed from the admin page (✎ Edit page and Admin → Website)."]
   };
+  // date-time box ⇄ time stamp
+  const whenVal = id => { const v = $(id).value; return v ? new Date(v).getTime() : null; };
+  const whenSet = (id, t) => { $(id).value = t ? new Date(t - new Date(t).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ""; };
+  const whenText = t => t && t > Date.now() ? ` · <span class="pill soon">Goes live ${new Date(t).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>` : "";
   const save = k => writeData(FILES[k][0], FILES[k][1], D[k], FILES[k][2]);
 
   // ---------- tabs ----------
@@ -93,6 +105,8 @@
         readData("data/notes.js", "NOTES", {}), readData("data/subjects.js", "SUBJECTS", window.SUBJECTS || []),
         readData("data/tests.js", "TESTS", {}), readData("data/live-tests.js", "LIVE_TESTS", []), readData("data/whats-new.js", "WHATS_NEW", [])]);
       Object.assign(D, { NOTES: n, SUBJECTS: s, TESTS: t, LIVE: l, NEWS: w });
+      const [ex, tp, si] = await Promise.all([readData("data/exams.js", "EXAMS", window.EXAMS || []), readData("data/topics.js", "TOPICS", window.TOPICS || {}), readData("data/site.js", "SITE", {})]);
+      Object.assign(D, { EXAMS: ex, TOPICS: tp, SITE: si || {}, DAILY: (await readData("data/daily.js", "DAILY", {})) || {} });
       connected = true; lockTabs();
       $("connInfo").textContent = `Connected to ${repo.full_name}. ${Object.keys(n).length} notes chapters, ${Object.keys(t).length} tests, ${l.length} live tests loaded.`;
       fillSubjects(); drawTests(); drawLive(); drawNews(); drawFiles();
@@ -175,9 +189,10 @@
     $("nTricks").value = (n.tricks || []).join("\n"); $("nQuiz").value = toQuiz(n.quiz);
     docxHtml = n.html || ""; $("nDocxPrev").innerHTML = docxHtml ? safeHtml(docxHtml) : "No file chosen yet.";
     const r = document.querySelector(`[name="nMode"][value="${n.html ? "docx" : "form"}"]`); r.checked = true; r.dispatchEvent(new Event("change"));
-    $("nDel").hidden = !D.NOTES[cid];
+    $("nDel").hidden = !D.NOTES[cid]; $("nPdf").checked = !!n.pdf; whenSet("nWhen", n.publishAt);
   }
   $("nSub").addEventListener("change", fillChapters);
+  $("nDocs").addEventListener("click", () => { const c = $("nChap").value; location.href = "docs-editor.html" + (c && c !== "__new" ? "?ch=" + encodeURIComponent(c) : ""); });
   $("nChap").addEventListener("change", loadChapter);
 
   $("nDocx").addEventListener("change", async e => {
@@ -211,9 +226,13 @@
       const qz = parseQuiz($("nQuiz").value); if (qz.errs.length) return say(qz.errs[0], "err");
       note.quiz = qz.list;
     }
+    const old = D.NOTES[cid]; if (old && old.deck) note.deck = old.deck; // keep slides made in the slide editor
+    if ($("nPdf").checked) note.pdf = true;
+    const nw = whenVal("nWhen"); if (nw && nw > Date.now()) note.publishAt = nw;
     let c = s.chapters.find(x => x.id === cid);
     if (!c) { c = { id: cid, title, sub: $("nDesc").value.trim() }; s.chapters.push(c); }
     c.title = title; c.sub = $("nDesc").value.trim() || c.sub || ""; c.ready = true;
+    if (note.publishAt) c.publishAt = note.publishAt; else delete c.publishAt;
     D.NOTES[cid] = note;
     try {
       say("Publishing… (1 of 2)", "info", true); await save("NOTES");
@@ -262,6 +281,13 @@
         const sec = pick(r, "section"); if (sec) q.section = sec;
         const qh = pick(r, "question (hindi)"), oh = ["a", "b", "c", "d", "e"].map(k => pick(r, k + " (hindi)")).filter(Boolean);
         if (qh && oh.length === opts.length) { q.qh = qh; q.optsh = oh; const wh = pick(r, "explanation (hindi)"); if (wh) q.whyh = wh; }
+        // topic + pictures (file names from the Files tab, or https links)
+        const topic = pick(r, "topic"); if (topic) q.topic = topic;
+        const im = k => { const v = pick(r, k); return !v ? "" : /^https:\/\//i.test(v) ? v : v.toLowerCase().replace(/[^a-z0-9.\-]+/g, "-"); };
+        if (im("question image")) q.img = im("question image");
+        const oi = ["a", "b", "c", "d", "e"].slice(0, opts.length).map(k => im(k + " image")); if (oi.some(Boolean)) q.oimg = oi;
+        if (im("solution image")) q.wimg = im("solution image");
+        if (im("solution image (hindi)")) q.wimgh = im("solution image (hindi)");
         if (!q.q || opts.length < 2 || q.a < 0 || q.a >= opts.length) bad.push(i + 2); else out.push(q);
       });
       tQs = out; drawTPrev();
@@ -269,20 +295,21 @@
     } catch (err) { say("Could not read the file: " + err.message, "err"); }
   });
   $("tTpl").addEventListener("click", () => {
-    const csv = "Section,Question,A,B,C,D,Answer,Explanation,Question (Hindi),A (Hindi),B (Hindi),C (Hindi),D (Hindi),Explanation (Hindi)\n" +
-      'General Awareness,Which Act introduced dyarchy in the provinces?,Indian Councils Act 1909,Government of India Act 1919,Government of India Act 1935,Charter Act 1853,B,"The 1919 Act split provincial subjects into transferred and reserved.",प्रांतों में द्वैध शासन किस अधिनियम ने शुरू किया?,भारतीय परिषद अधिनियम 1909,भारत सरकार अधिनियम 1919,भारत सरकार अधिनियम 1935,चार्टर अधिनियम 1853,1919 के अधिनियम ने प्रांतीय विषयों को हस्तांतरित और आरक्षित में बाँटा।\n' +
-      "English Comprehension,Select the synonym of ABUNDANT,Scarce,Plentiful,Tiny,Empty,B,Abundant means plentiful.,,,,,,\n";
+    const csv = "Section,Topic,Question,A,B,C,D,Answer,Explanation,Question (Hindi),A (Hindi),B (Hindi),C (Hindi),D (Hindi),Explanation (Hindi),Question image,A image,B image,C image,D image,Solution image\n" +
+      'General Awareness,Polity – British Acts,Which Act introduced dyarchy in the provinces?,Indian Councils Act 1909,Government of India Act 1919,Government of India Act 1935,Charter Act 1853,B,"The 1919 Act split provincial subjects into transferred and reserved.",प्रांतों में द्वैध शासन किस अधिनियम ने शुरू किया?,भारतीय परिषद अधिनियम 1909,भारत सरकार अधिनियम 1919,भारत सरकार अधिनियम 1935,चार्टर अधिनियम 1853,1919 के अधिनियम ने प्रांतीय विषयों को हस्तांतरित और आरक्षित में बाँटा।,,,,,,\n' +
+      'Quantitative Aptitude,Algebra,"If $x + \\frac{1}{x} = 3$, find $x^2 + \\frac{1}{x^2}$",7,9,11,5,A,"Square both sides: $x^2 + 2 + \\frac{1}{x^2} = 9$, so the answer is 7.",,,,,,,,,,,,q2-solution.png\n' +
+      "General Intelligence and Reasoning,Mirror image,Select the correct mirror image of the given figure.,Option A,Option B,Option C,Option D,C,,,,,,,,q3-figure.png,q3-a.png,q3-b.png,q3-c.png,q3-d.png,\n";
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "ssc-test-template.csv"; a.click();
   });
   function resetTest() {
     editing = null; tQs = []; $("tFormTitle").textContent = "New test";
-    ["tTitle", "tText"].forEach(k => $(k).value = ""); $("tMin").value = 60; $("tPlus").value = 2; $("tMinus").value = 0.5; $("tLive").checked = true; $("tSect").checked = false; $("tSecMin").value = 15; $("tFile").value = ""; drawTPrev();
+    ["tTitle", "tText"].forEach(k => $(k).value = ""); $("tMin").value = 60; $("tPlus").value = 2; $("tMinus").value = 0.5; $("tLive").checked = true; $("tSect").checked = false; $("tStrict").checked = false; whenSet("tWhen", null); $("tSecMin").value = 15; $("tFile").value = ""; drawTPrev();
   }
   $("tNew").addEventListener("click", resetTest);
   function drawTests() {
     const ids = Object.keys(D.TESTS);
     $("tList").innerHTML = ids.length ? ids.map(id => { const t = D.TESTS[id];
-      return `<div class="item"><span class="t"><b>${E(t.title)}</b><span>${E(t.type)} · ${t.questions.length} questions · ${t.minutes} min · ${E(examName(t.exam))}</span></span>
+      return `<div class="item"><span class="t"><b>${E(t.title)}</b><span>${E(t.type)} · ${t.questions.length} questions · ${t.minutes} min · ${E(examName(t.exam))}${whenText(t.publishAt)}</span></span>
       <a class="btn btn-out btn-sm" href="test.html?id=${encodeURIComponent(id)}" target="_blank" rel="noopener">Open</a>
       <button class="btn btn-out btn-sm" type="button" data-edit="${E(id)}">Edit</button><button class="btn btn-del btn-sm" type="button" data-del="${E(id)}">Delete</button></div>`; }).join("")
       : `<p class="muted" style="margin:0">No tests yet. Make your first one below.</p>`;
@@ -293,7 +320,7 @@
     if (ed) { const id = ed.dataset.edit, t = D.TESTS[id]; editing = id; tQs = t.questions.slice();
       $("tFormTitle").textContent = "Edit test"; $("tTitle").value = t.title; $("tExam").value = t.exam; $("tType").value = t.type;
       $("tMin").value = t.minutes; $("tPlus").value = t.plus; $("tMinus").value = t.minus; $("tLive").checked = D.LIVE.some(l => l.link === "test.html?id=" + id);
-      $("tSect").checked = !!t.sectional; $("tSecMin").value = t.sectional && t.sections[0] ? t.sections[0].minutes : 15;
+      $("tSect").checked = !!t.sectional; $("tStrict").checked = !!t.strict; whenSet("tWhen", t.publishAt); $("tSecMin").value = t.sectional && t.sections[0] ? t.sections[0].minutes : 15;
       const fr = document.querySelector('[name="tMode"][value="file"]'); fr.checked = true; fr.dispatchEvent(new Event("change"));
       $("tText").value = toQuiz(tQs); drawTPrev(); $("tTitle").scrollIntoView({ behavior: "smooth", block: "center" }); }
     if (del) { const id = del.dataset.del; if (!confirmBox(`Delete the test "${D.TESTS[id].title}"?`)) return;
@@ -306,6 +333,8 @@
     if (!tQs.length) return say("Add questions first.", "err");
     let id = editing; if (!id) { id = slug(title); let k = 2; while (D.TESTS[id]) id = slug(title) + "-" + k++; }
     const t = { title, exam: $("tExam").value, type: $("tType").value, minutes: +$("tMin").value || 60, plus: +$("tPlus").value || 1, minus: +$("tMinus").value || 0, questions: tQs };
+    if ($("tStrict").checked) t.strict = true;
+    const tw = whenVal("tWhen"); if (tw && tw > Date.now()) t.publishAt = tw;
     if ($("tSect").checked) {
       const names = [...new Set(tQs.map(q => q.section || "General"))];
       tQs.forEach(q => { if (!q.section) q.section = "General"; });
@@ -314,6 +343,7 @@
     }
     D.TESTS[id] = t;
     const link = "test.html?id=" + id, entry = { name: title, type: t.type, exams: examName(t.exam), questions: tQs.length, minutes: t.minutes, marking: `+${t.plus} / −${t.minus}`, link };
+    if (t.publishAt) entry.publishAt = t.publishAt;
     const i = D.LIVE.findIndex(l => l.link === link);
     if ($("tLive").checked) { if (i >= 0) D.LIVE[i] = entry; else D.LIVE.unshift(entry); } else if (i >= 0) D.LIVE.splice(i, 1);
     try {
@@ -375,10 +405,15 @@
     try {
       const r = await gh(`/contents/assets/uploads?ref=${encodeURIComponent(cfg.brn)}`); const list = await r.json();
       $("fList").innerHTML = list.filter(f => f.type === "file" && f.name !== ".keep").map(f => `<div class="item"><span class="t"><b>${E(f.name)}</b><span>assets/uploads/${E(f.name)} · ${Math.ceil(f.size / 1024)} KB</span></span>
-        <button class="btn btn-out btn-sm" type="button" data-copy="assets/uploads/${E(f.name)}">Copy link</button></div>`).join("") || `<p class="muted" style="margin:0">No files yet.</p>`;
+        <button class="btn btn-out btn-sm" type="button" data-copy="assets/uploads/${E(f.name)}">Copy link</button>
+        <button class="btn btn-del btn-sm" type="button" data-fdel="${E(f.name)}">Delete</button></div>`).join("") || `<p class="muted" style="margin:0">No files yet.</p>`;
     } catch (e) { $("fList").innerHTML = `<p class="muted" style="margin:0">No files yet.</p>`; }
   }
-  $("fList").addEventListener("click", async e => { const b = e.target.closest("[data-copy]"); if (!b) return;
+  $("fList").addEventListener("click", async e => {
+    const d = e.target.closest("[data-fdel]");
+    if (d) { if (!confirmBox(`Delete ${d.dataset.fdel}? Any notes, tests or slides using this file will show it as missing.`)) return;
+      try { say("Deleting…", "info", true); await removeFile("assets/uploads/" + d.dataset.fdel, "Admin: delete " + d.dataset.fdel); drawFiles(); say("File deleted.", "ok"); } catch (er) { say("Could not delete: " + er.message, "err"); } return; }
+    const b = e.target.closest("[data-copy]"); if (!b) return;
     const url = location.origin + location.pathname.replace(/[^/]*$/, "") + b.dataset.copy;
     try { await navigator.clipboard.writeText(url); say("Link copied: " + url, "ok"); } catch (er) { say("Link: " + url, "info"); } });
   $("fUp").addEventListener("click", async () => {
@@ -389,6 +424,220 @@
       $("fFile").value = ""; drawFiles(); say("Uploaded: assets/uploads/" + name, "ok"); }
     catch (e) { say("Could not upload: " + e.message, "err"); }
   });
+
+  // =====================================================================
+  // SLIDES (made in slide-editor.html)
+  // =====================================================================
+  async function drawSlides() {
+    try {
+      const t = await readText("data/slides/index.json"), list = t ? JSON.parse(t) : [];
+      const chName = id => { for (const s of D.SUBJECTS) { const c = s.chapters.find(x => x.id === id); if (c) return s.name + " · " + c.title; } return ""; };
+      $("sList").innerHTML = list.map(d => `<div class="item"><span class="t"><b>${E(d.title)}</b><span>${d.slides} slides · saved ${new Date(d.updated).toLocaleString("en-IN")}${d.chapter ? " · on " + E(chName(d.chapter) || d.chapter) : " · draft (not published)"}${d.pdf ? " · PDF download on" : ""}</span></span>
+        <a class="btn btn-out btn-sm" href="slide-editor.html?id=${encodeURIComponent(d.id)}">Open</a>${d.chapter ? `<a class="btn btn-out btn-sm" href="note.html?id=${encodeURIComponent(d.chapter)}" target="_blank" rel="noopener">View</a>` : ""}
+        <button class="btn btn-del btn-sm" type="button" data-sdel="${E(d.id)}" data-stitle="${E(d.title)}">Delete</button></div>`).join("") || `<p class="muted" style="margin:0">No slides yet. Click <b>＋ New slides</b>.</p>`;
+    } catch (e) { $("sList").innerHTML = `<p class="muted" style="margin:0">Could not load slides: ${E(e.message)}</p>`; }
+  }
+  document.querySelector('#atabs [data-t="slides"]').addEventListener("click", drawSlides);
+  $("sList").addEventListener("click", async e => {
+    const b = e.target.closest("[data-sdel]"); if (!b) return;
+    if (!confirmBox(`Delete the slides "${b.dataset.stitle}"? Students will no longer see them. This cannot be undone.`)) return;
+    const id = b.dataset.sdel;
+    try {
+      say("Deleting…", "info", true);
+      const list = JSON.parse((await readText("data/slides/index.json")) || "[]");
+      // take the slides off their chapter
+      let notesChanged = false;
+      Object.keys(D.NOTES).forEach(cid => { const n = D.NOTES[cid]; if (n.deck !== id) return; delete n.deck; notesChanged = true;
+        if (!n.html && !(n.phases || []).length) { delete D.NOTES[cid]; D.SUBJECTS.forEach(s2 => s2.chapters.forEach(c => { if (c.id === cid) c.ready = false; })); } });
+      if (notesChanged) { await save("NOTES"); await save("SUBJECTS"); }
+      await removeFile(`data/slides/${id}.json`, "Admin: delete slides " + id);
+      await writeB64("data/slides/index.json", b64FromText(JSON.stringify(list.filter(x => x.id !== id), null, 1)), "Admin: slides list");
+      drawSlides(); say("Slides deleted.", "ok");
+    } catch (er) { say("Could not delete: " + er.message, "err"); }
+  });
+  if (location.hash === "#notes") { const w = setInterval(() => { if (connected) { clearInterval(w); openTab("notes"); } }, 300); setTimeout(() => clearInterval(w), 15000); }
+  if (location.hash === "#slides") setTimeout(() => { if (connected) { openTab("slides"); drawSlides(); } else { const w = setInterval(() => { if (connected) { clearInterval(w); openTab("slides"); drawSlides(); } }, 300); setTimeout(() => clearInterval(w), 15000); } }, 0);
+
+  // =====================================================================
+  // REPORTS (mistakes reported by students)
+  // =====================================================================
+  const testName = id => (D.TESTS[id] && D.TESTS[id].title) || (id === "polity-ch1-4" ? "Indian Polity – Chapters 1 to 4" : id);
+  async function drawReports() {
+    try {
+      const r = await fetch("/api/admin/reports", { cache: "no-store" }); const d = await r.json(); if (!r.ok) throw new Error(d.error || r.status);
+      $("rList").innerHTML = d.reports.map(x => `<div class="item"><span class="t"><b>${E(testName(x.test))} · Question ${x.q + 1}</b>
+        <span>${E(x.why || "")}${x.text ? " – " + E(x.text) : ""}</span><span>${x.by ? E(x.by) + " · " : ""}${new Date(x.created).toLocaleString("en-IN")}</span></span>
+        ${D.TESTS[x.test] ? `<button class="btn btn-out btn-sm" type="button" data-redit="${E(x.test)}">Edit test</button>` : ""}
+        <button class="btn btn-out btn-sm" type="button" data-rdel="${x.id}">Done – remove</button></div>`).join("") || `<p class="muted" style="margin:0">No reports. All good!</p>`;
+    } catch (e) { $("rList").innerHTML = `<p class="muted" style="margin:0">Could not load reports: ${E(e.message)}</p>`; }
+  }
+  $("rList").addEventListener("click", async e => {
+    const del = e.target.closest("[data-rdel]"), ed = e.target.closest("[data-redit]");
+    if (del) { try { await fetch("/api/admin/reports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "delete", id: +del.dataset.rdel }) }); drawReports(); } catch (er) { say("Could not remove.", "err"); } }
+    if (ed) { openTab("tests"); const b = document.querySelector(`[data-edit="${CSS.escape(ed.dataset.redit)}"]`); if (b) b.click(); }
+  });
+  document.querySelector('#atabs [data-t="reports"]').addEventListener("click", drawReports);
+
+  // =====================================================================
+  // WEBSITE (menu, name, footer, exams, subjects, topics, page edits)
+  // =====================================================================
+  const NAVD = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["daily-quiz.html", "Daily Quiz"], ["leaderboard.html", "Leaderboard"], ["index.html#about", "About"]];
+  let navRows = [];
+  function drawWebsite() {
+    const pages = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["daily-quiz.html", "Daily quiz"], ["leaderboard.html", "Leaderboard"], ["account.html", "Account details"], ...D.EXAMS.map(x => [x.page, x.name + " page"])];
+    const edited = (D.SITE.pages || {});
+    $("wPages").innerHTML = pages.map(([u, n]) => `<div class="item"><span class="t"><b>${E(n)}</b><span>${E(u)}${edited[u.replace(/\.html$/, "")] ? " · has your edits" : ""}</span></span><a class="btn btn-out btn-sm" href="${E(u)}?edit=1" target="_blank" rel="noopener">✎ Edit page</a></div>`).join("");
+    const sh = D.SITE.shell || {};
+    $("wBrand").value = sh.brand || ""; $("wFoot1").value = sh.foot1 ? sh.foot1.replace(/<[^>]+>/g, "") : ""; $("wFoot2").value = sh.foot2 ? sh.foot2.replace(/<[^>]+>/g, "") : "";
+    $("wFoot1").placeholder = "© SSCAspirants_Official · Created by Yatharth Tyagi"; $("wFoot2").placeholder = "Notes, mock tests and PYQs for SSC exams · @SSCAspirants_Official";
+    const nv = sh.nav || {};
+    navRows = NAVD.map(([h, n]) => ({ h, n: (nv[h] && nv[h].label) || n, def: n, hide: !!(nv[h] && nv[h].hide), own: false }))
+      .concat((sh.links || []).map(l => ({ h: l.href, n: l.label, hide: !!l.hide, own: true })));
+    if (sh.navOrder) navRows.sort((a, b) => { const ia = sh.navOrder.indexOf(a.h), ib = sh.navOrder.indexOf(b.h); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+    drawNav(); drawExams(); drawSubs(); drawTopics();
+  }
+  function drawNav() {
+    $("wNav").innerHTML = navRows.map((r, i) => `<div class="item" data-i="${i}"><input data-f="n" value="${E(r.n)}" aria-label="Menu label" style="flex:1 1 160px;min-height:40px;border:1px solid var(--line);border-radius:9px;padding:0 10px">
+      <input data-f="h" value="${E(r.h)}" ${r.own ? "" : "readonly"} aria-label="Link" style="flex:1 1 160px;min-height:40px;border:1px solid var(--line);border-radius:9px;padding:0 10px;${r.own ? "" : "opacity:.6"}">
+      <label style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" data-f="show" ${r.hide ? "" : "checked"}> Show</label>
+      <button class="btn btn-out btn-sm" type="button" data-m="-1" ${i ? "" : "disabled"}>↑</button><button class="btn btn-out btn-sm" type="button" data-m="1" ${i < navRows.length - 1 ? "" : "disabled"}>↓</button>
+      ${r.own ? `<button class="btn btn-del btn-sm" type="button" data-rm>Delete</button>` : ""}</div>`).join("");
+  }
+  const readNav = () => $("wNav").querySelectorAll("[data-i]").forEach(row => { const r = navRows[+row.dataset.i]; r.n = row.querySelector('[data-f="n"]').value.trim(); r.h = row.querySelector('[data-f="h"]').value.trim(); r.hide = !row.querySelector('[data-f="show"]').checked; });
+  $("wNav").addEventListener("click", e => { const row = e.target.closest("[data-i]"); if (!row) return; const i = +row.dataset.i;
+    if (e.target.closest("[data-m]")) { readNav(); const j = i + +e.target.closest("[data-m]").dataset.m; [navRows[i], navRows[j]] = [navRows[j], navRows[i]]; drawNav(); }
+    if (e.target.closest("[data-rm]")) { readNav(); navRows.splice(i, 1); drawNav(); } });
+  $("wNavAdd").onclick = () => { readNav(); navRows.push({ h: "https://", n: "New link", hide: false, own: true }); drawNav(); };
+  $("wShellSave").onclick = async () => {
+    readNav();
+    for (const r of navRows) if (r.own && !/^(https?:\/\/[^\s]+|[\w./#?=&-]+)$/i.test(r.h)) return say(`The link for "${r.n}" doesn't look right.`, "err");
+    const sh = D.SITE.shell = D.SITE.shell || {};
+    sh.brand = $("wBrand").value.trim() || undefined; sh.foot1 = $("wFoot1").value.trim() ? E($("wFoot1").value.trim()) : undefined; sh.foot2 = $("wFoot2").value.trim() ? E($("wFoot2").value.trim()) : undefined;
+    sh.nav = {}; navRows.filter(r => !r.own).forEach(r => { if (r.n !== r.def || r.hide) sh.nav[r.h] = { label: r.n, hide: r.hide }; });
+    sh.links = navRows.filter(r => r.own).map(r => ({ label: r.n, href: r.h, hide: r.hide }));
+    sh.navOrder = navRows.map(r => r.h);
+    try { say("Saving…", "info", true); await save("SITE"); say("Menu, name and footer saved. Live in about a minute.", "ok"); } catch (er) { say("Could not save: " + er.message, "err"); }
+  };
+  // exams: every field can be changed
+  const LBL = { name: "Name", short: "Short name (badge)", full: "Full name", level: "Level", posts: "Posts", stage: "Stage", time: "Time", negative: "Negative marking", color: "Colour (CSS)", page: "Page file" };
+  function drawExams() {
+    $("wExams").innerHTML = D.EXAMS.map((x, i) => `<details class="item" data-e="${i}" style="display:block"><summary style="cursor:pointer;font-weight:700">${E(x.name || "New exam")} ${x.hide ? '<span class="pill soon">Hidden</span>' : ""}</summary>
+      <div class="form" style="margin-top:12px">${Object.keys(LBL).map(k => `<label class="f${k === "posts" ? " wide" : ""}">${LBL[k]}<input data-k="${k}" value="${E(x[k] || "")}" ${k === "page" ? "readonly" : ""}></label>`).join("")}
+      <label class="f wide">Pattern – one section per line: Section | Questions | Marks<textarea data-k="pattern" style="min-height:110px">${E((x.pattern || []).map(r => r.join(" | ")).join("\n"))}</textarea></label>
+      ${Object.keys(x).filter(k => !LBL[k] && !["id", "pattern", "hide"].includes(k)).map(k => `<label class="f wide">${E(k)} (other detail)<textarea data-j="${E(k)}">${E(JSON.stringify(x[k], null, 1))}</textarea></label>`).join("")}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><label style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" data-k="show" ${x.hide ? "" : "checked"}> Show on the website</label>
+      <button class="btn btn-out btn-sm" type="button" data-em="-1" ${i ? "" : "disabled"}>↑</button><button class="btn btn-out btn-sm" type="button" data-em="1" ${i < D.EXAMS.length - 1 ? "" : "disabled"}>↓</button>
+      <button class="btn btn-del btn-sm" type="button" data-edel>Delete exam</button></div></details>`).join("");
+  }
+  function readExams() {
+    $("wExams").querySelectorAll("[data-e]").forEach(box => { const x = D.EXAMS[+box.dataset.e];
+      box.querySelectorAll("input[data-k]").forEach(inp => { if (inp.dataset.k === "show") { if (inp.checked) delete x.hide; else x.hide = true; } else x[inp.dataset.k] = inp.value.trim(); });
+      x.pattern = box.querySelector('textarea[data-k="pattern"]').value.split(/\r?\n/).map(l => l.split("|").map(c => c.trim())).filter(r => r[0]).map(r => [r[0], +r[1] || r[1] || "", +r[2] || r[2] || ""]);
+      box.querySelectorAll("textarea[data-j]").forEach(t => { try { x[t.dataset.j] = JSON.parse(t.value); } catch (e) { throw new Error(`"${t.dataset.j}" of ${x.name} is not written correctly.`); } }); });
+  }
+  let newExamPages = [], goneExamPages = [];
+  $("wExams").addEventListener("click", e => { const box = e.target.closest("[data-e]"); if (!box) return; const i = +box.dataset.e;
+    const mv = e.target.closest("[data-em]"); if (mv) { e.preventDefault(); try { readExams(); } catch (er) { return say(er.message, "err"); } const j = i + +mv.dataset.em; [D.EXAMS[i], D.EXAMS[j]] = [D.EXAMS[j], D.EXAMS[i]]; drawExams(); }
+    if (e.target.closest("[data-edel]")) { e.preventDefault(); if (!confirmBox(`Delete ${D.EXAMS[i].name}? Its page will be removed too.`)) return; try { readExams(); } catch (er) {} goneExamPages.push(D.EXAMS[i].page); D.EXAMS.splice(i, 1); drawExams(); say("Press Save exams to finish.", "info"); } });
+  $("wExamAdd").onclick = () => {
+    try { readExams(); } catch (er) { return say(er.message, "err"); }
+    const name = prompt("Name of the new exam (e.g. SSC Delhi Police Constable)"); if (!name) return;
+    let id = slug(name).replace(/^ssc-/, ""); const ids = D.EXAMS.map(x => x.id); let k = 2, base = id; while (ids.includes(id)) id = base + "-" + k++;
+    const x = { id, page: "ssc-" + id + ".html", short: name.replace(/^SSC\s+/i, "").split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 5), name, full: name, level: "", posts: "", stage: "", time: "", negative: "", pattern: [], color: "linear-gradient(135deg,#1F3A93,#3F62D1)" };
+    D.EXAMS.push(x); newExamPages.push(x); drawExams(); $("wExams").querySelector(`[data-e="${D.EXAMS.length - 1}"]`).open = true; say("Fill in the details, then Save exams.", "info");
+  };
+  $("wExamSave").onclick = async () => {
+    try { readExams(); } catch (er) { return say(er.message, "err"); }
+    try {
+      say("Saving exams…", "info", true);
+      for (const x of newExamPages.filter(x => D.EXAMS.includes(x))) {
+        const tpl = await readText("ssc-cgl.html"); if (!tpl) throw new Error("Could not copy an exam page.");
+        const html = tpl.replace(/data-exam="[^"]*"/, `data-exam="${x.id}"`).replace(/data-page="exam-[^"]*"/, `data-page="exam-${x.id}"`).replace(/data-title="[^"]*"/, `data-title="${E(x.name)}"`)
+          .replace(/<title>[^<]*<\/title>/, `<title>${E(x.name)} – Exam Pattern, Mock Tests & PYQs | SSCAspirants_Official</title>`);
+        await writeB64(x.page, b64FromText(html), "Admin: new exam page " + x.page);
+      }
+      for (const p of goneExamPages) if (!D.EXAMS.some(x => x.page === p)) await removeFile(p, "Admin: delete exam page " + p);
+      newExamPages = []; goneExamPages = [];
+      await save("EXAMS"); drawExams(); say("Exams saved. Live in about a minute.", "ok");
+    } catch (er) { say("Could not save: " + er.message, "err"); }
+  };
+  // subjects and chapters
+  function drawSubs() {
+    $("wSubs").innerHTML = D.SUBJECTS.map((s, si) => `<details class="item" data-s="${si}" style="display:block"><summary style="cursor:pointer;font-weight:700">${E(s.name)} ${s.hide ? '<span class="pill soon">Hidden</span>' : ""} <span class="muted" style="font-weight:400">· ${s.chapters.length} chapters</span></summary>
+      <div class="form" style="margin-top:10px"><label class="f">Subject name<input data-sk="name" value="${E(s.name)}"></label><label class="f">Hindi name<input data-sk="hi" value="${E(s.hi || "")}"></label></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0"><label style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" data-sk="show" ${s.hide ? "" : "checked"}> Show subject</label>
+        <button class="btn btn-out btn-sm" type="button" data-sm="-1" ${si ? "" : "disabled"}>↑ Subject</button><button class="btn btn-out btn-sm" type="button" data-sm="1" ${si < D.SUBJECTS.length - 1 ? "" : "disabled"}>↓ Subject</button>
+        <button class="btn btn-del btn-sm" type="button" data-sdel2>Delete subject</button></div>
+      ${s.chapters.map((c, ci) => `<div class="item" data-c="${ci}" style="flex-wrap:wrap"><b style="min-width:26px">${ci + 1}.</b>
+        <input data-ck="title" value="${E(c.title)}" aria-label="Chapter title" style="flex:2 1 220px;min-height:38px;border:1px solid var(--line);border-radius:9px;padding:0 10px">
+        <input data-ck="sub" value="${E(c.sub || "")}" placeholder="Short line" aria-label="Short line" style="flex:2 1 200px;min-height:38px;border:1px solid var(--line);border-radius:9px;padding:0 10px">
+        <span class="pill ${D.NOTES[c.id] ? "ok" : "soon"}">${D.NOTES[c.id] ? "Has notes" : "Coming soon"}</span>
+        <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-ck="show" ${c.hide ? "" : "checked"}> Show</label>
+        <button class="btn btn-out btn-sm" type="button" data-cm="-1" ${ci ? "" : "disabled"}>↑</button><button class="btn btn-out btn-sm" type="button" data-cm="1" ${ci < s.chapters.length - 1 ? "" : "disabled"}>↓</button>
+        <button class="btn btn-del btn-sm" type="button" data-cdel>Delete</button></div>`).join("")}
+      <button class="btn btn-out btn-sm" type="button" data-cadd style="margin-top:8px">＋ Add chapter</button></details>`).join("");
+  }
+  let goneNotes = [];
+  function readSubs() {
+    $("wSubs").querySelectorAll("[data-s]").forEach(box => { const s = D.SUBJECTS[+box.dataset.s];
+      s.name = box.querySelector('[data-sk="name"]').value.trim() || s.name; s.hi = box.querySelector('[data-sk="hi"]').value.trim();
+      if (box.querySelector('[data-sk="show"]').checked) delete s.hide; else s.hide = true;
+      box.querySelectorAll("[data-c]").forEach(row => { const c = s.chapters[+row.dataset.c]; c.title = row.querySelector('[data-ck="title"]').value.trim() || c.title; c.sub = row.querySelector('[data-ck="sub"]').value.trim();
+        if (row.querySelector('[data-ck="show"]').checked) delete c.hide; else c.hide = true; }); });
+  }
+  $("wSubs").addEventListener("click", e => {
+    const box = e.target.closest("[data-s]"); if (!box) return; const si = +box.dataset.s, s = D.SUBJECTS[si], row = e.target.closest("[data-c]");
+    const b = e.target.closest("button"); if (!b) return; e.preventDefault(); readSubs();
+    const open = [...$("wSubs").querySelectorAll("details")].map(d => d.open);
+    if (b.dataset.sm) { const j = si + +b.dataset.sm; [D.SUBJECTS[si], D.SUBJECTS[j]] = [D.SUBJECTS[j], D.SUBJECTS[si]]; [open[si], open[j]] = [open[j], open[si]]; }
+    if (b.hasAttribute("data-sdel2")) { if (!confirmBox(`Delete the subject "${s.name}" and all its chapters and notes?`)) return; s.chapters.forEach(c => goneNotes.push(c.id)); D.SUBJECTS.splice(si, 1); open.splice(si, 1); }
+    if (row && b.dataset.cm) { const ci = +row.dataset.c, j = ci + +b.dataset.cm; [s.chapters[ci], s.chapters[j]] = [s.chapters[j], s.chapters[ci]]; }
+    if (row && b.hasAttribute("data-cdel")) { const c = s.chapters[+row.dataset.c]; if (!confirmBox(`Delete the chapter "${c.title}"${D.NOTES[c.id] ? " and its notes" : ""}?`)) return; goneNotes.push(c.id); s.chapters.splice(+row.dataset.c, 1); }
+    if (b.hasAttribute("data-cadd")) { const t = prompt("New chapter title"); if (!t) return; let id = slug(t), k = 2; const all = D.SUBJECTS.flatMap(x => x.chapters.map(c => c.id)); const base = id; while (all.includes(id)) id = base + "-" + k++; s.chapters.push({ id, title: t, sub: "" }); }
+    drawSubs(); $("wSubs").querySelectorAll("details").forEach((d, i) => d.open = !!open[i]); say("Press Save subjects and chapters to finish.", "info");
+  });
+  $("wSubAdd").onclick = () => { readSubs(); const n = prompt("New subject name (e.g. Indian History)"); if (!n) return; let id = slug(n), k = 2; const base = id; while (D.SUBJECTS.some(s => s.id === id)) id = base + "-" + k++; D.SUBJECTS.push({ id, name: n, hi: "", chapters: [] }); drawSubs(); };
+  $("wSubSave").onclick = async () => {
+    readSubs();
+    try { say("Saving…", "info", true);
+      const left = new Set(D.SUBJECTS.flatMap(s => s.chapters.map(c => c.id))); let notesChanged = false;
+      goneNotes.forEach(id => { if (!left.has(id) && D.NOTES[id]) { delete D.NOTES[id]; notesChanged = true; } }); goneNotes = [];
+      if (notesChanged) await save("NOTES"); await save("SUBJECTS"); fillSubjects(); say("Subjects and chapters saved. Live in about a minute.", "ok");
+    } catch (er) { say("Could not save: " + er.message, "err"); }
+  };
+  // topic lists
+  function drawTopics() {
+    $("wTopics").innerHTML = Object.entries(D.TOPICS).map(([k, g]) => `<label class="f">${E(g.label)}<textarea data-tg="${E(k)}" style="min-height:170px">${E(g.topics.map(t => typeof t === "string" ? t : t.name + (t.link ? " | " + t.link : "")).join("\n"))}</textarea></label>`).join("");
+  }
+  $("wTopicSave").onclick = async () => {
+    $("wTopics").querySelectorAll("[data-tg]").forEach(t => { D.TOPICS[t.dataset.tg].topics = t.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => { const [n, link] = l.split("|").map(x => x.trim()); return link ? { name: n, link } : n; }); });
+    try { say("Saving…", "info", true); await save("TOPICS"); say("Topic lists saved.", "ok"); } catch (er) { say("Could not save: " + er.message, "err"); }
+  };
+  document.querySelector('#atabs [data-t="website"]').addEventListener("click", drawWebsite);
+
+  // =====================================================================
+  // DAILY QUIZ
+  // =====================================================================
+  const istToday = () => new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+  function drawDaily() {
+    if (!$("dDate").value) $("dDate").value = istToday();
+    const days = Object.keys(D.DAILY).sort().reverse();
+    $("dList").innerHTML = days.map(d => `<div class="item"><span class="t"><b>${E(d)}${d === istToday() ? " (today)" : d > istToday() ? " (scheduled)" : ""}</b><span>${E(D.DAILY[d].title || "Daily quiz")} · ${D.DAILY[d].questions.length} questions</span></span>
+      <button class="btn btn-out btn-sm" type="button" data-dedit="${d}">Edit</button><button class="btn btn-del btn-sm" type="button" data-ddel="${d}">Delete</button></div>`).join("") || `<p class="muted" style="margin:0">No daily quizzes yet.</p>`;
+  }
+  $("dList").addEventListener("click", async e => {
+    const ed = e.target.closest("[data-dedit]"), del = e.target.closest("[data-ddel]");
+    if (ed) { const q = D.DAILY[ed.dataset.dedit]; $("dDate").value = ed.dataset.dedit; $("dTitle").value = q.title || ""; $("dText").value = toQuiz(q.questions); $("dText").scrollIntoView({ block: "center" }); }
+    if (del) { if (!confirmBox(`Delete the daily quiz of ${del.dataset.ddel}?`)) return; delete D.DAILY[del.dataset.ddel];
+      try { await save("DAILY"); drawDaily(); say("Deleted.", "ok"); } catch (er) { say("Could not delete: " + er.message, "err"); } }
+  });
+  $("dSave").addEventListener("click", async () => {
+    const day = $("dDate").value; if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return say("Pick a date.", "err");
+    const r = parseQuiz($("dText").value); if (r.errs.length) return say(r.errs[0], "err"); if (!r.list.length) return say("Add questions first.", "err");
+    D.DAILY[day] = { title: $("dTitle").value.trim(), questions: r.list.map(q => ({ q: q.q, opts: q.opts, a: q.a, why: q.why })) };
+    try { say("Saving…", "info", true); await save("DAILY"); drawDaily(); say(`Daily quiz for ${day} saved. Students see it on that day.`, "ok"); } catch (er) { say("Could not save: " + er.message, "err"); }
+  });
+  document.querySelector('#atabs [data-t="daily"]').addEventListener("click", drawDaily);
 
   // expose the text parsers for testing
   window.SSC_ADMIN = { parseBody, parseQuiz, parseTable, toBody, toQuiz, toTable };

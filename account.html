@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Account details – SSC Aspirants Official</title>
+<title>Account details – SSCAspirants_Official</title>
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,7 +41,7 @@
       <div class="phbtns"><label class="btn btn-out btn-sm" for="phFile" style="cursor:pointer">Change photo</label><input id="phFile" type="file" accept="image/*" hidden>
       <button class="btn btn-out btn-sm" type="button" id="phDel" hidden>Remove photo</button></div></div></div>
     <div class="amsg" id="phMsg" role="alert" style="margin-top:12px"></div>
-    <dl class="kv"><dt>Signs in with</dt><dd id="aWay">–</dd><dt>Account type</dt><dd id="aRole">–</dd></dl>
+    <dl class="kv"><dt>Signs in with</dt><dd id="aWay">–</dd><dt>Account type</dt><dd id="aRole">–</dd><dt>Daily quiz</dt><dd id="aStreak">–</dd></dl>
     <div class="bar" style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-out" type="button" id="aOut">Log out</button>
     </div>
@@ -65,6 +65,7 @@
 <script src="data/subjects.js"></script>
 <script src="data/exams.js"></script>
 <script src="data/tests.js"></script>
+<script src="data/site.js"></script>
 <script src="assets/site.js"></script>
 <script>
 (function () {
@@ -119,6 +120,7 @@
     } catch (err) { say(err.message, "err"); }
   });
 
+  fetch("/api/daily").then(r => r.json()).then(d => { $("aStreak").textContent = `🔥 ${d.streak}-day streak · best ${d.best} · ${d.played} done`; }).catch(() => {});
   const T = window.TESTS || {};
   const day = t => new Date(t).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
   fetch("/api/me/attempts").then(r => r.json()).then(d => {
@@ -126,8 +128,9 @@
     $("aRes").innerHTML = a.length ? a.map(x => {
       const t = T[x.test], name = t ? t.title : x.test === "polity-ch1-4" ? "Indian Polity – Chapter Test" : x.test;
       const link = t ? "test.html?id=" + encodeURIComponent(x.test) : "test.html";
-      return `<div class="row"><div class="t"><b>${E(name)}</b><span>${day(x.created)}</span></div>
-        <span class="sc">${+(+x.score).toFixed(2)}${x.max ? " / " + x.max : ""}</span><a class="btn btn-out" href="${link}">Retake</a></div>`;
+      const nth = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+      return `<div class="row"><div class="t"><b>${E(name)}</b><span>${day(x.created)}${x.n ? " · " + nth(x.n) + " attempt" : ""}${x.rank ? " · Rank " + x.rank + " / " + x.total + (x.n > 1 ? " (would be)" : "") : ""}</span></div>
+        <span class="sc">${+(+x.score).toFixed(2)}${x.max ? " / " + x.max : ""}</span><a class="btn btn-out" href="solutions.html?id=${encodeURIComponent(x.test)}${x.n ? "&n=" + x.n : ""}">Solutions</a><a class="btn btn-out" href="${link}">Retake</a></div>`;
     }).join("") : `<p class="muted">No tests yet.</p>`;
   }).catch(() => { $("aRes").innerHTML = `<p class="muted">Results show here on the live website.</p>`; });
 })();

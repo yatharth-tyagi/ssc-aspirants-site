@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Admin – SSC Aspirants Official</title>
+<title>Admin – SSCAspirants_Official</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
@@ -55,11 +55,57 @@
 <div class="atabs" role="tablist" aria-label="Admin sections" id="atabs">
   <button type="button" role="tab" data-t="connect">Status</button>
   <button type="button" role="tab" data-t="notes">Notes</button>
+  <button type="button" role="tab" data-t="slides">Slides</button>
   <button type="button" role="tab" data-t="tests">Tests</button>
   <button type="button" role="tab" data-t="live">Live tests</button>
   <button type="button" role="tab" data-t="news">What's new</button>
   <button type="button" role="tab" data-t="files">Files</button>
+  <button type="button" role="tab" data-t="daily">Daily quiz</button>
+  <button type="button" role="tab" data-t="reports">Reports</button>
+  <button type="button" role="tab" data-t="website">Website</button>
 </div>
+
+<!-- SLIDES -->
+<section class="card" data-p="slides" hidden>
+  <div class="sec-head"><h2>Slides</h2><p>Make notes as slides, like PowerPoint</p></div>
+  <div class="bar" style="margin-bottom:14px"><a class="btn btn-pri" href="slide-editor.html">＋ New slides</a></div>
+  <div class="list" id="sList"><p class="muted" style="margin:0">Loading…</p></div>
+</section>
+
+<!-- WEBSITE -->
+<section data-p="website" hidden style="display:flex;flex-direction:column;gap:18px">
+  <div class="card"><div class="sec-head"><h2>Edit any page</h2><p>Open a page, click <b>✎ Edit page</b>, then change any text, picture, link or section</p></div>
+    <div class="list" id="wPages"></div></div>
+  <div class="card"><div class="sec-head"><h2>Menu, name and footer</h2><p>Rename, hide, reorder or add menu items</p></div>
+    <div class="form"><label class="f" for="wBrand">Name in the menu<input id="wBrand" placeholder="SSCAspirants_Official"></label>
+    <label class="f wide" for="wFoot1">Footer – left<input id="wFoot1"></label><label class="f wide" for="wFoot2">Footer – right<input id="wFoot2"></label></div>
+    <div class="list" id="wNav" style="margin-top:14px"></div>
+    <div class="bar" style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-out" type="button" id="wNavAdd">＋ Add menu link</button><button class="btn btn-pri" type="button" id="wShellSave">Save menu, name and footer</button></div></div>
+  <div class="card"><div class="sec-head"><h2>Exams</h2><p>Edit exam details and patterns, hide or delete an exam, or add a new one</p></div>
+    <div class="list" id="wExams"></div>
+    <div class="bar" style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-out" type="button" id="wExamAdd">＋ Add exam</button><button class="btn btn-pri" type="button" id="wExamSave">Save exams</button></div></div>
+  <div class="card"><div class="sec-head"><h2>Subjects and chapters</h2><p>Rename, reorder, hide or delete; add subjects and chapters</p></div>
+    <div class="list" id="wSubs"></div>
+    <div class="bar" style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-out" type="button" id="wSubAdd">＋ Add subject</button><button class="btn btn-pri" type="button" id="wSubSave">Save subjects and chapters</button></div></div>
+  <div class="card"><div class="sec-head"><h2>Topic lists (subject-wise tests)</h2><p>One topic per line. To link a test: <code>Topic name | test.html?id=…</code></p></div>
+    <div class="form" id="wTopics"></div>
+    <div class="bar" style="margin-top:12px"><button class="btn btn-pri" type="button" id="wTopicSave">Save topic lists</button></div></div>
+</section>
+
+<!-- DAILY QUIZ -->
+<section class="card" data-p="daily" hidden>
+  <div class="sec-head"><h2>Daily quiz</h2><p>Make quizzes for any date – students see each one on its day</p></div>
+  <div class="form"><label class="f" for="dDate">Date<input id="dDate" type="date"></label><label class="f" for="dTitle">Title (optional)<input id="dTitle" placeholder="e.g. Polity + Current GK"></label>
+  <label class="f wide" for="dText">Questions<small>Blank line between questions. Line 1 = question, next lines = options (put * before the correct one), then "Why: …"</small><textarea id="dText" class="tall" placeholder="Who was the first President of India?&#10;*Dr Rajendra Prasad&#10;Dr S Radhakrishnan&#10;Zakir Husain&#10;V V Giri&#10;Why: He was President from 1950 to 1962."></textarea></label></div>
+  <div class="bar" style="margin-top:12px"><button class="btn btn-pri" type="button" id="dSave">Save daily quiz</button></div>
+  <div class="list" id="dList" style="margin-top:16px"></div>
+</section>
+
+<!-- REPORTS -->
+<section class="card" data-p="reports" hidden>
+  <div class="sec-head"><h2>Reported questions</h2><p>Mistakes students reported from tests</p></div>
+  <div class="list" id="rList"><p class="muted" style="margin:0">Loading…</p></div>
+</section>
 
 <!-- STATUS -->
 <section class="card lock" data-p="connect">
@@ -73,6 +119,7 @@
 <!-- NOTES -->
 <section class="card" data-p="notes" hidden>
   <div class="sec-head"><h2>Add or edit notes</h2><p>Pick a chapter, write or upload, then Publish</p></div>
+  <div class="bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"><a class="btn btn-pri" href="docs-editor.html">＋ New document (Docs editor)</a><button class="btn btn-out" type="button" id="nDocs">✎ Open this chapter in Docs editor</button></div>
   <div class="form">
     <label class="f" for="nSub">Subject<select id="nSub"></select></label>
     <label class="f" for="nChap">Chapter<select id="nChap"></select></label>
@@ -101,6 +148,8 @@
   </div>
 
   <div class="bar" style="margin-top:16px">
+    <label class="f" for="nWhen" style="margin-bottom:10px">Publish on (optional)<small>Leave empty to publish now. Works for written notes, documents and slides of this chapter.</small><input id="nWhen" type="datetime-local"></label>
+    <label class="f" for="nPdf" style="flex-direction:row;align-items:center;gap:10px;margin-bottom:10px"><input id="nPdf" type="checkbox" style="width:22px;height:22px;min-height:0"> Allow students to download PDF</label>
     <button class="btn btn-pri" id="nSave" type="button">Publish chapter</button>
     <a class="btn btn-out" id="nView" href="notes.html" target="_blank" rel="noopener">Open notes page</a>
     <button class="btn btn-del" id="nDel" type="button">Delete chapter notes</button>
@@ -121,12 +170,14 @@
     <label class="f" for="tMinus">Minus for wrong<input id="tMinus" type="number" step="0.25" value="0.5"></label>
     <label class="f" for="tLive" style="flex-direction:row;align-items:center;gap:10px"><input id="tLive" type="checkbox" checked style="width:22px;height:22px;min-height:0"> Show in Live tests on Home</label>
     <label class="f" for="tSect" style="flex-direction:row;align-items:center;gap:10px"><input id="tSect" type="checkbox" style="width:22px;height:22px;min-height:0"> Sectional timing (each section has its own timer)</label>
+    <label class="f" for="tWhen">Publish on (optional)<small>Leave empty to publish now. Students see it from this date and time.</small><input id="tWhen" type="datetime-local"></label>
+    <label class="f" for="tStrict" style="flex-direction:row;align-items:center;gap:10px"><input id="tStrict" type="checkbox" style="width:22px;height:22px;min-height:0"> Live exam mode (no Pause button)</label>
     <label class="f" for="tSecMin">Minutes per section<small>Used when sectional timing is on</small><input id="tSecMin" type="number" min="1" value="15"></label>
     <div class="f wide">Add questions
       <div class="seg2"><label><input type="radio" name="tMode" value="file" checked> Upload Excel / CSV</label><label><input type="radio" name="tMode" value="text"> Type here</label></div>
     </div>
     <div class="f wide" id="tFileBox">
-      <div class="help">Excel columns: <code>Section</code>, <code>Question</code>, <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>Answer</code> (A/B/C/D), <code>Explanation</code>. For Hindi, also fill <code>Question (Hindi)</code>, <code>A (Hindi)</code> … <code>D (Hindi)</code>, <code>Explanation (Hindi)</code>; leave them empty for English-only questions. <button class="btn btn-out btn-sm" id="tTpl" type="button">Download template</button></div>
+      <div class="help">Excel columns: <code>Section</code>, <code>Question</code>, <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>Answer</code> (A/B/C/D), <code>Explanation</code>. For Hindi, also fill <code>Question (Hindi)</code>, <code>A (Hindi)</code> … <code>D (Hindi)</code>, <code>Explanation (Hindi)</code>; leave them empty for English-only questions.<br>Optional: <code>Topic</code> (for strong/weak topic analysis), <code>Question image</code>, <code>A image</code> … <code>D image</code>, <code>Solution image</code>, <code>Solution image (Hindi)</code>. For pictures, first upload them in <b>Files</b>, then type the file name (for example <code>q12-figure.png</code>). Maths formulas: write them between <code>$</code> signs, for example <code>$\frac{1}{x}$</code> or <code>$x^2$</code>. <button class="btn btn-out btn-sm" id="tTpl" type="button">Download template</button></div>
       <input id="tFile" type="file" accept=".xlsx,.xls,.csv" style="margin-top:10px">
     </div>
     <label class="f wide" for="tText" id="tTextBox" hidden>Questions<small>Same format as Quick check. Add a line "Section: Reasoning" above questions to set their section. Typing here keeps English only; use Excel for Hindi.</small><textarea id="tText" class="tall"></textarea></label>
@@ -172,7 +223,9 @@
 </main>
 <script src="data/subjects.js"></script>
 <script src="data/exams.js"></script>
+<script src="data/site.js"></script>
 <script src="assets/site.js"></script>
+<script src="data/topics.js"></script>
 <script src="assets/admin.js"></script>
 </body>
 </html>

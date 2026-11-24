@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Log in – SSC Aspirants Official</title>
-<meta name="description" content="Log in or create your free SSC Aspirants Official account for mock tests, notes and PYQs.">
+<title>Log in – SSCAspirants_Official</title>
+<meta name="description" content="Log in or create your free SSCAspirants_Official account for mock tests, notes and PYQs.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
@@ -60,8 +60,8 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
 <body data-shell="off">
 <button class="icon-btn mode" id="modeBtn" type="button" aria-label="Switch light or dark"></button>
 <aside class="brandside">
-  <img src="assets/logo.png" alt="SSC Aspirants Official logo" width="170" height="170">
-  <h1>SSC Aspirants Official</h1>
+  <img src="assets/logo.png" alt="SSCAspirants_Official logo" width="170" height="170">
+  <h1>SSCAspirants_Official</h1>
   <p class="tag">No excuses. Only selection.</p>
   <ul>
     <li><b>✓</b>Full mock tests on the latest Eduquity pattern</li>
@@ -94,8 +94,22 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
       <label class="fl" id="pass2Row" hidden>Confirm password<input id="pass2" type="password" autocomplete="new-password" maxlength="128"></label>
       <button class="btn btn-pri" id="go" type="submit">Log in</button>
     </form>
-    <p class="small" id="forgot">Forgot password? If you joined with Google, use <b>Continue with Google</b>. Otherwise message us on <a href="https://www.instagram.com/sscaspirants_official/" target="_blank" rel="noopener">Instagram</a> and we'll reset it.</p>
-    <p class="foot2">© <span id="yr"></span> SSC Aspirants Official · Created by <b>Yatharth Tyagi</b></p>
+    <p class="small" id="forgot"><a href="#" id="fpOpen">Forgot password?</a></p>
+    <div id="fpBox" hidden>
+      <form id="fp1" novalidate>
+        <label class="fl">Your account email<input id="fpEmail" type="email" autocomplete="email" inputmode="email" maxlength="120"></label>
+        <button class="btn btn-pri" id="fpSend" type="submit">Send 6-digit code</button>
+      </form>
+      <form id="fp2" novalidate hidden>
+        <label class="fl">6-digit code from the email<input id="fpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" style="letter-spacing:.4em;font-weight:700"></label>
+        <label class="fl">New password<input id="fpPass" type="password" autocomplete="new-password" maxlength="128"></label>
+        <label class="fl">Confirm new password<input id="fpPass2" type="password" autocomplete="new-password" maxlength="128"></label>
+        <button class="btn btn-pri" id="fpGo" type="submit">Reset password</button>
+        <p class="small"><a href="#" id="fpAgain">Send the code again</a></p>
+      </form>
+      <p class="small"><a href="#" id="fpBack">← Back to log in</a></p>
+    </div>
+    <p class="foot2">© <span id="yr"></span> SSCAspirants_Official · Created by <b>Yatharth Tyagi</b></p>
   </div>
 </main>
 <script src="assets/site.js"></script>
@@ -123,7 +137,7 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
     $("tLogin").setAttribute("aria-selected", !r); $("tReg").setAttribute("aria-selected", r);
     $("head").textContent = r ? "Create your account" : "Welcome back";
     $("subhead").textContent = r ? "Join free and start practising today." : "Log in to continue your preparation.";
-    $("nameRow").hidden = !r; $("pass2Row").hidden = !r; $("forgot").hidden = r;
+    $("nameRow").hidden = !r; $("pass2Row").hidden = !r; $("forgot").hidden = r; if ($("fpBox")) { $("fpBox").hidden = true; $("form").hidden = false; }
     $("pass").autocomplete = r ? "new-password" : "current-password";
     $("go").textContent = r ? "Create account" : "Log in";
     history.replaceState(null, "", location.pathname + location.search + (r ? "#register" : ""));
@@ -133,8 +147,35 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
   $("show").addEventListener("click", () => { const p = $("pass"), s = p.type === "password"; p.type = s ? "text" : "password"; $("pass2").type = p.type; $("show").textContent = s ? "Hide" : "Show"; });
   mode(reg);
 
+  // ---------- forgot password (6-digit code by email) ----------
+  const fpShow = on => { $("fpBox").hidden = !on; $("form").hidden = on; document.querySelector(".tabs2").hidden = on; $("forgot").hidden = on; $("gwrap").hidden = on || !googleOn;
+    $("head").textContent = on ? "Reset your password" : "Welcome back"; $("subhead").textContent = on ? "We'll email you a 6-digit code." : "Log in to continue your preparation."; hush(); };
+  let googleOn = false;
+  $("fpOpen").onclick = e => { e.preventDefault(); mode(false); fpShow(true); $("fp1").hidden = false; $("fp2").hidden = true; $("fpEmail").value = $("email").value; };
+  $("fpBack").onclick = e => { e.preventDefault(); fpShow(false); mode(false); };
+  const post = async (u, body) => { const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || "Something went wrong. Please try again."); return d; };
+  const sendCode = async () => {
+    const em = $("fpEmail").value.trim(); if (!em) return say("Enter your account email.");
+    $("fpSend").disabled = true;
+    try { const d = await post("/api/auth/forgot", { email: em }); say(d.message, "ok"); $("fp1").hidden = true; $("fp2").hidden = false; $("fpCode").focus(); }
+    catch (err) { say(/JSON|fetch/i.test(err.message) ? "Forgot password works on the live website." : err.message); }
+    $("fpSend").disabled = false;
+  };
+  $("fp1").addEventListener("submit", e => { e.preventDefault(); sendCode(); });
+  $("fpAgain").onclick = e => { e.preventDefault(); sendCode(); };
+  $("fp2").addEventListener("submit", async e => {
+    e.preventDefault();
+    const pw = $("fpPass").value;
+    if (!/^\d{6}$/.test($("fpCode").value.trim())) return say("Enter the 6-digit code from the email.");
+    if (pw.length < 8) return say("New password must be at least 8 characters.");
+    if (pw !== $("fpPass2").value) return say("The two passwords don't match.");
+    $("fpGo").disabled = true;
+    try { await post("/api/auth/reset", { email: $("fpEmail").value.trim(), code: $("fpCode").value.trim(), password: pw }); say("Password changed! Taking you in…", "ok"); location.replace(next); }
+    catch (err) { say(err.message); $("fpGo").disabled = false; }
+  });
+
   fetch("/api/auth/config").then(r => r.json()).then(c => {
-    $("gwrap").hidden = !c.google;
+    googleOn = !!c.google; $("gwrap").hidden = !c.google;
     if (!c.ready) say("Login is being set up. Please try again soon.", "ok");
   }).catch(() => say("Login works on the live website (sscaspirants-official.in).", "ok"));
 
