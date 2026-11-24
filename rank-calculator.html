@@ -48,8 +48,8 @@
   </div>
   <div id="rMine"></div>
   <div class="rc-tabs" role="tablist"><button type="button" data-m="link" aria-selected="true">🔗 Answer-key link</button><button type="button" data-m="file">⤒ Upload saved page</button><button type="button" data-m="man">✎ Enter manually</button></div>
-  <div class="rc-in" data-mp="link"><input id="rLink" type="url" placeholder="https://ssc.digialm.com/…/….html" inputmode="url"><span class="help">Open the answer key on SSC's website, copy the address of your response sheet (it has <b>digialm.com</b> in it) and paste it here.</span></div>
-  <div class="rc-in" data-mp="file" hidden><input id="rFile" type="file" accept=".html,.htm,text/html"><span class="help">On a computer, open your response sheet and press <b>Ctrl + S</b> to save it, then upload that file here.</span></div>
+  <div class="rc-in" data-mp="link"><input id="rLink" type="url" placeholder="https://sscexams.cbexams.com/…/ViewCandResponse.aspx?enckey=…" inputmode="url"><span class="help">Open the answer key on SSC's website, copy the address of your response sheet (it has <b>cbexams.com</b> or <b>digialm.com</b> in it) and paste it here.</span></div>
+  <div class="rc-in" data-mp="file" hidden><input id="rFile" type="file" accept=".html,.htm,text/html" multiple><span class="help">On a computer, open your response sheet and press <b>Ctrl + S</b> to save it, then upload that file here.</span></div>
   <div class="rc-in" data-mp="man" hidden><div class="rc-tbl"><table class="rc-man"><thead><tr><th>Section</th><th>Correct</th><th>Wrong</th></tr></thead><tbody id="rManBody"></tbody></table></div>
     <div class="rc-form"><label for="rDate">Exam date (optional)<input id="rDate" type="date"></label><label for="rShift">Shift (optional)<select id="rShift"><option value="">–</option><option>Shift 1</option><option>Shift 2</option><option>Shift 3</option><option>Shift 4</option></select></label></div></div>
   <div style="margin-top:14px"><button class="btn btn-pri" type="button" id="rGo">Calculate my marks &amp; rank</button></div>
@@ -75,7 +75,37 @@ async function mine(){ $("rMine").innerHTML=""; try{const r=await fetch(`/api/ra
   if(d.mine) $("rMine").innerHTML=`<p class="rc-mine">Your saved marks for this exam: <b>${fx(d.mine.score)}${d.mine.max?" / "+fx(d.mine.max):""}</b> (${E(d.mine.cat||"UR")}) · ${d.count} students have used the calculator. Calculate again to see your latest rank.</p>`;
   else if(d.count) $("rMine").innerHTML=`<p class="muted" style="margin:10px 0 0">${d.count} students have used the calculator for this exam.</p>`;}catch(e){} }
 
-// read SSC's response sheet (digialm page)
+// ---- new SSC sheets (cbexams.com): questions are pictures; each option cell is painted
+//      green = correct option chosen, red = wrong option chosen, grey = not answered, yellow = the right option you missed ----
+function kind(c){ c=String(c||"").toLowerCase().replace(/^#/,"").trim();
+  if(/green$|^lime$/.test(c)) return "g"; if(/red$|^crimson$|^tomato$/.test(c)) return "r"; if(/gr[ae]y$|^silver$|^gainsboro$/.test(c)) return "s"; if(/yellow$|^gold$|^khaki$/.test(c)) return "y";
+  let h=c; if(/^[0-9a-f]{3}$/.test(h)) h=h.split("").map(x=>x+x).join(""); if(!/^[0-9a-f]{6}$/.test(h)) return null;
+  const R=parseInt(h.slice(0,2),16),G=parseInt(h.slice(2,4),16),B=parseInt(h.slice(4,6),16),mx=Math.max(R,G,B),mn=Math.min(R,G,B);
+  if(mn>232) return null;                       // white / near white
+  if(mx-mn<28) return "s";                      // grey
+  if(G>R+35&&G>B+35) return "g"; if(R>G+55&&R>B+55) return "r"; if(R>150&&G>140&&B<130&&Math.abs(R-G)<70) return "y"; return null; }
+const txt=h=>{const d=new DOMParser().parseFromString(h,"text/html");d.querySelectorAll("script,style").forEach(x=>x.remove());return (d.body?d.body.innerHTML:h).replace(/<br\s*\/?>|<\/(td|tr|p|div|li|th|h\d)>/gi,"\n").replace(/<[^>]+>/g," ").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/[ \t]+/g," ");};
+const isCb=h=>/lblsubject/i.test(h)||(/Q\.No/i.test(h)&&/bgcolor|background/i.test(h)&&!/question-pnl/i.test(h));
+function parseCb(pages){
+  const info={}, t=txt(pages[0]), f=(re)=>{const m=re.exec(t);return m?m[1].replace(/\s+/g," ").trim():"";};
+  info.name=f(/Candidate(?:'s)?\s*Name\s*:?\s*([^\n]{2,60})/i); info.roll=f(/Roll\s*(?:No\.?|Number)\s*:?\s*([^\n]{2,30})/i);
+  info.date=f(/(?:Test|Exam)\s*Date\s*:?\s*([0-9]{1,2}[\/\-.][0-9]{1,2}[\/\-.][0-9]{2,4})/i); info.time=f(/(?:Test|Exam)\s*Time(?:\s*(?:and|&)\s*Shift)?\s*:?\s*([^\n]{3,40})/i);
+  const bySec=new Map();
+  pages.forEach((h,pi)=>{
+    const lm=/id=["']?lblsubject["']?[^>]*>([\s\S]*?)<\/span>/i.exec(h); let label=lm?lm[1].replace(/<[^>]+>/g," ").replace(/&nbsp;/g," ").replace(/\s+/g," ").trim():"";
+    const pm=/(PART[\s\-]?[A-Z0-9]+)\s*[(\-:]?\s*(.*?)\)?\s*$/i.exec(label); const code=pm?pm[1].toUpperCase().replace(/\s/,"-"):(label||"PART-"+String.fromCharCode(65+pi));
+    const name=pm&&pm[2]?pm[2].trim():(label||code);
+    if(!bySec.has(code)) bySec.set(code,{name:code===name?name:name,code,q:new Map()});
+    const sec=bySec.get(code), parts=h.split(/Q\.No\s*:?\s*(?:&nbsp;|\s)*?(\d+)/i);
+    for(let i=1;i<parts.length;i+=2){ const no=+parts[i], chunk=parts[i+1]||""; if(sec.q.has(no)) continue;
+      const ks=new Set(); let m; const re=/bgcolor\s*=\s*["']?\s*(#?[A-Za-z0-9]+)|background(?:-color)?\s*:\s*(#?[A-Za-z0-9]+)/gi;
+      while((m=re.exec(chunk))){ const k=kind(m[1]||m[2]); if(k) ks.add(k); }
+      sec.q.set(no, ks.has("g")?"r":ks.has("r")?"w":(ks.has("s")||ks.has("y"))?"s":"u"); }
+  });
+  const secs=[...bySec.values()].sort((a,b)=>a.code.localeCompare(b.code)).map(x=>{const o={name:x.name,n:0,r:0,w:0,s:0,b:0,u:0};x.q.forEach(v=>{o.n++;o[v]++;});o.s+=o.u;return o;}).filter(x=>x.n);
+  return {info,secs,unknown:secs.reduce((a,x)=>a+x.u,0)};
+}
+// read SSC's response sheet (older digialm page)
 function parseSheet(html){
   const d=new DOMParser().parseFromString(html,"text/html"), info={};
   d.querySelectorAll("tr").forEach(tr=>{const td=tr.querySelectorAll(":scope > td");if(td.length!==2)return;const k=td[0].textContent.replace(/\s+/g," ").trim().toLowerCase(),v=td[1].textContent.replace(/\s+/g," ").trim();
@@ -126,12 +156,15 @@ $("rGo").addEventListener("click",async()=>{
       if(secs.some(s=>s.r+s.w>s.n)) return fail("Correct + wrong can't be more than the questions in a section.");
       if(!secs.some(s=>s.r||s.w)) return fail("Type how many you got correct and wrong in each section.");
       return await rank({},secs,true); }
-    let html="";
-    if(mode==="file"){ const f=$("rFile").files[0]; if(!f) return fail("Choose the saved answer-key file first."); html=await f.text(); }
+    let pages=[];
+    if(mode==="file"){ const fs=[...$("rFile").files]; if(!fs.length) return fail("Choose the saved answer-key file first."); for(const f of fs) pages.push(await f.text()); }
     else { const u=$("rLink").value.trim(); if(!u) return fail("Paste your answer-key link first.");
-      const r=await fetch("/api/rank?url="+encodeURIComponent(u)); const d=await r.json(); if(!r.ok) return fail(d.error||"Could not open the link."); html=d.html; }
-    const p=parseSheet(html); if(!p.secs.length) return fail("We couldn't read questions from this page. Make sure it is your response sheet (the page with your answers), or enter your marks manually.");
+      const r=await fetch("/api/rank?url="+encodeURIComponent(u)); const d=await r.json(); if(!r.ok) return fail(d.error||"Could not open the link."); pages=d.pages||[d.html]; }
+    const cb=pages.some(isCb), p=cb?parseCb(pages):parseSheet(pages.join("\n"));
+    if(!p.secs.length) return fail("We couldn't read questions from this page. Make sure it is your response sheet (the page with your answers), or enter your marks manually.");
     await rank(p.info,p.secs,false);
+    if(p.unknown) $("rOut").querySelector(".rc-res").insertAdjacentHTML("beforeend",`<p class="rc-err" style="margin:0">${p.unknown} question${p.unknown>1?"s":""} could not be read and were counted as skipped.</p>`);
+    if(cb&&mode==="file"&&p.secs.length<(tier().pattern||[]).length) $("rOut").querySelector(".rc-res").insertAdjacentHTML("beforeend",`<p class="muted" style="margin:0">Only ${p.secs.length} PART${p.secs.length>1?"s":""} found in the file. SSC shows one PART at a time – save each PART (Click Here for PART-B, C …) and choose all the files together, or use the link.</p>`);
   } finally { b.disabled=false; b.textContent=old; }
 });
 fillTier();
