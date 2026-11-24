@@ -10,7 +10,7 @@ window.SUBJECTS = [
     "id": "historical-background",
     "title": "Historical Background of the Indian Constitution",
     "sub": "Regulating Act 1773 to Independence Act 1947",
-    "ready": true
+    "ready": false
    },
    {
     "id": "making",
