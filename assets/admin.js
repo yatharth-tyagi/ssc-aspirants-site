@@ -109,7 +109,7 @@
       Object.assign(D, { EXAMS: ex, TOPICS: tp, SITE: si || {}, DAILY: (await readData("data/daily.js", "DAILY", {})) || {} });
       connected = true; lockTabs();
       $("connInfo").textContent = `Connected to ${repo.full_name}. ${Object.keys(n).length} notes chapters, ${Object.keys(t).length} tests, ${l.length} live tests loaded.`;
-      fillSubjects(); drawTests(); drawLive(); drawNews(); drawFiles();
+      fillSubjects(); drawTests(); drawLive(); drawNews();
       say("Ready. You can add notes and tests.", "ok");
       if (!$("atabs").querySelector('[aria-selected="true"]:not([data-t="connect"])')) openTab("notes");
     } catch (e) {
@@ -167,78 +167,134 @@
     return { list: out, errs };
   }
 
-  let docxHtml = "";
-  const mode = () => document.querySelector('[name="nMode"]:checked').value;
-  document.querySelectorAll('[name="nMode"]').forEach(r => r.addEventListener("change", () => { $("nFormBox").hidden = mode() !== "form"; $("nDocxBox").hidden = mode() !== "docx"; }));
-
+  // ---------- chapter picker ----------
+  let nCid = "", docLoaded = false, pptLoaded = false, nTab = "doc", pQs = [], pOpen = -1;
   function fillSubjects() {
     $("nSub").innerHTML = D.SUBJECTS.map(s => `<option value="${E(s.id)}">${E(s.name)}</option>`).join("");
     fillChapters();
   }
-  function fillChapters() {
+  function fillChapters(keep) {
     const s = D.SUBJECTS.find(x => x.id === $("nSub").value) || D.SUBJECTS[0]; if (!s) return;
     $("nChap").innerHTML = s.chapters.map((c, i) => `<option value="${E(c.id)}">${i + 1}. ${E(c.title)}${D.NOTES[c.id] ? " ✓" : ""}</option>`).join("") + `<option value="__new">+ New chapter</option>`;
+    if (keep) $("nChap").value = keep;
     loadChapter();
   }
+  const ytId = u => { u = String(u || "").trim(); const m = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([\w-]{11})/.exec(u); return m ? m[1] : /^[\w-]{11}$/.test(u) ? u : ""; };
+  function drawVideo() { const id = ytId($("vUrl").value); $("vPrev").innerHTML = id ? `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1" title="Video preview" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : ($("vUrl").value.trim() ? `<p class="bad-t" style="margin:0">This doesn't look like a YouTube link.</p>` : ""); paintStatus(); }
+  $("vUrl").addEventListener("input", drawVideo);
+  $("vDel").addEventListener("click", () => { $("vUrl").value = ""; $("vTitle").value = ""; drawVideo(); });
   function loadChapter() {
     const s = D.SUBJECTS.find(x => x.id === $("nSub").value), cid = $("nChap").value;
     const c = s && s.chapters.find(x => x.id === cid), n = D.NOTES[cid] || {};
+    nCid = cid === "__new" ? "" : cid;
     $("nTitle").value = n.title || (c ? c.title : ""); $("nDesc").value = c ? c.sub || "" : "";
     $("nRead").value = n.read || ""; $("nExams").value = (n.exams || []).join(", "); $("nIntro").value = n.intro || "";
-    $("nBody").value = toBody(n); $("nTblTitle").value = n.tableTitle || ""; $("nTbl").value = toTable(n);
-    $("nTricks").value = (n.tricks || []).join("\n"); $("nQuiz").value = toQuiz(n.quiz);
-    docxHtml = n.html || ""; $("nDocxPrev").innerHTML = docxHtml ? safeHtml(docxHtml) : "No file chosen yet.";
-    const r = document.querySelector(`[name="nMode"][value="${n.html ? "docx" : "form"}"]`); r.checked = true; r.dispatchEvent(new Event("change"));
-    $("nDel").hidden = !D.NOTES[cid]; $("nPdf").checked = !!n.pdf; whenSet("nWhen", n.publishAt);
+    $("nPdf").checked = !!n.pdf; whenSet("nWhen", n.publishAt); $("nDel").hidden = !D.NOTES[cid];
+    $("nDet").open = cid === "__new"; $("nDetInfo").textContent = cid === "__new" ? "– type the new chapter's title here" : "";
+    $("vUrl").value = n.video ? "https://www.youtube.com/watch?v=" + n.video.id : ""; $("vTitle").value = n.video ? n.video.title || "" : ""; drawVideo();
+    pQs = JSON.parse(JSON.stringify(n.quiz || [])); pOpen = -1; drawP();
+    $("nView").href = nCid ? "note.html?id=" + encodeURIComponent(nCid) : "notes.html";
+    docLoaded = pptLoaded = false; $("docFrame").src = "about:blank"; $("pptFrame").src = "about:blank";
+    openNt(nTab); paintStatus();
   }
-  $("nSub").addEventListener("change", fillChapters);
-  $("nDocs").addEventListener("click", () => { const c = $("nChap").value; location.href = "docs-editor.html" + (c && c !== "__new" ? "?ch=" + encodeURIComponent(c) : ""); });
+  $("nSub").addEventListener("change", () => fillChapters());
   $("nChap").addEventListener("change", loadChapter);
+  $("nTitle").addEventListener("input", paintStatus);
 
-  $("nDocx").addEventListener("change", async e => {
-    const f = e.target.files[0]; if (!f) return;
-    try {
-      say("Reading the Word file…", "info", true);
-      if (!window.mammoth) await load(LIBS.mammoth);
-      const res = await mammoth.convertToHtml({ arrayBuffer: await f.arrayBuffer() });
-      docxHtml = safeHtml(res.value); $("nDocxPrev").innerHTML = docxHtml;
-      if (!$("nTitle").value) $("nTitle").value = f.name.replace(/\.docx$/i, "");
-      say(`Word file read: ${Math.round(docxHtml.length / 1024)} KB. Check the preview, then Publish.`, "ok");
-    } catch (err) { say("Could not read the Word file: " + err.message, "err"); }
+  // ---------- Doc / PPT / Video / Practice tabs ----------
+  function openNt(t) {
+    nTab = t;
+    document.querySelectorAll("#ntabs [data-nt]").forEach(b => b.setAttribute("aria-selected", b.dataset.nt === t));
+    document.querySelectorAll("[data-np]").forEach(p => p.hidden = p.dataset.np !== t);
+    const n = D.NOTES[nCid] || {};
+    if (t === "doc" && !docLoaded) { docLoaded = true; $("docFrame").src = "docs-editor.html?embed=1" + (nCid ? "&ch=" + encodeURIComponent(nCid) : ""); }
+    if (t === "ppt" && !pptLoaded) { pptLoaded = true; $("pptFrame").src = "slide-editor.html?embed=1" + (n.deck ? "&id=" + encodeURIComponent(n.deck) : "&title=" + encodeURIComponent($("nTitle").value || "Slides")); }
+  }
+  $("ntabs").addEventListener("click", e => { const b = e.target.closest("[data-nt]"); if (b) openNt(b.dataset.nt); });
+  function paintStatus() {
+    const n = D.NOTES[nCid] || {}, mark = (id, on, txt) => { $(id).textContent = on ? txt : "Not added"; $(id).className = on ? "ok" : ""; };
+    mark("stDoc", n.html || (n.phases || []).length, "✓ Added"); mark("stPpt", n.deck, "✓ Added");
+    mark("stVid", ytId($("vUrl").value), "✓ Added"); mark("stPra", pQs.length, `✓ ${pQs.length} question${pQs.length === 1 ? "" : "s"}`);
+  }
+  const frameApi = f => { try { return f.contentWindow && f.contentWindow.SSCEmbed; } catch (e) { return null; } };
+
+  // ---------- practice questions: question → options → solution → next ----------
+  const pProblem = q => !q.q.trim() ? "has no question text" : q.opts.some(o => !o.trim()) ? "has an empty option" : q.a < 0 ? "has no correct answer ticked" : "";
+  function pBody(q, i) {
+    const img = (v, k) => v ? `<span class="thumb"><img src="${E(/^https:/.test(v) ? v : "assets/uploads/" + v)}" alt=""><button class="ibtn" type="button" data-pimgdel="${k}">✕</button></span>` : `<button class="ibtn im" type="button" data-pimg="${k}">🖼 Picture</button>`;
+    return `<div class="qc-b">
+      <label class="f2">Question ${i + 1}<textarea data-pf="q" placeholder="Type the question">${E(q.q)}</textarea></label><div>${img(q.img, "q")}</div>
+      <div class="f2" style="font-weight:600;font-size:.88rem">Options <small class="muted" style="font-weight:400">– tick the correct one</small></div>
+      ${q.opts.map((o, k) => `<div class="opt2${q.a === k ? " ok" : ""}"><input type="radio" name="pans${i}" data-pans="${k}" ${q.a === k ? "checked" : ""} aria-label="Option ${L(k)} is correct"><span class="L">${L(k)}</span>
+        <input type="text" data-popt="${k}" value="${E(o)}" placeholder="Option ${L(k)}"><span></span>${q.opts.length > 2 ? `<button class="ibtn" type="button" data-podel="${k}" title="Remove option">✕</button>` : ""}</div>`).join("")}
+      ${q.opts.length < 5 ? `<div><button class="ibtn" type="button" data-poadd>＋ Add option</button></div>` : ""}
+      <label class="f2">Solution<textarea data-pf="why" placeholder="Explain the answer">${E(q.why || "")}</textarea></label><div>${img(q.wimg, "w")}</div>
+      <div class="bar"><button class="btn btn-pri btn-sm" type="button" data-pnext>Save &amp; add next question</button><button class="btn btn-out btn-sm" type="button" data-pdone>Done</button></div></div>`;
+  }
+  function drawP() {
+    $("pList").innerHTML = pQs.length ? pQs.map((q, i) => `<div class="qc${i === pOpen ? " open" : ""}" data-pi="${i}">
+      <div class="qc-h" data-ptoggle><span class="qc-n">${i + 1}</span><span class="qc-t">${E(q.q || "(empty question)")}</span>
+      <span class="qc-a"><button type="button" data-pmv="-1" title="Move up" ${i ? "" : "disabled"}>↑</button><button type="button" data-pmv="1" title="Move down" ${i < pQs.length - 1 ? "" : "disabled"}>↓</button><button type="button" class="del" data-pqdel title="Delete">🗑</button></span></div>
+      ${i === pOpen ? pBody(q, i) : ""}</div>`).join("") : `<div class="mt-empty">No practice questions yet. Press ＋ Add question.</div>`;
+    paintStatus();
+  }
+  function pAdd() { pQs.push({ q: "", opts: ["", "", "", ""], a: -1, why: "" }); pOpen = pQs.length - 1; drawP(); const c = $("pList").querySelector(".qc.open"); if (c) { c.scrollIntoView({ block: "start", behavior: "smooth" }); c.querySelector("textarea").focus(); } }
+  $("pAdd").addEventListener("click", pAdd);
+  $("pList").addEventListener("input", e => { const c = e.target.closest("[data-pi]"); if (!c) return; const q = pQs[+c.dataset.pi], t = e.target;
+    if (t.dataset.pf) { q[t.dataset.pf] = t.value; if (t.dataset.pf === "q") c.querySelector(".qc-t").textContent = t.value || "(empty question)"; }
+    if (t.dataset.popt != null) q.opts[+t.dataset.popt] = t.value; });
+  $("pList").addEventListener("change", e => { const t = e.target; if (t.dataset.pans == null) return; const c = t.closest("[data-pi]"); pQs[+c.dataset.pi].a = +t.dataset.pans; c.querySelectorAll(".opt2").forEach((o, k) => o.classList.toggle("ok", k === +t.dataset.pans)); });
+  $("pList").addEventListener("click", async e => {
+    const c = e.target.closest("[data-pi]"); if (!c) return; const i = +c.dataset.pi, q = pQs[i];
+    if (e.target.closest(".qc-a")) { const mv = e.target.closest("[data-pmv]");
+      if (mv) { const j = i + +mv.dataset.pmv; [pQs[i], pQs[j]] = [pQs[j], pQs[i]]; pOpen = pOpen === i ? j : pOpen === j ? i : pOpen; drawP(); }
+      if (e.target.closest("[data-pqdel]") && confirmBox(`Delete practice question ${i + 1}?`)) { pQs.splice(i, 1); pOpen = -1; drawP(); } return; }
+    if (e.target.closest("[data-ptoggle]")) { pOpen = pOpen === i ? -1 : i; drawP(); return; }
+    if (e.target.closest("[data-poadd]")) { q.opts.push(""); drawP(); return; }
+    const od = e.target.closest("[data-podel]"); if (od) { const k = +od.dataset.podel; q.opts.splice(k, 1); if (q.a === k) q.a = -1; else if (q.a > k) q.a--; drawP(); return; }
+    const im = e.target.closest("[data-pimg]"); if (im) { const name = await pickImage(); if (!name) return; if (im.dataset.pimg === "q") q.img = name; else q.wimg = name; drawP(); return; }
+    const imd = e.target.closest("[data-pimgdel]"); if (imd) { if (imd.dataset.pimgdel === "q") delete q.img; else delete q.wimg; drawP(); return; }
+    if (e.target.closest("[data-pnext]")) { const p = pProblem(q); if (p) return say(`Question ${i + 1} ${p}.`, "err"); pAdd(); return; }
+    if (e.target.closest("[data-pdone]")) { const p = pProblem(q); if (p) say(`Question ${i + 1} ${p}.`, "err"); pOpen = -1; drawP(); }
   });
 
+  // ---------- publish the whole chapter ----------
   $("nSave").addEventListener("click", async () => {
     const s = D.SUBJECTS.find(x => x.id === $("nSub").value); if (!s) return;
-    const title = $("nTitle").value.trim(); if (!title) return say("Give the chapter a title.", "err");
+    const title = $("nTitle").value.trim(); if (!title) { $("nDet").open = true; $("nTitle").focus(); return say("Give the chapter a title (Chapter details).", "err"); }
+    for (let i = 0; i < pQs.length; i++) { const p = pProblem(pQs[i]); if (p) { openNt("practice"); pOpen = i; drawP(); return say(`Practice question ${i + 1} ${p}.`, "err"); } }
+    const vid = ytId($("vUrl").value); if ($("vUrl").value.trim() && !vid) { openNt("video"); return say("The YouTube link is not right.", "err"); }
     let cid = $("nChap").value;
     if (cid === "__new") { const same = s.chapters.find(c => !D.NOTES[c.id] && (c.id === slug(title) || c.title.toLowerCase() === title.toLowerCase())); if (same) cid = same.id; }
     if (cid === "__new") { cid = slug(title); let k = 2; const all = D.SUBJECTS.flatMap(x => x.chapters.map(c => c.id)); while (all.includes(cid)) cid = slug(title) + "-" + k++; }
-    const note = { subject: s.id, title, read: $("nRead").value.trim() || "10 min read",
-      exams: $("nExams").value.split(",").map(x => x.trim()).filter(Boolean), intro: $("nIntro").value.trim() };
-    if (mode() === "docx") {
-      if (!docxHtml) return say("Choose a Word file first.", "err");
-      note.html = docxHtml;
-    } else {
-      note.phases = parseBody($("nBody").value);
-      if (!note.phases.length) return say("Write some notes first.", "err");
-      const tb = parseTable($("nTbl").value); if (tb.table) { note.tableTitle = $("nTblTitle").value.trim() || "Important facts"; note.tableHead = tb.tableHead; note.table = tb.table; }
-      note.tricks = $("nTricks").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
-      const qz = parseQuiz($("nQuiz").value); if (qz.errs.length) return say(qz.errs[0], "err");
-      note.quiz = qz.list;
-    }
-    const old = D.NOTES[cid]; if (old && old.deck) note.deck = old.deck; // keep slides made in the slide editor
+    const old = D.NOTES[cid] || {};
+    const note = { subject: s.id, title, read: $("nRead").value.trim() || "10 min read", exams: $("nExams").value.split(",").map(x => x.trim()).filter(Boolean), intro: $("nIntro").value.trim() };
+    const doc = docLoaded && frameApi($("docFrame")), ppt = pptLoaded && frameApi($("pptFrame"));
+    if (docLoaded && !(doc && doc.ready)) return say("The Doc editor is still loading – try again in a moment.", "err");
+    if (pptLoaded && !(ppt && ppt.ready)) return say("The PPT editor is still loading – try again in a moment.", "err");
+    // document: from the Doc editor if it was opened, otherwise keep what is published
+    if (doc) { if (!doc.empty()) note.html = doc.html(); }
+    else { ["html", "phases", "tableTitle", "tableHead", "table", "tricks"].forEach(k => { if (old[k] !== undefined) note[k] = old[k]; }); }
+    if (vid) note.video = { id: vid, title: $("vTitle").value.trim() };
+    if (pQs.length) note.quiz = pQs.map(q => { const c = { ...q }; ["img", "wimg", "tag", "why"].forEach(k => { if (!c[k]) delete c[k]; }); return c; });
     if ($("nPdf").checked) note.pdf = true;
     const nw = whenVal("nWhen"); if (nw && nw > Date.now()) note.publishAt = nw;
-    let c = s.chapters.find(x => x.id === cid);
-    if (!c) { c = { id: cid, title, sub: $("nDesc").value.trim() }; s.chapters.push(c); }
-    c.title = title; c.sub = $("nDesc").value.trim() || c.sub || ""; c.ready = true;
-    if (note.publishAt) c.publishAt = note.publishAt; else delete c.publishAt;
-    D.NOTES[cid] = note;
     try {
+      say("Publishing… saving slides", "info", true);
+      if (ppt) { if (!ppt.empty()) note.deck = (ppt.dirty() || !old.deck) ? await ppt.save({ title, subject: s.id, chapter: cid, pdf: !!note.pdf }) : old.deck; }
+      else if (old.deck) note.deck = old.deck;
+      if (!note.html && !(note.phases || []).length && !note.deck && !note.video && !note.quiz) return say("Add something first: a document, slides, a video or practice questions.", "err");
+      let c = s.chapters.find(x => x.id === cid);
+      if (!c) { c = { id: cid, title, sub: $("nDesc").value.trim() }; s.chapters.push(c); }
+      c.title = title; c.sub = $("nDesc").value.trim() || c.sub || ""; c.ready = true;
+      if (note.publishAt) c.publishAt = note.publishAt; else delete c.publishAt;
+      D.NOTES[cid] = note;
       say("Publishing… (1 of 2)", "info", true); await save("NOTES");
       say("Publishing… (2 of 2)", "info", true); await save("SUBJECTS");
-      fillChapters(); $("nChap").value = cid; loadChapter();
-      say(`Published "${title}". It will be live in about a minute at note.html?id=${cid}`, "ok");
+      if (doc) doc.saved();
+      const keepTab = nTab, wasDoc = docLoaded, wasPpt = pptLoaded;
+      fillChapters(cid); if (wasDoc) openNt("doc"); if (wasPpt) openNt("ppt"); openNt(keepTab);
+      say(`Published "${title}". Live in about a minute at note.html?id=${cid}`, "ok");
     } catch (e) { say("Could not publish: " + e.message, "err"); }
   });
 
@@ -247,26 +303,192 @@
     if (!confirmBox(`Delete the notes for "${D.NOTES[cid].title}"? The chapter stays in the list as "Coming soon".`)) return;
     delete D.NOTES[cid];
     D.SUBJECTS.forEach(s => s.chapters.forEach(c => { if (c.id === cid) c.ready = false; }));
-    try { await save("NOTES"); await save("SUBJECTS"); fillChapters(); say("Chapter notes deleted.", "ok"); }
+    try { await save("NOTES"); await save("SUBJECTS"); fillChapters(cid); say("Chapter notes deleted.", "ok"); }
     catch (e) { say("Could not delete: " + e.message, "err"); }
   });
   // window.confirm is blocked in some previews; fall back to allowing the action there
   function confirmBox(msg) { try { return window.confirm(msg); } catch (e) { return true; } }
 
   // =====================================================================
-  // TESTS
+  // MOCK TESTS (Exam → Tier → Type)
   // =====================================================================
-  let editing = null, tQs = [];
-  $("tExam").innerHTML = `<option value="all">All SSC exams</option>` + (window.EXAMS || []).map(x => `<option value="${E(x.id)}">${E(x.name)}</option>`).join("");
-  const tMode = () => document.querySelector('[name="tMode"]:checked').value;
-  document.querySelectorAll('[name="tMode"]').forEach(r => r.addEventListener("change", () => { $("tFileBox").hidden = tMode() !== "file"; $("tTextBox").hidden = tMode() !== "text"; }));
-  function drawTPrev() {
-    const secs = {}; tQs.forEach(q => { const k = q.section || "General"; secs[k] = (secs[k] || 0) + 1; });
-    $("tPrev").innerHTML = tQs.length ? `<b>${tQs.length} questions</b> · ${Object.entries(secs).map(([k, v]) => `${E(k)}: ${v}`).join(" · ")}<ol style="margin:10px 0 0;padding-left:20px">${tQs.slice(0, 8).map(q => `<li>${E(q.q)} <span class="muted">(${String.fromCharCode(65 + q.a)})</span></li>`).join("")}</ol>${tQs.length > 8 ? `<p class="muted" style="margin:6px 0 0">…and ${tQs.length - 8} more</p>` : ""}` : "None yet.";
+  const TYPES = ["Full mock test", "Section-wise test", "Subject-wise test", "Chapter test", "PYQ paper"];
+  const examById = id => D.EXAMS.find(x => x.id === id);
+  const tiersOf = id => id === "all" ? [] : window.SSCTiers(examById(id));
+  const examName = id => id === "all" ? "All SSC exams" : (examById(id) || {}).name || id;
+  const L = k => String.fromCharCode(65 + k);
+  let editing = null, tQs = [], tSecs = [], openQ = -1, qLang = "en", autoTitle = "";
+
+  // ---------- list, grouped like the website ----------
+  function fillFilters() {
+    const v = $("mfExam").value;
+    $("mfExam").innerHTML = `<option value="">All exams</option>` + D.EXAMS.map(x => `<option value="${E(x.id)}">${E(x.name)}</option>`).join("") + `<option value="all">All SSC exams (common)</option>`;
+    $("mfExam").value = v; fillTierFilter();
+    if (!$("mfType").options.length) $("mfType").innerHTML = `<option value="">All types</option>` + TYPES.map(t => `<option>${t}</option>`).join("");
   }
-  $("tText").addEventListener("input", () => { const r = parseQuiz($("tText").value); tQs = r.list; drawTPrev(); if (r.errs.length) say(r.errs[0], "err"); });
+  function fillTierFilter() {
+    const T = tiersOf($("mfExam").value), v = $("mfTier").value;
+    $("mfTier").innerHTML = `<option value="">All tiers</option>` + T.map(t => `<option value="${E(t.id)}">${E(t.name)}</option>`).join("");
+    $("mfTier").value = T.some(t => t.id === v) ? v : ""; $("mfTier").disabled = T.length < 2;
+  }
+  ["mfExam", "mfTier", "mfType"].forEach(k => $(k).addEventListener("change", () => { if (k === "mfExam") fillTierFilter(); drawTests(); }));
+  function drawTests() {
+    fillFilters();
+    const fe = $("mfExam").value, ft = $("mfTier").value, fy = $("mfType").value;
+    const all = Object.entries(D.TESTS);
+    const exams = [...D.EXAMS.map(x => x.id), "all"].filter(id => !fe || id === fe);
+    let html = "";
+    exams.forEach(eid => {
+      const mine = all.filter(([, t]) => t.exam === eid); if (!mine.length && fe !== eid) return;
+      const ex = examById(eid), T = eid === "all" ? [{ id: "t1", name: "All tiers" }] : tiersOf(eid);
+      const inner = T.filter(tr => !ft || tr.id === ft).map(tr => {
+        const tl = mine.filter(([, t]) => eid === "all" || (t.tier || "t1") === tr.id);
+        const types = TYPES.filter(y => !fy || y === fy).map(y => { const l = tl.filter(([, t]) => t.type === y); return l.length ? `<div class="mt-type"><h5>${y} · ${l.length}</h5><div class="list">${l.map(testItem).join("")}</div></div>` : ""; }).join("");
+        return types || T.length > 1 ? `<div class="mt-tier">${T.length > 1 ? `<h4>${E(tr.name)}</h4>` : ""}${types || `<div class="mt-empty">No tests here yet.</div>`}</div>` : "";
+      }).join("");
+      html += `<div class="mt-ex"><h3 style="background:${ex ? ex.color : "linear-gradient(135deg,#475467,#1E2433)"}">${E(examName(eid))} <span>${mine.length} test${mine.length === 1 ? "" : "s"}</span></h3>${inner || `<div class="mt-tier"><div class="mt-empty">No tests here yet. Press ＋ New test.</div></div>`}</div>`;
+    });
+    $("tList").innerHTML = html || `<div class="mt-empty">No tests yet. Press ＋ New test to make your first one.</div>`;
+  }
+  const testItem = ([id, t]) => `<div class="item"><span class="t"><b>${E(t.title)}</b><span>${t.questions.length} questions · ${t.minutes} min · +${t.plus}/−${t.minus}${t.section ? " · " + E(t.section) : ""}${t.year ? " · " + E(t.year) + (t.shift ? " " + E(t.shift) : "") : ""}${whenText(t.publishAt)}</span></span>
+      <a class="btn btn-out btn-sm" href="test.html?id=${encodeURIComponent(id)}" target="_blank" rel="noopener">Open</a>
+      <button class="btn btn-out btn-sm" type="button" data-edit="${E(id)}">Edit</button><button class="btn btn-out btn-sm" type="button" data-copy="${E(id)}">Copy</button><button class="btn btn-del btn-sm" type="button" data-del="${E(id)}">Delete</button></div>`;
+  $("tList").addEventListener("click", async e => {
+    const ed = e.target.closest("[data-edit]"), cp = e.target.closest("[data-copy]"), del = e.target.closest("[data-del]");
+    if (ed) loadTest(ed.dataset.edit);
+    if (cp) { loadTest(cp.dataset.copy); editing = null; $("tTitle").value += " (copy)"; $("tFormTitle").textContent = "New test (copy)"; $("tOpen").hidden = true; }
+    if (del) { const id = del.dataset.del; if (!confirmBox(`Delete the test "${D.TESTS[id].title}"? Students' old results stay saved.`)) return;
+      delete D.TESTS[id]; D.LIVE = D.LIVE.filter(l => l.link !== "test.html?id=" + id);
+      try { await save("TESTS"); await save("LIVE"); drawTests(); drawLive(); if (editing === id) closeEd(); say("Test deleted.", "ok"); } catch (er) { say("Could not delete: " + er.message, "err"); } }
+  });
+
+  // ---------- step 1: where it goes ----------
+  function fillExamSel() { $("tExam").innerHTML = D.EXAMS.map(x => `<option value="${E(x.id)}">${E(x.name)}</option>`).join("") + `<option value="all">All SSC exams (common)</option>`; }
+  function fillTierSel(keep) {
+    const T = tiersOf($("tExam").value);
+    $("tTier").innerHTML = T.map(t => `<option value="${E(t.id)}">${E(t.name)}</option>`).join("");
+    if (keep && T.some(t => t.id === keep)) $("tTier").value = keep;
+    $("tTierW").hidden = T.length < 2; fillSecPick(); presetInfo();
+  }
+  const curTier = () => tiersOf($("tExam").value).find(t => t.id === $("tTier").value) || tiersOf($("tExam").value)[0];
+  function fillSecPick(keep) {
+    const tr = curTier(), names = tr ? tr.pattern.map(r => r[0]) : [];
+    $("tSecPick").innerHTML = names.map(n => `<option>${E(n)}</option>`).join("") + `<option value="__other">Other…</option>`;
+    if (keep) { if (!names.includes(keep)) $("tSecPick").insertAdjacentHTML("afterbegin", `<option>${E(keep)}</option>`); $("tSecPick").value = keep; }
+  }
+  function typeUi() { const ty = $("tType").value; $("tSecPickW").hidden = ty !== "Section-wise test"; $("tYearW").hidden = $("tShiftW").hidden = ty !== "PYQ paper"; presetInfo(); }
+  function presetInfo() { const tr = curTier(); $("tPresetInfo").textContent = tr ? `${examName($("tExam").value)} ${tr.name}: ${tr.pattern.reduce((a, r) => a + (+r[1] || 0), 0)} questions · ${tr.minutes} min · +${tr.plus} / −${tr.minus}` : "Pick an exam to use its pattern"; $("tPreset").disabled = !tr; }
+  const rePreset = () => { if (!editing && !tQs.length && curTier()) $("tPreset").click(); };
+  $("tExam").addEventListener("change", () => { fillTierSel(); rePreset(); });
+  $("tTier").addEventListener("change", () => { fillSecPick(); presetInfo(); rePreset(); });
+  $("tType").addEventListener("change", () => { typeUi(); rePreset(); });
+  $("tSecPick").addEventListener("change", () => { if ($("tSecPick").value === "__other") { const n = prompt("Section name"); if (n) fillSecPick(n.trim()); else fillSecPick(); } rePreset(); });
+
+  // ---------- step 2: pattern ----------
+  $("tPreset").addEventListener("click", () => {
+    const tr = curTier(); if (!tr) return;
+    const ty = $("tType").value;
+    $("tPlus").value = tr.plus; $("tMinus").value = tr.minus;
+    if (ty === "Section-wise test") { const r = tr.pattern.find(x => x[0] === $("tSecPick").value) || tr.pattern[0];
+      tSecs = [{ name: r[0], minutes: +r[3] || Math.max(10, Math.round(r[1] * 0.6)), n: +r[1] || 0 }]; $("tMin").value = tSecs[0].minutes; $("tSect").checked = false; }
+    else if (ty === "Full mock test" || ty === "PYQ paper") { tSecs = tr.pattern.map(r => ({ name: r[0], minutes: +r[3] || 0, n: +r[1] || 0 })); $("tMin").value = tr.minutes; $("tSect").checked = tSecs.every(s => s.minutes > 0) && tSecs.length > 1; }
+    else { $("tMin").value = Math.max(10, Math.round((tQs.length || 25) * 0.6)); }
+    if (!$("tTitle").value.trim() || $("tTitle").value === autoTitle) { const n = Object.values(D.TESTS).filter(t => t.exam === $("tExam").value && (t.tier || "t1") === tr.id && t.type === ty).length + 1;
+      $("tTitle").value = `${examName($("tExam").value)} ${tr.name} – ${ty === "Full mock test" ? "Full Mock " + n : ty === "Section-wise test" ? $("tSecPick").value + " – Sectional " + n : ty === "PYQ paper" ? "PYQ " + ($("tYear").value || "") : ty + " " + n}`; autoTitle = $("tTitle").value; }
+    drawSecs(); drawQs(); say("Exam pattern filled in. Check it, then add questions.", "ok");
+  });
+  function drawSecs() {
+    $("tSecs").innerHTML = tSecs.length ? `<div class="mt-sec hd"><span>Section</span><span>Minutes</span><span>Questions</span><span></span></div>` + tSecs.map((s, i) => `<div class="mt-sec" data-si="${i}"><input data-k="name" value="${E(s.name)}" aria-label="Section name"><input data-k="minutes" type="number" min="0" value="${s.minutes || ""}" aria-label="Minutes"><input data-k="n" type="number" min="0" value="${s.n || ""}" aria-label="Planned questions"><button type="button" data-sdel title="Remove section">✕</button></div>`).join("")
+      : `<p class="muted" style="margin:0">No sections – all questions in one part. Use ⚡ Use exam pattern or ＋ Add section.</p>`;
+  }
+  $("tSecs").addEventListener("input", e => { const row = e.target.closest("[data-si]"); if (!row) return; const s = tSecs[+row.dataset.si], k = e.target.dataset.k;
+    if (k === "name") { const old = s.name; s.name = e.target.value; tQs.forEach(q => { if (q.section === old) q.section = s.name; }); } else s[k] = +e.target.value || 0; drawProg(); });
+  $("tSecs").addEventListener("click", e => { const b = e.target.closest("[data-sdel]"); if (!b) return; tSecs.splice(+b.closest("[data-si]").dataset.si, 1); drawSecs(); drawQs(); });
+  $("tSecAdd").addEventListener("click", () => { tSecs.push({ name: "Section " + (tSecs.length + 1), minutes: 15, n: 25 }); drawSecs(); drawQs(); });
+
+  // ---------- step 3: questions ----------
+  const secNames = () => tSecs.length ? tSecs.map(s => s.name) : ["General"];
+  function drawProg() {
+    $("tCount").textContent = `· ${tQs.length} added`;
+    $("tSecProg").innerHTML = tSecs.length > 0 ? tSecs.map(s => { const n = tQs.filter(q => q.section === s.name).length; return `<span class="${s.n && n >= s.n ? "full" : ""}">${E(s.name)}: ${n}${s.n ? " / " + s.n : ""}</span>`; }).join("") : "";
+  }
+  const imgTag = (v, k) => v ? `<span class="thumb"><img src="${E(/^https:/.test(v) ? v : "assets/uploads/" + v)}" alt=""><button class="ibtn" type="button" data-imgdel="${k}">✕</button></span>` : `<button class="ibtn im" type="button" data-img="${k}">🖼 Picture</button>`;
+  function qBody(q, i) {
+    const hi = qLang === "hi", qt = hi ? q.qh || "" : q.q, ot = hi ? q.optsh || [] : q.opts, wt = hi ? q.whyh || "" : q.why || "";
+    return `<div class="qc-b">
+      <div class="qc-row"><label class="f2">Section<select data-f="section">${secNames().map(n => `<option${n === (q.section || "General") ? " selected" : ""}>${E(n)}</option>`).join("")}${q.section && !secNames().includes(q.section) ? `<option selected>${E(q.section)}</option>` : ""}</select></label>
+        <label class="f2">Topic (optional)<input type="text" data-f="topic" value="${E(q.topic || "")}" placeholder="e.g. Algebra"></label></div>
+      <div class="lang2" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="${!hi}">English</button><button type="button" data-lang="hi" aria-pressed="${hi}">हिन्दी</button></div>
+      <label class="f2">${hi ? "प्रश्न (Hindi question)" : "Question"}<textarea data-f="${hi ? "qh" : "q"}" placeholder="${hi ? "प्रश्न यहाँ लिखें" : "Type the question"}">${E(qt)}</textarea></label>
+      ${hi ? "" : `<div>${imgTag(q.img, "q")}</div>`}
+      <div class="f2" style="font-weight:600;font-size:.88rem">Options <small class="muted" style="font-weight:400">– tick the correct one</small></div>
+      ${q.opts.map((o, k) => `<div class="opt2${q.a === k ? " ok" : ""}"><input type="radio" name="ans${i}" data-ans="${k}" ${q.a === k ? "checked" : ""} aria-label="Option ${L(k)} is correct"><span class="L">${L(k)}</span>
+        <input type="text" data-opt="${k}" value="${E(ot[k] || "")}" placeholder="${hi ? "विकल्प " : "Option "}${L(k)}">${hi ? "" : imgTag((q.oimg || [])[k], "o" + k)}${q.opts.length > 2 ? `<button class="ibtn" type="button" data-odel="${k}" title="Remove option">✕</button>` : ""}</div>`).join("")}
+      ${q.opts.length < 5 && !hi ? `<div><button class="ibtn" type="button" data-oadd>＋ Add option</button></div>` : ""}
+      <label class="f2">${hi ? "हल (Hindi solution)" : "Solution"}<textarea data-f="${hi ? "whyh" : "why"}" placeholder="${hi ? "हल यहाँ लिखें" : "Explain the answer"}">${E(wt)}</textarea></label>
+      ${hi ? "" : `<div>${imgTag(q.wimg, "w")}</div>`}
+      <div class="bar"><button class="btn btn-pri btn-sm" type="button" data-next>Save &amp; add next question</button><button class="btn btn-out btn-sm" type="button" data-done>Done</button></div></div>`;
+  }
+  function drawQs() {
+    drawProg();
+    $("qList").innerHTML = tQs.length ? tQs.map((q, i) => `<div class="qc${i === openQ ? " open" : ""}" data-qi="${i}">
+      <div class="qc-h" data-toggle><span class="qc-n">${i + 1}</span><span class="qc-t"><small>${E(q.section || "General")}</small>${E(q.q || "(empty question)")}</span>
+      <span class="qc-a"><button type="button" data-mv="-1" title="Move up" ${i ? "" : "disabled"}>↑</button><button type="button" data-mv="1" title="Move down" ${i < tQs.length - 1 ? "" : "disabled"}>↓</button><button type="button" data-dup title="Copy">⧉</button><button type="button" class="del" data-qdel title="Delete">🗑</button></span></div>
+      ${i === openQ ? qBody(q, i) : ""}</div>`).join("") : `<div class="mt-empty">No questions yet. Press ＋ Add question, upload Excel/Word, or pick from the Question bank.</div>`;
+  }
+  const blankQ = sec => ({ section: sec || (tSecs.length ? tSecs[Math.max(0, tSecs.findIndex(s => tQs.filter(q => q.section === s.name).length < (s.n || 1e9)))].name : "General"), q: "", opts: ["", "", "", ""], a: -1, why: "" });
+  function addQ() { tQs.push(blankQ(openQ >= 0 && tQs[openQ] ? tQs[openQ].section : null)); openQ = tQs.length - 1; qLang = "en"; drawQs(); const c = $("qList").querySelector(".qc.open"); if (c) { c.scrollIntoView({ block: "start", behavior: "smooth" }); c.querySelector("textarea").focus(); } }
+  $("qAdd").addEventListener("click", addQ); $("qAdd2").addEventListener("click", addQ);
+  $("qList").addEventListener("input", e => {
+    const c = e.target.closest("[data-qi]"); if (!c) return; const q = tQs[+c.dataset.qi], t = e.target;
+    if (t.dataset.f) { q[t.dataset.f] = t.value; if (t.dataset.f === "q") c.querySelector(".qc-t").lastChild.textContent = t.value || "(empty question)"; if (t.dataset.f === "section") { c.querySelector(".qc-t small").textContent = t.value; drawProg(); } }
+    if (t.dataset.opt != null) { const k = +t.dataset.opt; if (qLang === "hi") { q.optsh = q.optsh || q.opts.map(() => ""); q.optsh[k] = t.value; } else q.opts[k] = t.value; }
+    if (t.dataset.ans != null) { q.a = +t.dataset.ans; c.querySelectorAll(".opt2").forEach((o, k) => o.classList.toggle("ok", k === q.a)); }
+  });
+  $("qList").addEventListener("change", e => { const t = e.target; if (t.dataset.ans != null) { const c = t.closest("[data-qi]"); tQs[+c.dataset.qi].a = +t.dataset.ans; c.querySelectorAll(".opt2").forEach((o, k) => o.classList.toggle("ok", k === +t.dataset.ans)); } });
+  const qProblem = q => !q.q.trim() ? "has no question text" : q.opts.filter(o => o.trim()).length < q.opts.length ? "has an empty option" : q.a < 0 ? "has no correct answer ticked" : "";
+  $("qList").addEventListener("click", async e => {
+    const c = e.target.closest("[data-qi]"); if (!c) return; const i = +c.dataset.qi, q = tQs[i];
+    if (e.target.closest(".qc-a")) {
+      const mv = e.target.closest("[data-mv]");
+      if (mv) { const j = i + +mv.dataset.mv; [tQs[i], tQs[j]] = [tQs[j], tQs[i]]; openQ = openQ === i ? j : openQ === j ? i : openQ; drawQs(); }
+      if (e.target.closest("[data-dup]")) { tQs.splice(i + 1, 0, JSON.parse(JSON.stringify(q))); openQ = i + 1; drawQs(); }
+      if (e.target.closest("[data-qdel]") && confirmBox(`Delete question ${i + 1}?`)) { tQs.splice(i, 1); openQ = -1; drawQs(); }
+      return;
+    }
+    if (e.target.closest("[data-toggle]")) { openQ = openQ === i ? -1 : i; drawQs(); return; }
+    const lg = e.target.closest("[data-lang]"); if (lg) { qLang = lg.dataset.lang; drawQs(); return; }
+    if (e.target.closest("[data-oadd]")) { q.opts.push(""); if (q.optsh) q.optsh.push(""); if (q.oimg) q.oimg.push(""); drawQs(); return; }
+    const od = e.target.closest("[data-odel]"); if (od) { const k = +od.dataset.odel; q.opts.splice(k, 1); if (q.optsh) q.optsh.splice(k, 1); if (q.oimg) q.oimg.splice(k, 1); if (q.a === k) q.a = -1; else if (q.a > k) q.a--; drawQs(); return; }
+    const im = e.target.closest("[data-img]"); if (im) { const k = im.dataset.img, name = await pickImage(); if (!name) return;
+      if (k === "q") q.img = name; else if (k === "w") q.wimg = name; else { q.oimg = q.oimg || q.opts.map(() => ""); q.oimg[+k.slice(1)] = name; } drawQs(); return; }
+    const imd = e.target.closest("[data-imgdel]"); if (imd) { const k = imd.dataset.imgdel; if (k === "q") delete q.img; else if (k === "w") delete q.wimg; else if (q.oimg) { q.oimg[+k.slice(1)] = ""; if (!q.oimg.some(Boolean)) delete q.oimg; } drawQs(); return; }
+    if (e.target.closest("[data-next]")) { const p = qProblem(q); if (p) return say(`Question ${i + 1} ${p}.`, "err"); addQ(); return; }
+    if (e.target.closest("[data-done]")) { const p = qProblem(q); if (p) say(`Question ${i + 1} ${p}.`, "err"); openQ = -1; drawQs(); }
+  });
+  // pictures go straight to assets/uploads/ on the website
+  function pickImage() {
+    return new Promise(ok => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+      inp.onchange = async () => { const f = inp.files[0]; if (!f) return ok(null);
+        if (f.size > 5e6) { say("Picture is too big (over 5 MB).", "err"); return ok(null); }
+        const name = Date.now().toString(36) + "-" + f.name.toLowerCase().replace(/[^a-z0-9.\-]+/g, "-").slice(-50);
+        try { say("Uploading picture…", "info", true); await writeB64("assets/uploads/" + name, b64FromBytes(new Uint8Array(await f.arrayBuffer())), "Admin: picture " + name); say("Picture added.", "ok"); ok(name); }
+        catch (er) { say("Could not upload: " + er.message, "err"); ok(null); } };
+      inp.click(); });
+  }
+  window.SSCAdminPickImage = pickImage;
+
+  // ---------- bulk upload: Excel / CSV ----------
+  const mergeQs = (list, what) => {
+    if (!list.length) return;
+    const add = !tQs.length || confirmBox(`Add the ${list.length} ${what} questions after your ${tQs.length} questions?\n\nCancel = replace all questions.`);
+    tQs = add ? tQs.concat(list) : list; openQ = -1;
+    list.forEach(q => { if (q.section && !tSecs.some(s => s.name === q.section) && !(tSecs.length === 0 && q.section === "General")) tSecs.push({ name: q.section, minutes: 0, n: 0 }); });
+    drawSecs(); drawQs();
+  };
+  $("qXls").addEventListener("click", () => $("tFile").click());
   $("tFile").addEventListener("change", async e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) return; e.target.value = "";
     try {
       say("Reading the file…", "info", true);
       if (!window.XLSX) await load(LIBS.xlsx);
@@ -277,83 +499,158 @@
       rows.forEach((r, i) => {
         const opts = ["a", "b", "c", "d", "e"].map(k => pick(r, k)).filter(Boolean);
         const ans = pick(r, "answer").toUpperCase().replace(/[^A-E]/g, "");
-        const q = { q: pick(r, "question"), opts, a: ans ? ans.charCodeAt(0) - 65 : -1, why: pick(r, "explanation") };
+        const q = { q: pick(r, "question"), opts, a: ans ? ans.charCodeAt(0) - 65 : -1, why: pick(r, "explanation") || pick(r, "solution") };
         const sec = pick(r, "section"); if (sec) q.section = sec;
         const qh = pick(r, "question (hindi)"), oh = ["a", "b", "c", "d", "e"].map(k => pick(r, k + " (hindi)")).filter(Boolean);
-        if (qh && oh.length === opts.length) { q.qh = qh; q.optsh = oh; const wh = pick(r, "explanation (hindi)"); if (wh) q.whyh = wh; }
-        // topic + pictures (file names from the Files tab, or https links)
+        if (qh) { q.qh = qh; if (oh.length === opts.length) q.optsh = oh; const wh = pick(r, "explanation (hindi)") || pick(r, "solution (hindi)"); if (wh) q.whyh = wh; }
         const topic = pick(r, "topic"); if (topic) q.topic = topic;
         const im = k => { const v = pick(r, k); return !v ? "" : /^https:\/\//i.test(v) ? v : v.toLowerCase().replace(/[^a-z0-9.\-]+/g, "-"); };
         if (im("question image")) q.img = im("question image");
         const oi = ["a", "b", "c", "d", "e"].slice(0, opts.length).map(k => im(k + " image")); if (oi.some(Boolean)) q.oimg = oi;
         if (im("solution image")) q.wimg = im("solution image");
-        if (im("solution image (hindi)")) q.wimgh = im("solution image (hindi)");
         if (!q.q || opts.length < 2 || q.a < 0 || q.a >= opts.length) bad.push(i + 2); else out.push(q);
       });
-      tQs = out; drawTPrev();
-      say(bad.length ? `${out.length} questions read. Skipped rows ${bad.slice(0, 10).join(", ")} (missing question, options or answer).` : `${out.length} questions read.`, bad.length ? "err" : "ok");
+      mergeQs(out, "Excel");
+      say(bad.length ? `${out.length} questions added. Skipped rows ${bad.slice(0, 10).join(", ")} (missing question, options or answer).` : `${out.length} questions added from Excel.`, bad.length ? "err" : "ok");
     } catch (err) { say("Could not read the file: " + err.message, "err"); }
   });
   $("tTpl").addEventListener("click", () => {
     const csv = "Section,Topic,Question,A,B,C,D,Answer,Explanation,Question (Hindi),A (Hindi),B (Hindi),C (Hindi),D (Hindi),Explanation (Hindi),Question image,A image,B image,C image,D image,Solution image\n" +
-      'General Awareness,Polity – British Acts,Which Act introduced dyarchy in the provinces?,Indian Councils Act 1909,Government of India Act 1919,Government of India Act 1935,Charter Act 1853,B,"The 1919 Act split provincial subjects into transferred and reserved.",प्रांतों में द्वैध शासन किस अधिनियम ने शुरू किया?,भारतीय परिषद अधिनियम 1909,भारत सरकार अधिनियम 1919,भारत सरकार अधिनियम 1935,चार्टर अधिनियम 1853,1919 के अधिनियम ने प्रांतीय विषयों को हस्तांतरित और आरक्षित में बाँटा।,,,,,,\n' +
-      'Quantitative Aptitude,Algebra,"If $x + \\frac{1}{x} = 3$, find $x^2 + \\frac{1}{x^2}$",7,9,11,5,A,"Square both sides: $x^2 + 2 + \\frac{1}{x^2} = 9$, so the answer is 7.",,,,,,,,,,,,q2-solution.png\n' +
-      "General Intelligence and Reasoning,Mirror image,Select the correct mirror image of the given figure.,Option A,Option B,Option C,Option D,C,,,,,,,,q3-figure.png,q3-a.png,q3-b.png,q3-c.png,q3-d.png,\n";
+      'General Awareness,Polity – British Acts,Which Act introduced dyarchy in the provinces?,Indian Councils Act 1909,Government of India Act 1919,Government of India Act 1935,Charter Act 1853,B,"The 1919 Act split provincial subjects into transferred and reserved.",प्रांतों में द्वैध शासन किस अधिनियम ने शुरू किया?,भारतीय परिषद अधिनियम 1909,भारत सरकार अधिनियम 1919,भारत सरकार अधिनियम 1935,चार्टर अधिनियम 1853,"1919 के अधिनियम ने प्रांतीय विषयों को हस्तांतरित और आरक्षित में बाँटा।",,,,,,\n' +
+      'Quantitative Aptitude,Algebra,"If $x + \\frac{1}{x} = 3$, find $x^2 + \\frac{1}{x^2}$",7,9,11,5,A,"Square both sides: $x^2 + 2 + \\frac{1}{x^2} = 9$, so the answer is 7.",,,,,,,,,,,,\n';
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "ssc-test-template.csv"; a.click();
   });
-  function resetTest() {
-    editing = null; tQs = []; $("tFormTitle").textContent = "New test";
-    ["tTitle", "tText"].forEach(k => $(k).value = ""); $("tMin").value = 60; $("tPlus").value = 2; $("tMinus").value = 0.5; $("tLive").checked = true; $("tSect").checked = false; $("tStrict").checked = false; whenSet("tWhen", null); $("tSecMin").value = 15; $("tFile").value = ""; drawTPrev();
+
+  // ---------- bulk upload: Word ----------
+  function parseWordQs(text) {
+    const out = []; let sec = "", q = null, field = null;
+    const push = () => { if (q && q.q) out.push(q); q = null; field = null; };
+    text.split(/\r?\n/).map(l => l.trim()).forEach(l => {
+      if (!l) return;
+      let m;
+      if ((m = /^section\s*[:\-–]\s*(.+)$/i.exec(l))) { push(); sec = m[1].trim(); return; }
+      if ((m = /^(?:q(?:uestion)?\.?\s*)?(\d+)\s*[.):]\s*(.+)$/i.exec(l)) && !/^\(?[a-e][).]/i.test(l)) { push(); q = { q: m[2], opts: [], a: -1, why: "" }; if (sec) q.section = sec; field = "q"; return; }
+      if (!q) { q = { q: l, opts: [], a: -1, why: "" }; if (sec) q.section = sec; field = "q"; return; }
+      if ((m = /^\(?([a-e])[).]\s*hindi\s*:\s*(.+)$/i.exec(l))) { q.optsh = q.optsh || []; q.optsh[m[1].toLowerCase().charCodeAt(0) - 97] = m[2]; return; }
+      if ((m = /^(\*)?\s*\(?([a-e])[).]\s*(.+)$/i.exec(l)) && field !== "why") {
+        // several options on one line: (a) 7 (b) 9 (c) 11 (d) 5
+        const parts = (m[1] ? "" : l).split(/\s*\(([a-e])\)\s*/i).filter(Boolean);
+        if (!m[1] && parts.length > 2 && parts.length % 2 === 0) { for (let k = 0; k < parts.length; k += 2) q.opts.push(parts[k + 1].replace(/\s*\*$/, "")); }
+        else { if (m[1] || /\*$/.test(m[3])) q.a = q.opts.length; q.opts.push(m[3].replace(/\s*\*$/, "").replace(/\s*\((correct|right)\)$/i, "")); }
+        field = "opt"; return; }
+      if ((m = /^(?:ans(?:wer)?|correct(?: answer)?)\s*[.:\-–]?\s*\(?([a-e])\)?/i.exec(l))) { q.a = m[1].toLowerCase().charCodeAt(0) - 97; field = null; return; }
+      if ((m = /^(?:sol(?:ution)?|explanation|why|exp)\s*[.:\-–]\s*(.*)$/i.exec(l))) { q.why = m[1]; field = "why"; return; }
+      if ((m = /^topic\s*[:\-–]\s*(.+)$/i.exec(l))) { q.topic = m[1]; return; }
+      if ((m = /^hindi\s*[:\-–]\s*(.+)$/i.exec(l))) { q.qh = m[1]; return; }
+      if ((m = /^(?:hindi solution|हल)\s*[:\-–]\s*(.+)$/i.exec(l))) { q.whyh = m[1]; return; }
+      if (field === "q") q.q += "\n" + l; else if (field === "why") q.why += (q.why ? "\n" : "") + l;
+    });
+    push();
+    const ok = [], bad = [];
+    out.forEach((q, i) => { if (q.optsh && q.optsh.length !== q.opts.length) delete q.optsh; if (q.opts.length >= 2 && q.a >= 0 && q.a < q.opts.length) ok.push(q); else bad.push(i + 1); });
+    return { ok, bad };
   }
-  $("tNew").addEventListener("click", resetTest);
-  function drawTests() {
-    const ids = Object.keys(D.TESTS);
-    $("tList").innerHTML = ids.length ? ids.map(id => { const t = D.TESTS[id];
-      return `<div class="item"><span class="t"><b>${E(t.title)}</b><span>${E(t.type)} · ${t.questions.length} questions · ${t.minutes} min · ${E(examName(t.exam))}${whenText(t.publishAt)}</span></span>
-      <a class="btn btn-out btn-sm" href="test.html?id=${encodeURIComponent(id)}" target="_blank" rel="noopener">Open</a>
-      <button class="btn btn-out btn-sm" type="button" data-edit="${E(id)}">Edit</button><button class="btn btn-del btn-sm" type="button" data-del="${E(id)}">Delete</button></div>`; }).join("")
-      : `<p class="muted" style="margin:0">No tests yet. Make your first one below.</p>`;
-  }
-  const examName = id => id === "all" ? "All SSC exams" : ((window.EXAMS || []).find(x => x.id === id) || {}).name || id;
-  $("tList").addEventListener("click", async e => {
-    const ed = e.target.closest("[data-edit]"), del = e.target.closest("[data-del]");
-    if (ed) { const id = ed.dataset.edit, t = D.TESTS[id]; editing = id; tQs = t.questions.slice();
-      $("tFormTitle").textContent = "Edit test"; $("tTitle").value = t.title; $("tExam").value = t.exam; $("tType").value = t.type;
-      $("tMin").value = t.minutes; $("tPlus").value = t.plus; $("tMinus").value = t.minus; $("tLive").checked = D.LIVE.some(l => l.link === "test.html?id=" + id);
-      $("tSect").checked = !!t.sectional; $("tStrict").checked = !!t.strict; whenSet("tWhen", t.publishAt); $("tSecMin").value = t.sectional && t.sections[0] ? t.sections[0].minutes : 15;
-      const fr = document.querySelector('[name="tMode"][value="file"]'); fr.checked = true; fr.dispatchEvent(new Event("change"));
-      $("tText").value = toQuiz(tQs); drawTPrev(); $("tTitle").scrollIntoView({ behavior: "smooth", block: "center" }); }
-    if (del) { const id = del.dataset.del; if (!confirmBox(`Delete the test "${D.TESTS[id].title}"?`)) return;
-      delete D.TESTS[id]; D.LIVE = D.LIVE.filter(l => l.link !== "test.html?id=" + id);
-      try { await save("TESTS"); await save("LIVE"); drawTests(); drawLive(); say("Test deleted.", "ok"); } catch (er) { say("Could not delete: " + er.message, "err"); } }
+  $("qDoc").addEventListener("click", () => $("tDocx").click());
+  $("qDocHelp").addEventListener("click", () => $("docHelp").hidden = !$("docHelp").hidden);
+  $("tDocx").addEventListener("change", async e => {
+    const f = e.target.files[0]; if (!f) return; e.target.value = "";
+    try { say("Reading the Word file…", "info", true);
+      if (!window.mammoth) await load(LIBS.mammoth);
+      const res = await mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() });
+      const r = parseWordQs(res.value);
+      if (!r.ok.length) return say("No questions found. Press “? Word format” to see how to write them.", "err");
+      mergeQs(r.ok, "Word");
+      say(r.bad.length ? `${r.ok.length} questions added. Questions ${r.bad.slice(0, 10).join(", ")} were skipped (need options and an answer).` : `${r.ok.length} questions added from Word.`, r.bad.length ? "err" : "ok");
+    } catch (err) { say("Could not read the Word file: " + err.message, "err"); }
   });
+
+  // ---------- question bank ----------
+  let bankRows = [];
+  $("qBank").addEventListener("click", () => {
+    const ids = Object.keys(D.TESTS).filter(id => id !== editing);
+    if (!ids.length) return say("No earlier tests yet. The question bank fills up as you publish tests.", "info");
+    $("bTest").innerHTML = `<option value="">All tests</option>` + ids.map(id => `<option value="${E(id)}">${E(D.TESTS[id].title)}</option>`).join("");
+    $("bFind").value = ""; $("bAll").checked = false; fillBankSec(); drawBank(); $("bankDlg").showModal();
+  });
+  function fillBankSec() { const ids = $("bTest").value ? [$("bTest").value] : Object.keys(D.TESTS).filter(id => id !== editing);
+    const secs = [...new Set(ids.flatMap(id => D.TESTS[id].questions.map(q => q.section || "General")))];
+    $("bSec").innerHTML = `<option value="">All sections</option>` + secs.map(s => `<option>${E(s)}</option>`).join(""); }
+  function drawBank() {
+    const ids = $("bTest").value ? [$("bTest").value] : Object.keys(D.TESTS).filter(id => id !== editing), sec = $("bSec").value, w = $("bFind").value.trim().toLowerCase();
+    const have = new Set(tQs.map(q => q.q.trim()));
+    bankRows = ids.flatMap(id => D.TESTS[id].questions.map(q => ({ q, from: D.TESTS[id].title }))).filter(x => (!sec || (x.q.section || "General") === sec) && (!w || (x.q.q + " " + (x.q.topic || "")).toLowerCase().includes(w)));
+    $("bList").innerHTML = bankRows.length ? bankRows.slice(0, 400).map((x, i) => `<label><input type="checkbox" data-b="${i}"${have.has(x.q.q.trim()) ? " disabled" : ""}><span>${E(x.q.q)}<small>${E(x.q.section || "General")}${x.q.topic ? " · " + E(x.q.topic) : ""} · ${E(x.from)}${have.has(x.q.q.trim()) ? " · already in this test" : ""}</small></span></label>`).join("") : `<p class="muted">No questions match.</p>`;
+    $("bInfo").textContent = bankRows.length + " questions";
+  }
+  $("bTest").addEventListener("change", () => { fillBankSec(); drawBank(); });
+  $("bSec").addEventListener("change", drawBank); $("bFind").addEventListener("input", drawBank);
+  $("bAll").addEventListener("change", () => $("bList").querySelectorAll("input:not(:disabled)").forEach(c => c.checked = $("bAll").checked));
+  $("bCancel").addEventListener("click", () => $("bankDlg").close());
+  $("bAdd").addEventListener("click", () => {
+    const picked = [...$("bList").querySelectorAll("input:checked")].map(c => JSON.parse(JSON.stringify(bankRows[+c.dataset.b].q)));
+    $("bankDlg").close(); if (!picked.length) return;
+    tQs = tQs.concat(picked); picked.forEach(q => { if (q.section && tSecs.length && !tSecs.some(s => s.name === q.section)) tSecs.push({ name: q.section, minutes: 0, n: 0 }); });
+    drawSecs(); drawQs(); say(`${picked.length} questions added from the question bank.`, "ok");
+  });
+
+  // ---------- open / close / save ----------
+  function openEd() { $("tEd").hidden = false; $("tEd").scrollIntoView({ behavior: "smooth", block: "start" }); }
+  function closeEd() { $("tEd").hidden = true; editing = null; }
+  $("tClose").addEventListener("click", () => { if (tQs.length && !confirmBox("Close without publishing? Unpublished changes will be lost.")) return; closeEd(); });
+  function resetTest() {
+    editing = null; tQs = []; tSecs = []; openQ = -1; qLang = "en"; $("tFormTitle").textContent = "New test"; $("tOpen").hidden = true;
+    fillExamSel(); const fe = $("mfExam").value; if (fe) $("tExam").value = fe; fillTierSel($("mfTier").value);
+    $("tType").value = $("mfType").value || "Full mock test"; typeUi();
+    ["tTitle", "tYear", "tShift"].forEach(k => $(k).value = ""); $("tMin").value = 60; $("tPlus").value = 2; $("tMinus").value = 0.5;
+    $("tLive").checked = true; $("tSect").checked = false; $("tStrict").checked = false; whenSet("tWhen", null);
+    if (curTier()) $("tPreset").click(); else { drawSecs(); drawQs(); }
+  }
+  $("tNew").addEventListener("click", () => { resetTest(); openEd(); });
+  function loadTest(id) {
+    const t = D.TESTS[id]; editing = id; tQs = JSON.parse(JSON.stringify(t.questions)); openQ = -1; qLang = "en";
+    fillExamSel(); $("tExam").value = examById(t.exam) || t.exam === "all" ? t.exam : "all"; fillTierSel(t.tier || "t1");
+    $("tType").value = t.type; typeUi(); if (t.section) fillSecPick(t.section);
+    $("tFormTitle").textContent = "Edit test"; $("tTitle").value = t.title; $("tYear").value = t.year || ""; $("tShift").value = t.shift || "";
+    $("tMin").value = t.minutes; $("tPlus").value = t.plus; $("tMinus").value = t.minus; $("tLive").checked = D.LIVE.some(l => l.link === "test.html?id=" + id);
+    $("tSect").checked = !!t.sectional; $("tStrict").checked = !!t.strict; whenSet("tWhen", t.publishAt);
+    const names = t.sections && t.sections.length ? t.sections.map(s => s.name) : [...new Set(tQs.map(q => q.section).filter(Boolean))];
+    tSecs = names.map(n => ({ name: n, minutes: ((t.sections || []).find(s => s.name === n) || {}).minutes || 0, n: (t.plan || {})[n] || 0 }));
+    $("tOpen").href = "test.html?id=" + encodeURIComponent(id); $("tOpen").hidden = false;
+    drawSecs(); drawQs(); openEd();
+  }
   $("tSave").addEventListener("click", async () => {
-    const title = $("tTitle").value.trim(); if (!title) return say("Give the test a name.", "err");
-    if (tMode() === "text") { const r = parseQuiz($("tText").value); if (r.errs.length) return say(r.errs[0], "err"); tQs = r.list; }
-    if (!tQs.length) return say("Add questions first.", "err");
+    const title = $("tTitle").value.trim(); if (!title) return say("Give the test a name (step 1).", "err");
+    if (!tQs.length) return say("Add questions first (step 3).", "err");
+    for (let i = 0; i < tQs.length; i++) { const p = qProblem(tQs[i]); if (p) { openQ = i; drawQs(); return say(`Question ${i + 1} ${p}.`, "err"); } }
     let id = editing; if (!id) { id = slug(title); let k = 2; while (D.TESTS[id]) id = slug(title) + "-" + k++; }
-    const t = { title, exam: $("tExam").value, type: $("tType").value, minutes: +$("tMin").value || 60, plus: +$("tPlus").value || 1, minus: +$("tMinus").value || 0, questions: tQs };
+    const exam = $("tExam").value, type = $("tType").value, tr = curTier();
+    const qs = tQs.map(q => { const c = { ...q }; ["topic", "qh", "whyh", "img", "wimg"].forEach(k => { if (!c[k]) delete c[k]; }); if (c.optsh && !c.optsh.some(Boolean)) delete c.optsh; if (c.oimg && !c.oimg.some(Boolean)) delete c.oimg; if (!c.section) c.section = "General"; return c; });
+    const t = { title, exam, type, minutes: +$("tMin").value || 60, plus: +$("tPlus").value || 1, minus: +$("tMinus").value || 0, questions: qs };
+    if (tr && exam !== "all") t.tier = tr.id;
+    if (type === "Section-wise test") t.section = $("tSecPick").value;
+    if (type === "PYQ paper") { if ($("tYear").value.trim()) t.year = $("tYear").value.trim(); if ($("tShift").value.trim()) t.shift = $("tShift").value.trim(); }
     if ($("tStrict").checked) t.strict = true;
     const tw = whenVal("tWhen"); if (tw && tw > Date.now()) t.publishAt = tw;
+    const order = tSecs.map(s => s.name); qs.sort((a, b) => { const x = order.indexOf(a.section), y = order.indexOf(b.section); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); });
+    if (tSecs.length) t.plan = Object.fromEntries(tSecs.filter(s => s.n).map(s => [s.name, s.n]));
     if ($("tSect").checked) {
-      const names = [...new Set(tQs.map(q => q.section || "General"))];
-      tQs.forEach(q => { if (!q.section) q.section = "General"; });
-      t.sectional = true; t.sections = names.map(n => ({ name: n, minutes: +$("tSecMin").value || 15 }));
+      const names = [...new Set(qs.map(q => q.section))];
+      t.sectional = true; t.sections = names.map(n => ({ name: n, minutes: ((tSecs.find(s => s.name === n) || {}).minutes) || 15 }));
       t.minutes = t.sections.reduce((s, x) => s + x.minutes, 0);
-    }
+    } else if (tSecs.length > 1) t.sections = tSecs.filter(s => qs.some(q => q.section === s.name)).map(s => ({ name: s.name, minutes: s.minutes || 0 }));
     D.TESTS[id] = t;
-    const link = "test.html?id=" + id, entry = { name: title, type: t.type, exams: examName(t.exam), questions: tQs.length, minutes: t.minutes, marking: `+${t.plus} / −${t.minus}`, link };
+    const link = "test.html?id=" + id, entry = { name: title, type, exams: examName(exam) + (tr && exam !== "all" && tiersOf(exam).length > 1 ? " · " + tr.name : ""), questions: qs.length, minutes: t.minutes, marking: `+${t.plus} / −${t.minus}`, link };
     if (t.publishAt) entry.publishAt = t.publishAt;
     const i = D.LIVE.findIndex(l => l.link === link);
     if ($("tLive").checked) { if (i >= 0) D.LIVE[i] = entry; else D.LIVE.unshift(entry); } else if (i >= 0) D.LIVE.splice(i, 1);
     try {
       say("Publishing test… (1 of 2)", "info", true); await save("TESTS");
       say("Publishing test… (2 of 2)", "info", true); await save("LIVE");
-      drawTests(); drawLive(); editing = id; $("tFormTitle").textContent = "Edit test";
-      say(`Published "${title}" with ${tQs.length} questions. Live in about a minute at ${link}`, "ok");
+      editing = id; tQs = JSON.parse(JSON.stringify(qs)); drawQs(); drawTests(); drawLive(); $("tFormTitle").textContent = "Edit test"; $("tOpen").href = link; $("tOpen").hidden = false;
+      say(`Published "${title}" with ${qs.length} questions under ${examName(exam)}${tr && exam !== "all" ? " → " + tr.name : ""} → ${type}. Live in about a minute.`, "ok");
     } catch (e) { say("Could not publish: " + e.message, "err"); }
   });
-  drawTPrev();
+  $("tSect").addEventListener("change", () => { if ($("tSect").checked && tSecs.length) $("tMin").value = tSecs.reduce((a, s) => a + (s.minutes || 0), 0) || $("tMin").value; });
 
   // =====================================================================
   // LIVE TESTS
@@ -399,66 +696,6 @@
   $("wSave").addEventListener("click", async () => { try { say("Publishing…", "info", true); await save("NEWS"); say("What's new published.", "ok"); } catch (e) { say("Could not publish: " + e.message, "err"); } });
 
   // =====================================================================
-  // FILES
-  // =====================================================================
-  async function drawFiles() {
-    try {
-      const r = await gh(`/contents/assets/uploads?ref=${encodeURIComponent(cfg.brn)}`); const list = await r.json();
-      $("fList").innerHTML = list.filter(f => f.type === "file" && f.name !== ".keep").map(f => `<div class="item"><span class="t"><b>${E(f.name)}</b><span>assets/uploads/${E(f.name)} · ${Math.ceil(f.size / 1024)} KB</span></span>
-        <button class="btn btn-out btn-sm" type="button" data-copy="assets/uploads/${E(f.name)}">Copy link</button>
-        <button class="btn btn-del btn-sm" type="button" data-fdel="${E(f.name)}">Delete</button></div>`).join("") || `<p class="muted" style="margin:0">No files yet.</p>`;
-    } catch (e) { $("fList").innerHTML = `<p class="muted" style="margin:0">No files yet.</p>`; }
-  }
-  $("fList").addEventListener("click", async e => {
-    const d = e.target.closest("[data-fdel]");
-    if (d) { if (!confirmBox(`Delete ${d.dataset.fdel}? Any notes, tests or slides using this file will show it as missing.`)) return;
-      try { say("Deleting…", "info", true); await removeFile("assets/uploads/" + d.dataset.fdel, "Admin: delete " + d.dataset.fdel); drawFiles(); say("File deleted.", "ok"); } catch (er) { say("Could not delete: " + er.message, "err"); } return; }
-    const b = e.target.closest("[data-copy]"); if (!b) return;
-    const url = location.origin + location.pathname.replace(/[^/]*$/, "") + b.dataset.copy;
-    try { await navigator.clipboard.writeText(url); say("Link copied: " + url, "ok"); } catch (er) { say("Link: " + url, "info"); } });
-  $("fUp").addEventListener("click", async () => {
-    const f = $("fFile").files[0]; if (!f) return say("Choose a file first.", "err");
-    if (f.size > 20 * 1024 * 1024) return say("That file is over 20 MB. Please make it smaller.", "err");
-    const name = f.name.toLowerCase().replace(/[^a-z0-9.\-]+/g, "-");
-    try { say("Uploading…", "info", true); await writeB64("assets/uploads/" + name, b64FromBytes(new Uint8Array(await f.arrayBuffer())), "Admin: upload " + name);
-      $("fFile").value = ""; drawFiles(); say("Uploaded: assets/uploads/" + name, "ok"); }
-    catch (e) { say("Could not upload: " + e.message, "err"); }
-  });
-
-  // =====================================================================
-  // SLIDES (made in slide-editor.html)
-  // =====================================================================
-  async function drawSlides() {
-    try {
-      const t = await readText("data/slides/index.json"), list = t ? JSON.parse(t) : [];
-      const chName = id => { for (const s of D.SUBJECTS) { const c = s.chapters.find(x => x.id === id); if (c) return s.name + " · " + c.title; } return ""; };
-      $("sList").innerHTML = list.map(d => `<div class="item"><span class="t"><b>${E(d.title)}</b><span>${d.slides} slides · saved ${new Date(d.updated).toLocaleString("en-IN")}${d.chapter ? " · on " + E(chName(d.chapter) || d.chapter) : " · draft (not published)"}${d.pdf ? " · PDF download on" : ""}</span></span>
-        <a class="btn btn-out btn-sm" href="slide-editor.html?id=${encodeURIComponent(d.id)}">Open</a>${d.chapter ? `<a class="btn btn-out btn-sm" href="note.html?id=${encodeURIComponent(d.chapter)}" target="_blank" rel="noopener">View</a>` : ""}
-        <button class="btn btn-del btn-sm" type="button" data-sdel="${E(d.id)}" data-stitle="${E(d.title)}">Delete</button></div>`).join("") || `<p class="muted" style="margin:0">No slides yet. Click <b>＋ New slides</b>.</p>`;
-    } catch (e) { $("sList").innerHTML = `<p class="muted" style="margin:0">Could not load slides: ${E(e.message)}</p>`; }
-  }
-  document.querySelector('#atabs [data-t="slides"]').addEventListener("click", drawSlides);
-  $("sList").addEventListener("click", async e => {
-    const b = e.target.closest("[data-sdel]"); if (!b) return;
-    if (!confirmBox(`Delete the slides "${b.dataset.stitle}"? Students will no longer see them. This cannot be undone.`)) return;
-    const id = b.dataset.sdel;
-    try {
-      say("Deleting…", "info", true);
-      const list = JSON.parse((await readText("data/slides/index.json")) || "[]");
-      // take the slides off their chapter
-      let notesChanged = false;
-      Object.keys(D.NOTES).forEach(cid => { const n = D.NOTES[cid]; if (n.deck !== id) return; delete n.deck; notesChanged = true;
-        if (!n.html && !(n.phases || []).length) { delete D.NOTES[cid]; D.SUBJECTS.forEach(s2 => s2.chapters.forEach(c => { if (c.id === cid) c.ready = false; })); } });
-      if (notesChanged) { await save("NOTES"); await save("SUBJECTS"); }
-      await removeFile(`data/slides/${id}.json`, "Admin: delete slides " + id);
-      await writeB64("data/slides/index.json", b64FromText(JSON.stringify(list.filter(x => x.id !== id), null, 1)), "Admin: slides list");
-      drawSlides(); say("Slides deleted.", "ok");
-    } catch (er) { say("Could not delete: " + er.message, "err"); }
-  });
-  if (location.hash === "#notes") { const w = setInterval(() => { if (connected) { clearInterval(w); openTab("notes"); } }, 300); setTimeout(() => clearInterval(w), 15000); }
-  if (location.hash === "#slides") setTimeout(() => { if (connected) { openTab("slides"); drawSlides(); } else { const w = setInterval(() => { if (connected) { clearInterval(w); openTab("slides"); drawSlides(); } }, 300); setTimeout(() => clearInterval(w), 15000); } }, 0);
-
-  // =====================================================================
   // REPORTS (mistakes reported by students)
   // =====================================================================
   const testName = id => (D.TESTS[id] && D.TESTS[id].title) || (id === "polity-ch1-4" ? "Indian Polity – Chapters 1 to 4" : id);
@@ -481,10 +718,10 @@
   // =====================================================================
   // WEBSITE (menu, name, footer, exams, subjects, topics, page edits)
   // =====================================================================
-  const NAVD = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["daily-quiz.html", "Daily Quiz"], ["leaderboard.html", "Leaderboard"], ["index.html#about", "About"]];
+  const NAVD = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["daily-quiz.html", "Daily Quiz"], ["leaderboard.html", "Leaderboard"], ["index.html#about", "About"]];
   let navRows = [];
   function drawWebsite() {
-    const pages = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["daily-quiz.html", "Daily quiz"], ["leaderboard.html", "Leaderboard"], ["account.html", "Account details"], ...D.EXAMS.map(x => [x.page, x.name + " page"])];
+    const pages = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["daily-quiz.html", "Daily quiz"], ["leaderboard.html", "Leaderboard"], ["account.html", "Account details"], ...D.EXAMS.map(x => [x.page, x.name + " page"])];
     const edited = (D.SITE.pages || {});
     $("wPages").innerHTML = pages.map(([u, n]) => `<div class="item"><span class="t"><b>${E(n)}</b><span>${E(u)}${edited[u.replace(/\.html$/, "")] ? " · has your edits" : ""}</span></span><a class="btn btn-out btn-sm" href="${E(u)}?edit=1" target="_blank" rel="noopener">✎ Edit page</a></div>`).join("");
     const sh = D.SITE.shell || {};
@@ -519,12 +756,20 @@
     try { say("Saving…", "info", true); await save("SITE"); say("Menu, name and footer saved. Live in about a minute.", "ok"); } catch (er) { say("Could not save: " + er.message, "err"); }
   };
   // exams: every field can be changed
-  const LBL = { name: "Name", short: "Short name (badge)", full: "Full name", level: "Level", posts: "Posts", stage: "Stage", time: "Time", negative: "Negative marking", color: "Colour (CSS)", page: "Page file" };
+  const LBL = { name: "Name", short: "Short name (badge)", full: "Full name", level: "Level", posts: "Posts", color: "Colour (CSS)", page: "Page file" };
+  const tierBox = (t, j) => `<div class="mt-sb" data-tr="${j}" style="background:var(--surface)"><div class="form">
+      <label class="f">Tier name<input data-t="name" value="${E(t.name)}" placeholder="Tier 1"></label><label class="f">Total minutes<input data-t="minutes" type="number" value="${E(t.minutes)}"></label>
+      <label class="f">Marks for correct<input data-t="plus" type="number" step="0.25" value="${E(t.plus)}"></label><label class="f">Minus for wrong<input data-t="minus" type="number" step="0.25" value="${E(t.minus)}"></label>
+      <label class="f wide">Negative marking (shown to students)<input data-t="negative" value="${E(t.negative || "")}"></label>
+      <label class="f wide">Pattern – one section per line: Section | Questions | Marks | Minutes<textarea data-t="pattern" style="min-height:120px">${E((t.pattern || []).map(r => r.join(" | ")).join("\n"))}</textarea></label></div>
+      <div style="margin-top:8px"><button class="btn btn-del btn-sm" type="button" data-trdel>Remove this tier</button></div></div>`;
   function drawExams() {
     $("wExams").innerHTML = D.EXAMS.map((x, i) => `<details class="item" data-e="${i}" style="display:block"><summary style="cursor:pointer;font-weight:700">${E(x.name || "New exam")} ${x.hide ? '<span class="pill soon">Hidden</span>' : ""}</summary>
       <div class="form" style="margin-top:12px">${Object.keys(LBL).map(k => `<label class="f${k === "posts" ? " wide" : ""}">${LBL[k]}<input data-k="${k}" value="${E(x[k] || "")}" ${k === "page" ? "readonly" : ""}></label>`).join("")}
-      <label class="f wide">Pattern – one section per line: Section | Questions | Marks<textarea data-k="pattern" style="min-height:110px">${E((x.pattern || []).map(r => r.join(" | ")).join("\n"))}</textarea></label>
-      ${Object.keys(x).filter(k => !LBL[k] && !["id", "pattern", "hide"].includes(k)).map(k => `<label class="f wide">${E(k)} (other detail)<textarea data-j="${E(k)}">${E(JSON.stringify(x[k], null, 1))}</textarea></label>`).join("")}</div>
+      <div class="f wide">Tiers (Tier 1, Tier 2 … or Paper 1, Paper 2) – each has its own pattern; "⚡ Use exam pattern" in Mock tests uses these
+        <div class="tiers" style="display:flex;flex-direction:column;gap:10px;margin-top:6px">${window.SSCTiers(x).map(tierBox).join("")}</div>
+        <div><button class="btn btn-out btn-sm" type="button" data-tradd>＋ Add tier</button></div></div>
+      ${Object.keys(x).filter(k => !LBL[k] && !["id", "pattern", "hide", "tiers", "stage", "time", "negative"].includes(k)).map(k => `<label class="f wide">${E(k)} (other detail)<textarea data-j="${E(k)}">${E(JSON.stringify(x[k], null, 1))}</textarea></label>`).join("")}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><label style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" data-k="show" ${x.hide ? "" : "checked"}> Show on the website</label>
       <button class="btn btn-out btn-sm" type="button" data-em="-1" ${i ? "" : "disabled"}>↑</button><button class="btn btn-out btn-sm" type="button" data-em="1" ${i < D.EXAMS.length - 1 ? "" : "disabled"}>↓</button>
       <button class="btn btn-del btn-sm" type="button" data-edel>Delete exam</button></div></details>`).join("");
@@ -532,18 +777,23 @@
   function readExams() {
     $("wExams").querySelectorAll("[data-e]").forEach(box => { const x = D.EXAMS[+box.dataset.e];
       box.querySelectorAll("input[data-k]").forEach(inp => { if (inp.dataset.k === "show") { if (inp.checked) delete x.hide; else x.hide = true; } else x[inp.dataset.k] = inp.value.trim(); });
-      x.pattern = box.querySelector('textarea[data-k="pattern"]').value.split(/\r?\n/).map(l => l.split("|").map(c => c.trim())).filter(r => r[0]).map(r => [r[0], +r[1] || r[1] || "", +r[2] || r[2] || ""]);
+      x.tiers = [...box.querySelectorAll("[data-tr]")].map((tb, j) => { const g = k => tb.querySelector(`[data-t="${k}"]`).value.trim();
+        return { id: "t" + (j + 1), name: g("name") || "Tier " + (j + 1), minutes: +g("minutes") || 60, plus: +g("plus") || 1, minus: +g("minus") || 0, negative: g("negative"),
+          pattern: g("pattern").split(/\r?\n/).map(l => l.split("|").map(c => c.trim())).filter(r => r[0]).map(r => [r[0], +r[1] || 0, +r[2] || 0, +r[3] || 0]) }; });
+      if (x.tiers[0]) { x.pattern = x.tiers[0].pattern.map(r => r.slice(0, 3)); x.stage = x.tiers[0].name; x.time = x.tiers[0].minutes + " minutes"; x.negative = x.tiers[0].negative; }
       box.querySelectorAll("textarea[data-j]").forEach(t => { try { x[t.dataset.j] = JSON.parse(t.value); } catch (e) { throw new Error(`"${t.dataset.j}" of ${x.name} is not written correctly.`); } }); });
   }
   let newExamPages = [], goneExamPages = [];
   $("wExams").addEventListener("click", e => { const box = e.target.closest("[data-e]"); if (!box) return; const i = +box.dataset.e;
+    if (e.target.closest("[data-tradd]")) { e.preventDefault(); const tl = box.querySelector(".tiers"), n = tl.children.length + 1; tl.insertAdjacentHTML("beforeend", tierBox({ name: "Tier " + n, minutes: 60, plus: 2, minus: 0.5, negative: "", pattern: [] }, n - 1)); return; }
+    if (e.target.closest("[data-trdel]")) { e.preventDefault(); const tl = box.querySelector(".tiers"); if (tl.children.length < 2) return say("An exam needs at least one tier.", "err"); if (confirmBox("Remove this tier? Tests in it will show under the first tier.")) e.target.closest("[data-tr]").remove(); return; }
     const mv = e.target.closest("[data-em]"); if (mv) { e.preventDefault(); try { readExams(); } catch (er) { return say(er.message, "err"); } const j = i + +mv.dataset.em; [D.EXAMS[i], D.EXAMS[j]] = [D.EXAMS[j], D.EXAMS[i]]; drawExams(); }
     if (e.target.closest("[data-edel]")) { e.preventDefault(); if (!confirmBox(`Delete ${D.EXAMS[i].name}? Its page will be removed too.`)) return; try { readExams(); } catch (er) {} goneExamPages.push(D.EXAMS[i].page); D.EXAMS.splice(i, 1); drawExams(); say("Press Save exams to finish.", "info"); } });
   $("wExamAdd").onclick = () => {
     try { readExams(); } catch (er) { return say(er.message, "err"); }
     const name = prompt("Name of the new exam (e.g. SSC Delhi Police Constable)"); if (!name) return;
     let id = slug(name).replace(/^ssc-/, ""); const ids = D.EXAMS.map(x => x.id); let k = 2, base = id; while (ids.includes(id)) id = base + "-" + k++;
-    const x = { id, page: "ssc-" + id + ".html", short: name.replace(/^SSC\s+/i, "").split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 5), name, full: name, level: "", posts: "", stage: "", time: "", negative: "", pattern: [], color: "linear-gradient(135deg,#1F3A93,#3F62D1)" };
+    const x = { id, page: "ssc-" + id + ".html", short: name.replace(/^SSC\s+/i, "").split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 5), name, full: name, level: "", posts: "", tiers: [{ id: "t1", name: "Tier 1", minutes: 60, plus: 2, minus: 0.5, negative: "−0.50 per wrong answer", pattern: [] }], pattern: [], color: "linear-gradient(135deg,#1F3A93,#3F62D1)" };
     D.EXAMS.push(x); newExamPages.push(x); drawExams(); $("wExams").querySelector(`[data-e="${D.EXAMS.length - 1}"]`).open = true; say("Fill in the details, then Save exams.", "info");
   };
   $("wExamSave").onclick = async () => {

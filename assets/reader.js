@@ -26,67 +26,83 @@
   const head = (n.tableHead || []).filter(Boolean);
   const pager = `<div class="pager">${prev ? `<a class="btn btn-out" href="note.html?id=${prev.id}">← ${esc(prev.title)}</a>` : `<a class="btn btn-out" href="notes.html#${sub.id}">← All ${esc(sub.name)} notes</a>`}
       ${next ? `<a class="btn btn-pri" href="note.html?id=${next.id}">${esc(next.title)} →</a>` : ""}</div>`;
+  const src = v => { v = String(v || "").trim(); if (!v) return ""; if (/^https:\/\//i.test(v)) return v; if (/^(assets\/|\/assets\/)/.test(v)) return v.replace(/^\//, ""); if (/^[a-z0-9._-]+$/i.test(v)) return "assets/uploads/" + v; return ""; };
+  const pic = (v, alt) => { const u = src(v); return u ? `<img class="pq-img" src="${esc(u)}" alt="${esc(alt || "")}" loading="lazy">` : ""; };
+
+  // ---- what this chapter has ----
   const hasNotes = !!(n.html || (n.phases && n.phases.length));
-  const quizHtml = () => (n.quiz && n.quiz.length ? "<h2>Quick check</h2>" : "") + (n.quiz || []).map((q, qi) => `<div class="q" data-q="${qi}"><p>${qi + 1}. ${esc(q.q)}<small>${esc(q.tag || "")}</small></p>
-      ${q.opts.map((o, oi) => `<button type="button" data-o="${oi}">${String.fromCharCode(65 + oi)}. ${esc(o)}</button>`).join("")}<div class="why" hidden></div></div>`).join("");
-  function quizWire() { box.querySelectorAll(".q").forEach(el => { const q = (n.quiz || [])[el.dataset.q];
-    el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { el.querySelectorAll("button").forEach(x => { x.disabled = true; if (+x.dataset.o === q.a) x.classList.add("right"); });
-      if (+b.dataset.o !== q.a) b.classList.add("wrong"); const w = el.querySelector(".why"); w.hidden = false; w.textContent = (+b.dataset.o === q.a ? "Correct. " : "Not quite. ") + q.why; })); }); }
-  // Slides made in the admin slide editor (data/slides/<deck>.json), and the optional PDF download.
-  function extras() {
-    const meta = box.querySelector(".note-meta");
-    if (n.pdf) meta.insertAdjacentHTML("beforeend", `<button class="btn btn-out pdf-btn" type="button" id="pdfBtn" style="margin-left:auto;min-height:36px;padding:6px 14px">Download PDF</button>`);
-    if (!n.deck) { if (n.pdf) document.getElementById("pdfBtn").onclick = () => SlideKit.printNow("note-printing", n.title); return; }
-    const h1 = box.querySelector("h1");
-    h1.insertAdjacentHTML("afterend", `${hasNotes ? `<div class="note-switch chips" role="group" aria-label="Show"><button class="chip" type="button" data-v="slides" aria-pressed="true">Slides</button><button class="chip" type="button" data-v="notes" aria-pressed="false">Notes</button></div>` : ""}<div id="slideBox"><p class="muted">Loading slides…</p></div>`);
-    const rest = [...box.children].filter(el => el !== h1 && el !== meta && !el.matches("#slideBox,.note-switch,.pager"));
-    let deck = null;
-    const view = v => { box.querySelectorAll(".note-switch [data-v]").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v));
-      document.getElementById("slideBox").hidden = v !== "slides"; rest.forEach(el => el.hidden = v === "slides"); };
-    if (hasNotes) { view("slides"); box.querySelector(".note-switch").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (b) view(b.dataset.v); }); }
+  const tabs = [hasNotes && ["notes", "📄", "Notes"], n.deck && ["slides", "📊", "Slides"], n.video && n.video.id && ["video", "▶", "Video"], n.quiz && n.quiz.length && ["practice", "❓", "Practice"]].filter(Boolean);
+  const notesHtml = () => {
+    if (n.html) return `<div class="doc">${window.DOMPurify ? DOMPurify.sanitize(n.html) : safeHtml(n.html)}</div>`;
+    return `${(n.phases || []).map(p => `<h2>${esc(p.h)}</h2><ol class="tl">${p.items.map(it => `
+      <li><span class="yr">${esc(it.yr)}</span><div><h3>${esc(it.t)}</h3>${it.s ? `<small>${esc(it.s)}</small>` : ""}
+      <ul>${it.pts.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div></li>`).join("")}</ol>`).join("")}
+      ${n.table ? `<h2>${esc(n.tableTitle || "Important facts")}</h2><div class="tbl"><table><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+      <tbody>${n.table.map(r => `<tr>${r.slice(0, head.length).map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : ""}
+      ${n.tricks && n.tricks.length ? `<div class="tricks"><b>Memory tricks</b><ul>${n.tricks.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}`;
+  };
+  const panes = {
+    notes: () => notesHtml(),
+    slides: () => `<div id="slideBox"><p class="muted">Loading slides…</p></div>`,
+    video: () => `<div class="vwrap"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(n.video.id)}?rel=0&modestbranding=1&playsinline=1" title="${esc(n.video.title || n.title)}" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>${n.video.title ? `<p class="vtitle">${esc(n.video.title)}</p>` : ""}`,
+    practice: () => `<div class="pbar" id="pbar"></div>` + n.quiz.map((q, qi) => `<div class="q" data-q="${qi}"><p>${qi + 1}. ${esc(q.q)}${q.tag ? `<small>${esc(q.tag)}</small>` : ""}</p>${pic(q.img, "Question picture")}
+      ${q.opts.map((o, oi) => `<button type="button" data-o="${oi}">${String.fromCharCode(65 + oi)}. ${esc(o)}</button>`).join("")}<div class="why" hidden></div></div>`).join("") +
+      `<div class="pbar"><button class="btn btn-out" type="button" id="pAgain">↻ Reattempt all questions</button></div>`
+  };
+  box.innerHTML = `<div class="note-meta"><span class="pill">${esc(sub.name)} · Chapter ${chNo}</span>${n.read ? `<span class="pill ok">${esc(n.read)}</span>` : ""}${(n.exams || []).map(e => `<span class="pill soon">${esc(e)}</span>`).join("")}</div>
+    <h1>${esc(n.title)}</h1>${n.intro ? `<p>${esc(n.intro)}</p>` : ""}
+    ${tabs.length > 1 ? `<div class="ntabs" role="tablist" aria-label="Chapter">${tabs.map(([id, ic, l]) => `<button type="button" role="tab" data-v="${id}"><span aria-hidden="true">${ic}</span>${l}</button>`).join("")}</div>` : ""}
+    ${tabs.map(([id]) => `<section class="npane" data-pane="${id}"${id === "notes" ? "" : ' data-dyn="1"'}>${panes[id]()}</section>`).join("")}
+    <div class="donebar" id="doneBar"><span id="doneTxt">Finished this chapter?</span><button class="btn btn-pri" type="button" id="doneBtn">✓ Mark as complete</button></div>
+    ${pager}`;
+
+  // ---- reading progress (kept in the student's account) ----
+  let isDone = false;
+  const paintDone = () => { const b = document.getElementById("doneBtn"), bar = document.getElementById("doneBar");
+    b.textContent = isDone ? "↺ Mark as not complete" : "✓ Mark as complete"; b.className = "btn " + (isDone ? "btn-out" : "btn-pri");
+    document.getElementById("doneTxt").innerHTML = isDone ? "<b>✓ You have completed this chapter.</b>" : "Finished this chapter?"; bar.classList.toggle("on", isDone); };
+  const post = body => fetch("/api/me/progress", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => {});
+  fetch("/api/me/progress").then(r => r.ok ? r.json() : null).then(d => { if (!d) return; const me = d.progress.find(x => x.chapter === id); isDone = !!(me && me.done); paintDone(); }).catch(() => {});
+  post({ chapter: id });
+  document.getElementById("doneBtn").addEventListener("click", () => { isDone = !isDone; paintDone(); post({ chapter: id, done: isDone }); });
+  paintDone();
+
+  // ---- tabs ----
+  let deck = null, view = null;
+  function show(v) {
+    if (!tabs.some(t => t[0] === v)) v = tabs[0] ? tabs[0][0] : null; view = v;
+    box.querySelectorAll(".ntabs [data-v]").forEach(b => b.setAttribute("aria-selected", b.dataset.v === v));
+    box.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== v);
+    if (v === "slides" && !deck) loadDeck();
+  }
+  const tb = box.querySelector(".ntabs");
+  if (tb) tb.addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (!b) return; history.replaceState(null, "", "#" + b.dataset.v); show(b.dataset.v); });
+  function loadDeck() {
+    deck = {};
     fetch("data/slides/" + encodeURIComponent(n.deck) + ".json", { cache: "no-cache" }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(d => {
       deck = d; SlideKit.viewer(d, document.getElementById("slideBox"), { download: false });
     }).catch(() => { document.getElementById("slideBox").innerHTML = `<p class="muted">The slides could not be loaded. Please refresh the page.</p>`; });
-    if (n.pdf) document.getElementById("pdfBtn").onclick = () => {
-      const slidesOn = !document.getElementById("slideBox").hidden;
-      if (slidesOn && deck) SlideKit.printDeck(deck); else SlideKit.printNow("note-printing", n.title);
-    };
   }
-  if (!hasNotes && n.deck) {
-    box.innerHTML = `<div class="note-meta"><span class="pill">${esc(sub.name)} · Chapter ${chNo}</span>${n.read ? `<span class="pill ok">${esc(n.read)}</span>` : ""}${(n.exams || []).map(e => `<span class="pill soon">${esc(e)}</span>`).join("")}</div>
-      <h1>${esc(n.title)}</h1>${n.intro ? `<p>${esc(n.intro)}</p>` : ""}${pager}`;
-    extras(); return;
+
+  // ---- practice: instant right / wrong, reattempt as often as you like ----
+  function wirePractice() {
+    const pb = document.getElementById("pbar"); if (!pb) return;
+    const score = () => { const done = box.querySelectorAll(".q.done").length, ok = box.querySelectorAll(".q.ok").length; pb.innerHTML = `<b>${ok}</b> correct · <b>${done}</b> of ${n.quiz.length} answered`; };
+    box.querySelectorAll(".q").forEach(el => { const q = n.quiz[el.dataset.q];
+      el.querySelectorAll("button[data-o]").forEach(b => b.addEventListener("click", () => {
+        el.querySelectorAll("button[data-o]").forEach(x => { x.disabled = true; if (+x.dataset.o === q.a) x.classList.add("right"); });
+        const good = +b.dataset.o === q.a; if (!good) b.classList.add("wrong"); el.classList.add("done"); if (good) el.classList.add("ok");
+        const w = el.querySelector(".why"); w.hidden = false; w.innerHTML = `<b class="${good ? "ok-t" : "bad-t"}">${good ? "✓ Correct." : "✗ Not quite. Answer: " + String.fromCharCode(65 + q.a)}</b> ${esc(q.why || "")}${pic(q.wimg, "Solution")}`; score(); })); });
+    document.getElementById("pAgain").addEventListener("click", () => { box.querySelectorAll(".q").forEach(el => { el.classList.remove("done", "ok"); el.querySelectorAll("button[data-o]").forEach(x => { x.disabled = false; x.classList.remove("right", "wrong"); }); const w = el.querySelector(".why"); w.hidden = true; w.innerHTML = ""; });
+      score(); box.querySelector('[data-pane="practice"]').scrollIntoView({ behavior: "smooth", block: "start" }); });
+    score();
   }
-  // Notes uploaded from a Word file in the admin page are stored as HTML.
-  if (n.html) {
-    const clean = window.DOMPurify ? DOMPurify.sanitize(n.html) : safeHtml(n.html);
-    box.innerHTML = `<div class="note-meta"><span class="pill">${esc(sub.name)} · Chapter ${chNo}</span>${n.read ? `<span class="pill ok">${esc(n.read)}</span>` : ""}${(n.exams || []).map(e => `<span class="pill soon">${esc(e)}</span>`).join("")}</div>
-      <h1>${esc(n.title)}</h1>${n.intro ? `<p>${esc(n.intro)}</p>` : ""}<div class="doc">${clean}</div>${quizHtml()}${pager}`;
-    quizWire(); extras(); return;
+  wirePractice();
+
+  // ---- optional PDF download (notes or slides, whichever is open) ----
+  if (n.pdf && (hasNotes || n.deck)) {
+    box.querySelector(".note-meta").insertAdjacentHTML("beforeend", `<button class="btn btn-out pdf-btn" type="button" id="pdfBtn" style="margin-left:auto;min-height:36px;padding:6px 14px">Download PDF</button>`);
+    document.getElementById("pdfBtn").onclick = () => { if (view === "slides" && deck && deck.slides) SlideKit.printDeck(deck); else if (hasNotes) { show("notes"); SlideKit.printNow("note-printing", n.title); } else if (deck && deck.slides) SlideKit.printDeck(deck); };
   }
-  box.innerHTML = `
-    <div class="note-meta"><span class="pill">${esc(sub.name)} · Chapter ${chNo}</span><span class="pill ok">${esc(n.read)}</span>${(n.exams || []).map(e => `<span class="pill soon">${esc(e)}</span>`).join("")}</div>
-    <h1>${esc(n.title)}</h1>
-    <p>${esc(n.intro)}</p>
-    ${(n.phases || []).map(p => `<h2>${esc(p.h)}</h2><ol class="tl">${p.items.map(it => `
-      <li><span class="yr">${esc(it.yr)}</span><div><h3>${esc(it.t)}</h3>${it.s ? `<small>${esc(it.s)}</small>` : ""}
-      <ul>${it.pts.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div></li>`).join("")}</ol>`).join("")}
-    ${n.phases && n.phases.length ? "" : ""}${n.table ? `<h2>${esc(n.tableTitle || "Important facts")}</h2><div class="tbl"><table><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead>
-      <tbody>${n.table.map(r => `<tr>${r.slice(0, head.length).map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : ""}
-    ${n.tricks && n.tricks.length ? `<div class="tricks"><b>Memory tricks</b><ul>${n.tricks.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
-    ${n.quiz && n.quiz.length ? "<h2>Quick check</h2>" : ""}
-    ${(n.quiz || []).map((q, qi) => `<div class="q" data-q="${qi}"><p>${qi + 1}. ${esc(q.q)}<small>${esc(q.tag)}</small></p>
-      ${q.opts.map((o, oi) => `<button type="button" data-o="${oi}">${String.fromCharCode(65 + oi)}. ${esc(o)}</button>`).join("")}
-      <div class="why" hidden></div></div>`).join("")}
-    <div class="pager">${prev ? `<a class="btn btn-out" href="note.html?id=${prev.id}">← ${esc(prev.title)}</a>` : `<a class="btn btn-out" href="notes.html#${sub.id}">← All ${esc(sub.name)} notes</a>`}
-      ${next ? `<a class="btn btn-pri" href="note.html?id=${next.id}">${esc(next.title)} →</a>` : `<a class="btn btn-pri" href="test.html">Take the chapter test →</a>`}</div>`;
-  box.querySelectorAll(".q").forEach(el => {
-    const q = (n.quiz || [])[el.dataset.q];
-    el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-      el.querySelectorAll("button").forEach(x => { x.disabled = true; if (+x.dataset.o === q.a) x.classList.add("right"); });
-      if (+b.dataset.o !== q.a) b.classList.add("wrong");
-      const w = el.querySelector(".why"); w.hidden = false; w.textContent = (+b.dataset.o === q.a ? "Correct. " : "Not quite. ") + q.why;
-    }));
-  });
-  extras();
+  show((location.hash || "").slice(1));
 })();

@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/ribbon.css">
 <link rel="stylesheet" href="assets/reader.css">
 <script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light"}catch(e){}</script>
 <style>
@@ -21,6 +22,10 @@ body{display:flex;flex-direction:column;min-height:100vh;margin:0;background:var
 .eb:hover{background:#ffffff1a}.eb.gold{background:#F5C451;color:#141B38;border-color:#F5C451}
 .dstat{font-size:.82rem;color:#C9D3FF}
 .tools{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+body.embed .dtop{display:none}body.embed .rg.own{display:none}
+#page.w-narrow{max-width:640px}#page.w-wide{max-width:1040px}
+#page .bordered{border:2px solid #1F3A93;border-radius:10px;padding:10px 14px}
+#page hr.pb{border-top:2px dashed #C9962E}
 .tools .sep{width:1px;height:26px;background:var(--line);margin:0 4px}
 .tb{min-width:34px;height:34px;padding:0 8px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--ink);font:600 .9rem Inter,sans-serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .tb:hover{background:var(--pri-soft);border-color:var(--line)}
@@ -53,7 +58,7 @@ dialog select,dialog input[type=text],dialog input[type=number]{min-height:42px;
 .tpick i{width:22px;height:22px;border:1px solid var(--line);border-radius:3px;background:var(--bg)}
 .tpick i.on{background:var(--pri-soft);border-color:var(--pri)}
 @media(max-width:700px){#page{padding:28px 18px;min-height:70vh}.tools{overflow-x:auto;flex-wrap:nowrap}}
-@media print{.dbar,.wc,.banner{display:none!important}#page{box-shadow:none;padding:0;max-width:none}}
+@media print{.dbar,.wc,.banner{display:none!important}#page hr.pb{break-after:page;border:0}#page{box-shadow:none;padding:0;max-width:none}}
 </style>
 </head>
 <body data-shell="off">
@@ -61,26 +66,38 @@ dialog select,dialog input[type=text],dialog input[type=number]{min-height:42px;
   <div class="dtop">
     <a class="eb" href="admin.html#notes">← Admin</a><img src="assets/logo.png" alt="">
     <input id="title" placeholder="Chapter title" maxlength="140" aria-label="Chapter title">
-    <button class="eb" type="button" id="importBtn">Import Word</button><input type="file" id="docxFile" accept=".docx" hidden>
-    <button class="eb" type="button" id="printBtn">PDF</button>
-    <button class="eb" type="button" id="saveBtn">Save draft</button>
-    <button class="eb gold" type="button" id="pubBtn">Publish</button>
+    <button class="eb" type="button" id="saveTop">Save draft</button><button class="eb gold" type="button" id="pubTop">Publish</button>
     <span class="dstat" id="stat"></span>
   </div>
-  <div class="tools" role="toolbar" aria-label="Formatting">
-    <button class="tb" data-c="undo" title="Undo (Ctrl+Z)">↶</button><button class="tb" data-c="redo" title="Redo (Ctrl+Y)">↷</button><span class="sep"></span>
-    <select id="style" title="Style"><option value="p">Normal text</option><option value="h2">Heading 1</option><option value="h3">Heading 2</option><option value="h4">Heading 3</option><option value="blockquote">Quote</option></select>
-    <select id="font" title="Font"><option value="">Font</option><option value="Inter">Inter</option><option value="Poppins">Poppins</option><option value="Hind">Hind (हिन्दी)</option><option value="Merriweather">Merriweather</option><option value="Georgia">Georgia</option><option value="Courier New">Courier</option></select>
-    <select id="size" title="Text size"><option value="">Size</option><option>12</option><option>14</option><option>16</option><option>18</option><option>20</option><option>24</option><option>28</option><option>32</option><option>40</option></select><span class="sep"></span>
-    <button class="tb" data-c="bold" title="Bold (Ctrl+B)"><b>B</b></button><button class="tb" data-c="italic" title="Italic (Ctrl+I)"><i>I</i></button><button class="tb" data-c="underline" title="Underline (Ctrl+U)"><u>U</u></button><button class="tb" data-c="strikeThrough" title="Strikethrough"><s>S</s></button>
-    <button class="tb" data-c="superscript" title="Superscript">x²</button><button class="tb" data-c="subscript" title="Subscript">x₂</button>
-    <span class="clr" title="Text colour"><button class="tb" type="button" tabindex="-1"><span id="fcS" style="--c:#C0392B">A</span></button><input type="color" id="fc" value="#c0392b"></span>
-    <span class="clr" title="Highlight"><button class="tb" type="button" tabindex="-1"><span id="hcS" style="--c:#FFE066">▇</span></button><input type="color" id="hc" value="#ffe066"></span><span class="sep"></span>
-    <button class="tb" data-c="justifyLeft" title="Align left">⯇</button><button class="tb" data-c="justifyCenter" title="Centre">≡</button><button class="tb" data-c="justifyRight" title="Align right">⯈</button><button class="tb" data-c="justifyFull" title="Justify">☰</button><span class="sep"></span>
-    <button class="tb" data-c="insertUnorderedList" title="Bullets">•≡</button><button class="tb" data-c="insertOrderedList" title="Numbers">1.</button><button class="tb" data-c="outdent" title="Decrease indent">⇤</button><button class="tb" data-c="indent" title="Increase indent">⇥</button><span class="sep"></span>
-    <button class="tb" data-c="link" title="Link">🔗</button><button class="tb" data-c="image" title="Picture">🖼</button><input type="file" id="imgFile" accept="image/*" hidden><button class="tb" data-c="table" title="Table">▦</button><button class="tb" data-c="hr" title="Line">―</button>
-    <select id="box" title="Special box"><option value="">Box…</option><option value="info">ℹ Note box</option><option value="trick">💡 Memory trick</option><option value="imp">⚠ Important</option><option value="exam">🎯 Asked in exam</option></select>
-    <button class="tb" data-c="removeFormat" title="Clear formatting">⨯A</button><button class="tb" data-c="find" title="Find and replace (Ctrl+H)">🔍</button>
+  <div class="ribbon" id="ribbon">
+    <div class="rtabs" role="tablist" aria-label="Editor menus"><button type="button" data-rt="home">Home</button><button type="button" data-rt="insert">Insert</button><button type="button" data-rt="layout">Layout</button><button type="button" data-rt="file">File</button><span class="rstat" id="rstat"></span></div>
+    <div class="tools" role="toolbar" aria-label="Formatting">
+    <div class="rpane" data-rp="home">
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-c="undo" title="Undo"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span><span class="rl">Undo</span></button><button class="tb rb" type="button" data-c="redo" title="Redo"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span><span class="rl">Redo</span></button></div><span class="rgl">History</span></div>
+      <div class="rg"><div class="rgb stack"><div class="rrow"><select class="rsel" id="style" title="Style"><option value="p">Normal text</option><option value="h2">Heading 1</option><option value="h3">Heading 2</option><option value="h4">Heading 3</option><option value="blockquote">Quote</option></select>
+        <select class="rsel" id="font" title="Font"><option value="">Font</option><option value="Inter">Inter</option><option value="Poppins">Poppins</option><option value="Hind">Hind (हिन्दी)</option><option value="Merriweather">Merriweather</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Arial">Arial</option><option value="Courier New">Courier</option></select>
+        <select class="rsel" id="size" title="Text size" style="width:68px"><option value="">Size</option><option>10</option><option>12</option><option>14</option><option>16</option><option>18</option><option>20</option><option>24</option><option>28</option><option>32</option><option>40</option><option>48</option></select></div>
+        <div class="rrow"><button class="tb rb sm" type="button" data-c="bold" title="Bold"><span class="ri"><b>B</b></span><span class="rl">Bold</span></button><button class="tb rb sm" type="button" data-c="italic" title="Italic"><span class="ri"><i>I</i></span><span class="rl">Italic</span></button><button class="tb rb sm" type="button" data-c="underline" title="Underline"><span class="ri"><u>U</u></span><span class="rl">Underline</span></button><button class="tb rb sm" type="button" data-c="strikeThrough" title="Strike"><span class="ri"><s>S</s></span><span class="rl">Strike</span></button><button class="tb rb sm" type="button" data-c="superscript" title="Super"><span class="ri">x²</span><span class="rl">Super</span></button><button class="tb rb sm" type="button" data-c="subscript" title="Sub"><span class="ri">x₂</span><span class="rl">Sub</span></button></div></div><span class="rgl">Font</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="fc" id="fcBtn" title="Text colour"><span class="ri"><span>A</span></span><span class="rl">Text colour</span></button><button class="tb rb" type="button" data-pop="hc" id="hcBtn" title="Highlight"><span class="ri"><span style="background:#FFE066;padding:0 4px;border-radius:3px">ab</span></span><span class="rl">Highlight</span></button><button class="tb rb" type="button" data-c="removeFormat" title="Clear format"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16M3 21L21 3"/></svg></span><span class="rl">Clear format</span></button></div><span class="rgl">Colour</span></div>
+      <div class="rg"><div class="rgb stack"><div class="rrow"><button class="tb rb sm" type="button" data-c="justifyLeft" title="Left"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></span><span class="rl">Left</span></button><button class="tb rb sm" type="button" data-c="justifyCenter" title="Centre"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></span><span class="rl">Centre</span></button><button class="tb rb sm" type="button" data-c="justifyRight" title="Right"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></svg></span><span class="rl">Right</span></button><button class="tb rb sm" type="button" data-c="justifyFull" title="Justify"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span><span class="rl">Justify</span></button></div>
+        <div class="rrow"><button class="tb rb sm" type="button" data-c="insertUnorderedList" title="Bullets"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span><span class="rl">Bullets</span></button><button class="tb rb sm" type="button" data-c="insertOrderedList" title="Numbers"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h10M10 12h10M10 18h10M4 4h1v4M4 18h2l-2 2h2M4 11l2 0-2 3h2"/></svg></span><span class="rl">Numbers</span></button><button class="tb rb sm" type="button" data-c="outdent" title="Less"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6h9M11 12h9M11 18h9M7 9l-3 3 3 3"/></svg></span><span class="rl">Less</span></button><button class="tb rb sm" type="button" data-c="indent" title="More"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6h9M11 12h9M11 18h9M4 9l3 3-3 3"/></svg></span><span class="rl">More</span></button></div></div><span class="rgl">Paragraph</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="lh" title="Line spacing"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6h9M11 12h9M11 18h9M5 4v16M3 6l2-2 2 2M3 18l2 2 2-2"/></svg></span><span class="rl">Line spacing</span></button><button class="tb rb" type="button" data-c="find" title="Find"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span><span class="rl">Find</span></button></div><span class="rgl">Editing</span></div>
+    </div>
+    <div class="rpane" data-rp="insert">
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-c="image" title="Picture"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></span><span class="rl">Picture</span></button><input type="file" id="imgFile" accept="image/*" hidden><button class="tb rb" type="button" data-c="table" title="Table"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg></span><span class="rl">Table</span></button><button class="tb rb" type="button" data-c="link" title="Link"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span><span class="rl">Link</span></button></div><span class="rgl">Insert</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="box" title="Special box"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10h10M7 14h6"/></svg></span><span class="rl">Special box</span></button><button class="tb rb" type="button" data-c="quote" title="Quote"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h4v6H5V9a2 2 0 0 1 2-2zM15 7h4v6h-6V9a2 2 0 0 1 2-2zM5 13c0 3 2 4 4 4M13 13c0 3 2 4 4 4"/></svg></span><span class="rl">Quote</span></button><button class="tb rb" type="button" data-c="cols" title="2 columns"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></span><span class="rl">2 columns</span></button></div><span class="rgl">Boxes</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="sym" title="Symbol"><span class="ri">Ω</span><span class="rl">Symbol</span></button><button class="tb rb" type="button" data-c="date" title="Date"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span><span class="rl">Date</span></button><button class="tb rb" type="button" data-c="hr" title="Line"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/></svg></span><span class="rl">Line</span></button><button class="tb rb" type="button" data-c="pb" title="Page break"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v6h14V3M5 21v-6h14v6M3 12h3M9 12h2M13 12h2M18 12h3"/></svg></span><span class="rl">Page break</span></button></div><span class="rgl">Extras</span></div>
+    </div>
+    <div class="rpane" data-rp="layout">
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="case" title="Change case"><span class="ri">Aa</span><span class="rl">Change case</span></button><button class="tb rb" type="button" data-pop="shade" title="Shading"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16l5-12 5 12M9 12h6"/></svg></span><span class="rl">Shading</span></button><button class="tb rb" type="button" data-c="border" title="Border box"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2"/></svg></span><span class="rl">Border box</span></button></div><span class="rgl">Paragraph look</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="lh" title="Line spacing"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6h9M11 12h9M11 18h9M5 4v16M3 6l2-2 2 2M3 18l2 2 2-2"/></svg></span><span class="rl">Line spacing</span></button><button class="tb rb" type="button" data-pop="pw" title="Page width"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></span><span class="rl">Page width</span></button></div><span class="rgl">Page</span></div>
+    </div>
+    <div class="rpane" data-rp="file">
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" id="importBtn" title="Upload Word"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13l1.5 5 2.5-5 2.5 5L16 13"/></svg></span><span class="rl">Upload Word</span></button><input type="file" id="docxFile" accept=".docx" hidden><button class="tb rb" type="button" id="pdfInBtn" title="Upload PDF"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 17v-4h1.5a1.5 1.5 0 0 1 0 3H8"/></svg></span><span class="rl">Upload PDF</span></button><input type="file" id="pdfFile" accept="application/pdf" hidden></div><span class="rgl">Upload</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" id="printBtn" title="Save as PDF"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/></svg></span><span class="rl">Save as PDF</span></button><button class="tb rb" type="button" id="wordOut" title="Download Word"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg></span><span class="rl">Download Word</span></button></div><span class="rgl">Download</span></div>
+      <div class="rg own"><div class="rgb"><button class="tb rb" type="button" id="saveBtn" title="Save draft"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7M8 21v-7h8v7"/></svg></span><span class="rl">Save draft</span></button><button class="tb rb gold" type="button" id="pubBtn" title="Publish"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg></span><span class="rl">Publish</span></button></div><span class="rgl">Publish</span></div>
+    </div>
+    </div>
   </div>
   <div class="ctx" id="tblBar"><b>Table:</b><button class="tb" data-t="rowA">＋ Row above</button><button class="tb" data-t="rowB">＋ Row below</button><button class="tb" data-t="colL">＋ Column left</button><button class="tb" data-t="colR">＋ Column right</button><button class="tb" data-t="delRow">− Row</button><button class="tb" data-t="delCol">− Column</button><button class="tb" data-t="head">Heading row</button><button class="tb" data-t="delTbl">Delete table</button></div>
   <div class="ctx" id="imgBar"><b>Picture:</b><button class="tb" data-i="25">25%</button><button class="tb" data-i="50">50%</button><button class="tb" data-i="75">75%</button><button class="tb" data-i="100">100%</button><button class="tb" data-i="left">Left</button><button class="tb" data-i="center">Centre</button><button class="tb" data-i="right">Right</button><button class="tb" data-i="del">Delete</button></div>
@@ -106,13 +123,17 @@ dialog select,dialog input[type=text],dialog input[type=number]{min-height:42px;
   <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-out" type="button" id="tCancel">Cancel</button></div></dialog>
 
 <script src="assets/site.js"></script>
+<script src="assets/ribbon.js"></script>
 <script>
 (function () {
 const $ = id => document.getElementById(id), E = SSC.esc, page = $("page");
 const qs = new URLSearchParams(location.search);
 let cid = qs.get("ch") || "", dirty = false, NOTES = {}, SUBS = [];
 const DRAFT = () => "ssc-doc-draft:" + (cid || "new");
-const stat = t => $("stat").textContent = t;
+const EMBED = qs.get("embed") === "1";
+if (EMBED) document.body.classList.add("embed");
+const stat = t => { $("stat").textContent = t; $("rstat").textContent = t; };
+Ribbon.tabs($("ribbon"));
 document.execCommand("styleWithCSS", false, true);
 document.execCommand("defaultParagraphSeparator", false, "p");
 
@@ -157,6 +178,11 @@ document.querySelector(".tools").addEventListener("click", e => {
   if (c === "table") return openTable();
   if (c === "hr") return exec("insertHTML", "<hr><p><br></p>");
   if (c === "find") return openFind();
+  if (c === "quote") return exec("formatBlock", "<blockquote>");
+  if (c === "cols") return exec("insertHTML", `<div class="cols2"><div><p>Left column</p></div><div><p>Right column</p></div></div><p><br></p>`);
+  if (c === "date") return exec("insertText", new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }));
+  if (c === "pb") return exec("insertHTML", `<hr class="pb"><p><br></p>`);
+  if (c === "border") { const b = blockOf(); if (b) { b.classList.toggle("bordered"); changed(); } return; }
   exec(c);
 });
 $("style").onchange = e => { exec("formatBlock", "<" + e.target.value + ">"); };
@@ -170,11 +196,22 @@ function wrapStyle(prop, val) {
 const FONTS = { Inter: "Inter,sans-serif", Poppins: "Poppins,sans-serif", Hind: "Hind,sans-serif", Merriweather: "Merriweather,serif", Georgia: "Georgia,serif", "Courier New": "'Courier New',monospace" };
 $("font").onchange = e => { if (e.target.value) wrapStyle("fontFamily", FONTS[e.target.value]); e.target.value = ""; };
 $("size").onchange = e => { if (e.target.value) wrapStyle("fontSize", e.target.value + "px"); e.target.value = ""; };
-$("fc").oninput = e => { $("fcS").style.setProperty("--c", e.target.value); }; $("fc").onchange = e => exec("foreColor", e.target.value);
-$("hc").oninput = e => { $("hcS").style.setProperty("--c", e.target.value); }; $("hc").onchange = e => exec("hiliteColor", e.target.value);
-$("box").onchange = e => { const v = e.target.value; e.target.value = ""; if (!v) return;
-  const t = { info: "ℹ Note", trick: "💡 Memory trick", imp: "⚠ Important", exam: "🎯 Asked in exam" }[v];
-  exec("insertHTML", `<div class="callout ${v}"><p><b>${t}:</b> type here</p></div><p><br></p>`); };
+// pop-ups: colours, boxes, symbols, line spacing, case, shading, page width
+const BOXES = { info: "ℹ Note", trick: "💡 Memory trick", imp: "⚠ Important", exam: "🎯 Asked in exam", formula: "🧮 Formula", example: "✏ Example", def: "📖 Definition" };
+document.querySelector(".tools").addEventListener("click", e => {
+  const b = e.target.closest("[data-pop]"); if (!b) return; const k = b.dataset.pop;
+  if (k === "fc") Ribbon.palette(b, c => { exec("foreColor", c || "#1E2433"); if (c) b.querySelector(".ri span").style.color = c; }, { noneLabel: "Automatic" });
+  if (k === "hc") Ribbon.palette(b, c => exec("hiliteColor", c || "transparent"));
+  if (k === "shade") Ribbon.palette(b, c => { const bl = blockOf(); if (!bl) return stat("Click inside a paragraph first"); bl.style.background = c || ""; bl.style.padding = c ? "6px 10px" : ""; bl.style.borderRadius = c ? "6px" : ""; changed(); });
+  if (k === "box") Ribbon.menu(b, Object.entries(BOXES), v => exec("insertHTML", `<div class="callout ${v}"><p><b>${BOXES[v]}:</b> type here</p></div><p><br></p>`));
+  if (k === "sym") Ribbon.symbols(b, t => exec("insertText", t));
+  if (k === "lh") Ribbon.menu(b, [["1", "Single (1.0)"], ["1.3", "1.3"], ["1.5", "1.5"], ["1.7", "Normal (1.7)"], ["2", "Double (2.0)"]], v => { const bl = blockOf(); const sel = getSelection(); const blocks = bl ? [bl] : [];
+    if (sel.rangeCount && !sel.isCollapsed) page.querySelectorAll("p,li,h2,h3,h4,blockquote").forEach(x => { if (sel.containsNode(x, true)) blocks.push(x); });
+    if (!blocks.length) return stat("Click inside a paragraph first"); blocks.forEach(x => x.style.lineHeight = v); changed(); });
+  if (k === "case") Ribbon.menu(b, [["up", "UPPERCASE"], ["low", "lowercase"], ["title", "Title Case"], ["sent", "Sentence case"]], v => { page.focus(); restoreSel(); const t = getSelection().toString(); if (!t) return stat("Select some words first");
+    const r = v === "up" ? t.toUpperCase() : v === "low" ? t.toLowerCase() : v === "title" ? t.toLowerCase().replace(/\b\w/g, m => m.toUpperCase()) : t.charAt(0).toUpperCase() + t.slice(1).toLowerCase(); exec("insertText", r); });
+  if (k === "pw") Ribbon.menu(b, [["n", "Narrow page"], ["", "Normal page"], ["w", "Wide page"]], v => { page.classList.remove("w-narrow", "w-wide"); if (v) page.classList.add(v === "n" ? "w-narrow" : "w-wide"); });
+});
 
 // pictures (made smaller, saved to the website)
 $("imgFile").onchange = async e => {
@@ -237,7 +274,7 @@ page.addEventListener("paste", e => { const h = e.clipboardData.getData("text/ht
 function changed() { dirty = true; stat("Not saved"); const w = (page.innerText.trim().match(/\S+/g) || []).length; $("wc").textContent = `${w} words`;
   clearTimeout(changed.t); changed.t = setTimeout(() => { try { localStorage.setItem(DRAFT(), JSON.stringify({ at: Date.now(), title: $("title").value, html: page.innerHTML })); } catch (e) {} }, 600); }
 page.addEventListener("input", changed); $("title").addEventListener("input", changed);
-window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+window.addEventListener("beforeunload", e => { if (dirty && !EMBED) { e.preventDefault(); e.returnValue = ""; } });
 
 // Word import
 $("importBtn").onclick = () => $("docxFile").click();
@@ -248,12 +285,26 @@ $("docxFile").onchange = async e => { const f = e.target.files[0]; e.target.valu
     page.focus(); document.execCommand("insertHTML", false, safe(r.value)); if (!$("title").value) $("title").value = f.name.replace(/\.docx$/i, ""); changed(); stat("Word file added");
   } catch (er) { stat("Could not read the file: " + er.message); } };
 $("printBtn").onclick = () => window.print();
+$("wordOut").onclick = () => { const html = `<html><head><meta charset="utf-8"><title>${E($("title").value || "Notes")}</title></head><body>${finalHtml()}</body></html>`;
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + html], { type: "application/msword" })); a.download = (slug($("title").value || "notes")) + ".doc"; a.click(); };
+// PDF → each page becomes a picture in the document
+$("pdfInBtn").onclick = () => $("pdfFile").click();
+$("pdfFile").onchange = async e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { stat("Reading PDF…");
+    const pages = await Ribbon.pdfPages(await f.arrayBuffer(), 1.6, (i, n) => stat(`Reading PDF page ${i} of ${n}…`));
+    let html = "";
+    for (let i = 0; i < pages.length; i++) { stat(`Saving page ${i + 1} of ${pages.length}…`);
+      const data = pages[i].toDataURL("image/jpeg", 0.85), path = `assets/uploads/pdf-${Date.now().toString(36)}-${i + 1}.jpg`;
+      await write(path, data.split(",")[1], "Admin: notes PDF page");
+      html += `<p style="text-align:center"><img src="${path}" alt="Page ${i + 1}" style="width:100%"></p>`; }
+    page.focus(); document.execCommand("insertHTML", false, html + "<p><br></p>"); if (!$("title").value) $("title").value = f.name.replace(/\.pdf$/i, ""); changed(); stat(`PDF added: ${pages.length} pages`);
+  } catch (er) { stat("Could not read the PDF: " + er.message); } };
 
 // form notes (older style) → document
 const esc = s => E(s == null ? "" : s);
 function notesToHtml(n) {
   if (n.html) return n.html;
-  let h = n.intro ? `<p>${esc(n.intro)}</p>` : "";
+  let h = n.intro && !EMBED ? `<p>${esc(n.intro)}</p>` : ""; // in the admin Notes tab the introduction has its own box
   (n.phases || []).forEach(p => { h += `<h2>${esc(p.h)}</h2>`; p.items.forEach(it => { h += `<h3>${esc([it.yr, it.t].filter(Boolean).join(" – "))}</h3>${it.s ? `<p><i>${esc(it.s)}</i></p>` : ""}<ul>${it.pts.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`; }); });
   const hd = (n.tableHead || []).filter(Boolean);
   if (n.table) h += `<h2>${esc(n.tableTitle || "Important facts")}</h2><table><thead><tr>${hd.map(x => `<th>${esc(x)}</th>`).join("")}</tr></thead><tbody>${n.table.map(r => `<tr>${r.slice(0, hd.length).map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
@@ -322,7 +373,16 @@ $("pGo").onclick = async () => {
   } catch (er) { $("pMsg").textContent = "Could not publish: " + er.message; }
   $("pGo").disabled = false;
 };
-open();
+$("saveTop").onclick = () => $("saveBtn").click(); $("pubTop").onclick = () => $("pubBtn").click();
+// inside the admin Notes tab: the admin page reads the document and publishes it with the chapter
+window.SSCEmbed = {
+  html: () => finalHtml(),
+  empty: () => !page.innerText.trim() && !page.querySelector("img,table"),
+  dirty: () => dirty,
+  saved: () => { dirty = false; try { localStorage.removeItem(DRAFT()); } catch (e) {} stat("Published ✓"); },
+  ready: false
+};
+open().then(() => { window.SSCEmbed.ready = true; });
 })();
 </script>
 </body>

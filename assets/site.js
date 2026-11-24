@@ -1,11 +1,26 @@
 // SSCAspirants_Official – shared layout (side menu, top bar, reading mode, search)
 // Every page has <body data-page="..." data-title="..."> and its content in <main id="content">.
 // This script wraps that content with the side menu and top bar, so the menu lives in ONE place.
+// Exam tiers (Tier 1 / Tier 2 or Paper 1 / Paper 2). Old exam data without tiers becomes one tier.
+window.SSCTiers = function (ex) {
+  if (!ex) return [];
+  if (ex.tiers && ex.tiers.length) return ex.tiers;
+  const m = parseInt(ex.time) || 60;
+  return [{ id: "t1", name: ex.stage || "Tier 1", minutes: /hour/i.test(ex.time || "") ? m * 60 : m, plus: 2, minus: 0.5, negative: ex.negative || "", pattern: ex.pattern || [] }];
+};
+// Where "Back to test series" goes for a test
+window.SSCSeriesUrl = function (t) {
+  const ex = t && (window.EXAMS || []).find(e => e.id === t.exam);
+  if (!ex) return "mock-tests.html";
+  const tab = { "Full mock test": "mock", "Section-wise test": "sectional", "Subject-wise test": "subject", "Chapter test": "subject", "PYQ paper": "pyq" }[t.type] || "mock";
+  return ex.page + (t.tier && t.tier !== "t1" ? "?tier=" + encodeURIComponent(t.tier) : "") + "#" + tab;
+};
 (function () {
   const IG = "https://www.instagram.com/sscaspirants_official/";
   const NAV = [
     ["index.html", "Home", "home", '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
     ["mock-tests.html", "Mock Tests", "tests", '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/>'],
+    ["live-tests.html", "Live Tests", "live", '<circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/>'],
     ["notes.html", "Notes", "notes", '<path d="M4 5h7v14H4zM13 5h7v14h-7z"/>'],
     ["pyq.html", "PYQ Papers", "pyq", '<path d="M6 3h9l4 4v14H6zM14 3v5h5"/>'],
     ["daily-quiz.html", "Daily Quiz", "daily", '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14l2 2 4-4"/>'],
@@ -74,6 +89,8 @@
     <div class="main">
       <header class="top" style="position:sticky">
         <button class="icon-btn" id="ham" type="button" aria-label="Open or close menu" aria-controls="side" aria-expanded="true">${svg('<path d="M4 6h16M4 12h16M4 18h16"/>')}<span class="ham-label">Menu</span></button>
+        ${page === "home" ? "" : `<button class="icon-btn nav-ic" id="backNav" type="button" aria-label="Back" title="Back">${svg('<path d="M15 18l-6-6 6-6"/>')}</button>
+        <a class="icon-btn nav-ic" id="homeNav" href="index.html" aria-label="Home" title="Home">${svg('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>')}</a>`}
         <h1>${title}</h1>
         <button class="icon-btn only-compact" id="searchBtn" type="button" aria-label="Search" aria-expanded="false">${svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>')}</button>
         <button class="icon-btn only-compact" id="readBtn" type="button" aria-label="Reading mode and text size" aria-expanded="false" style="font-weight:700">Aa</button>
@@ -147,6 +164,13 @@
   ED.customBlock = customBlock;
   // exams hidden in Admin → Website disappear from the exam lists too
   (window.EXAMS || []).filter(e => e.hide).forEach(e => content.querySelectorAll(`a[href="${e.page}"]`).forEach(a => { if (a.classList.contains("exam")) a.hidden = true; }));
+
+  // ---- back: previous page on this site, otherwise the page this one belongs to ----
+  const bk = document.getElementById("backNav");
+  if (bk) bk.addEventListener("click", () => {
+    let same = false; try { same = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (e) {}
+    if (same && history.length > 1) history.back(); else location.href = document.body.dataset.back || "index.html";
+  });
 
   // ---- hamburger: desktop collapses the menu, phone slides it in ----
   const ham = document.getElementById("ham"), side = document.getElementById("side");
@@ -223,6 +247,7 @@
     if (d.user) {
       paintAvatar(d.user);
       h += `<a class="side-link" href="account.html"${page === "account" ? ' aria-current="page"' : ""}>${svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>')}Account details</a>`;
+      h += `<a class="side-link" href="saved.html"${page === "saved" ? ' aria-current="page"' : ""}>${svg('<path d="M6 3h12v18l-6-4-6 4z"/>')}Saved questions</a>`;
     }
     if (d.admin) h += `<a class="side-link" href="admin.html"${page === "admin" || page === "admin-team" ? ' aria-current="page"' : ""}>${svg('<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>')}Admin panel</a>`;
     if (d.user) h += `<button class="side-link" type="button" id="logoutBtn">${svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>')}Log out</button>`;
@@ -238,5 +263,58 @@
     document.dispatchEvent(new CustomEvent("ssc:user", { detail: d }));
   }).catch(() => {});
 
+
+  // ---- test cards: after a test is given, the card shows the last attempt (marks, accuracy, rank,
+  //      correct / wrong / skipped), Solution & Analysis, Reattempt and the list of all attempts ----
+  const nthW = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+  const testQs = key => { if (window.TESTS && TESTS[key]) return TESTS[key].questions;
+    if (key === "polity-ch1-4" && window.SUBJECTS && window.NOTES) { const sb = SUBJECTS.find(x => x.id === "polity"), qs = []; if (sb) sb.chapters.forEach(c => (NOTES[c.id] && NOTES[c.id].quiz || []).forEach(q => qs.push(q))); return qs; }
+    return null; };
+  const tUrl = (key, extra) => (key === "polity-ch1-4" ? "test.html?" : "test.html?id=" + encodeURIComponent(key) + "&") + extra;
+  const counts = (key, a) => { const Q = testQs(key); if (!Q || !a.ans || a.ans.length !== Q.length) return null;
+    let r = 0, w = 0, sk = 0; a.ans.forEach((x, i) => { if (x == null) sk++; else if (x === Q[i].a) r++; else w++; }); return { r, w, sk }; };
+  const fmtN = v => +(+v).toFixed(2);
+  function paintCard(el, list) {
+    if (!list || !list.length) return;
+    list = list.slice().sort((a, b) => (a.n || 0) - (b.n || 0) || a.created - b.created);
+    const key = el.dataset.tcard, last = list.reduce((x, y) => (y.created > x.created ? y : x)), c = counts(key, last);
+    const title = el.dataset.title || (el.querySelector("b") || {}).textContent || "Test";
+    const acc = c && c.r + c.w ? Math.round(c.r / (c.r + c.w) * 100) : null;
+    el.classList.add("tc-done");
+    el.innerHTML = `<span class="pill ok tc-pill">✓ Attempted${list.length > 1 ? ` · ${list.length} attempts` : ""}</span>
+      <b class="tc-title">${esc(title)}</b>
+      <div class="tc-stats"><span title="Marks in your last attempt">📝 <b>${fmtN(last.score)}</b>/${fmtN(last.max)}</span>${acc != null ? `<span title="Accuracy">◎ ${acc}%</span>` : ""}${last.rank != null ? `<span title="Rank">🏆 ${last.rank}/${last.total}</span>` : ""}<span class="muted">${nthW(last.n || list.length)} attempt</span></div>
+      ${c ? `<div class="tc-bar" aria-hidden="true"><i class="c" style="flex:${c.r}"></i><i class="w" style="flex:${c.w}"></i><i class="s" style="flex:${c.sk}"></i></div>
+      <div class="tc-leg"><span><i class="c"></i>${c.r} Correct</span><span><i class="w"></i>${c.w} Wrong</span><span><i class="s"></i>${c.sk} Skipped</span></div>` : ""}
+      <div class="tc-btns"><a class="btn btn-pri" href="${tUrl(key, "view=result&n=" + (last.n || list.length))}">Solution &amp; Analysis</a>
+        <a class="btn btn-out" href="${tUrl(key, "again=1")}">↻ Reattempt (${nthW(list.length + 1)})</a>
+        <button class="btn btn-out" type="button" data-allatt>All attempts (${list.length})</button></div>`;
+    el.querySelector("[data-allatt]").addEventListener("click", () => attemptsDialog(key, title, list));
+  }
+  function attemptsDialog(key, title, list) {
+    let dl = document.getElementById("attDlg");
+    if (!dl) { dl = document.createElement("dialog"); dl.id = "attDlg"; dl.className = "att-dlg"; document.body.appendChild(dl);
+      dl.addEventListener("click", e => { if (e.target === dl || e.target.closest("[data-close]")) dl.close(); }); }
+    dl.innerHTML = `<div class="att-h"><div><small>All attempts</small><b>${esc(title)}</b></div><button type="button" class="icon-btn" data-close aria-label="Close">✕</button></div>
+      <div class="att-list">${list.map(a => { const c = counts(key, a), n = a.n || 1;
+        return `<div class="att-row${n === 1 ? " off" : ""}"><span class="att-n">${nthW(n)}${n === 1 ? "<small>Official rank</small>" : ""}</span>
+          <span class="att-m"><b>${fmtN(a.score)}</b>/${fmtN(a.max)}<small>Marks</small></span>
+          <span class="att-m"><b>${a.rank != null ? a.rank + "<i>/" + a.total + "</i>" : "–"}</b><small>Rank</small></span>
+          <span class="att-m"><b>${a.pct != null ? fmtN(a.pct) : "–"}</b><small>Percentile</small></span>
+          <span class="att-c">${c ? `<em class="c">✓ ${c.r}</em><em class="w">✗ ${c.w}</em><em class="s">– ${c.sk}</em>` : ""}<small>${new Date(a.created).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</small></span>
+          <span class="att-b"><a class="btn btn-pri" href="${tUrl(key, "view=result&n=" + n)}">Result</a><a class="btn btn-out" href="solutions.html?id=${encodeURIComponent(key)}&n=${n}">Solutions</a></span></div>`; }).join("")}</div>
+      <p class="muted att-note">Your official rank always comes from your 1st attempt. Later attempts show the rank that score would get.</p>
+      <div class="att-f"><a class="btn btn-pri" href="${tUrl(key, "again=1")}">↻ Reattempt (${nthW(list.length + 1)} attempt)</a></div>`;
+    dl.showModal();
+  }
+  function testCards() {
+    const cards = [...document.querySelectorAll("[data-tcard]")]; if (!cards.length) return;
+    fetch("/api/me/attempts?full=1", { credentials: "same-origin" }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d || !d.attempts) return; const by = {}; d.attempts.forEach(a => (by[a.test] = by[a.test] || []).push(a));
+      cards.forEach(c => paintCard(c, by[c.dataset.tcard]));
+    }).catch(() => {});
+  }
+  window.SSCTestCards = testCards;
+  testCards();
   window.SSC = { store, svg, esc, logout, paintAvatar, clean, ED };
 })();

@@ -114,6 +114,34 @@ body{display:flex;flex-direction:column;min-height:100vh}
 .tvy tr.me td{background:var(--pri-soft);font-weight:600}.tvy tr:last-child td{border-bottom:0}
 .qrow{animation:fadeIn .3s both}
 @media (prefers-reduced-motion:reduce){.qmain,.op,.op .mk,.qrow{animation:none!important}}
+/* separate boxes, clear text, two panes that scroll on their own */
+.blk{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--surface);position:relative}
+.blk-h{font:700 .74rem Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--pri);margin:0 0 8px}
+.vblk{background:var(--bg)}
+.qmain{gap:12px;background:var(--bg)}
+.qmain::before{opacity:.03;background-size:min(40%,220px)}
+.qmain::after{opacity:.3}
+.qtext{color:var(--ink);font-weight:500}
+.op .ot{color:var(--ink);font-weight:500}
+.op .lt{color:var(--ink)}
+.chipx{color:var(--ink)}
+.op .who{color:var(--ink);opacity:.75;font-weight:600}
+.solbox p{color:var(--ink)}
+.grid2 button{color:var(--ink);font-size:.92rem}
+.grid2 button.s-r{color:#0B5A43}.grid2 button.s-w{color:#9B1C1C}.grid2 button.s-s{color:var(--ink)}
+[data-read="dark"] .grid2 button.s-r{color:#7FE3C0}[data-read="dark"] .grid2 button.s-w{color:#FFB4B4}
+.secs{display:flex;flex-direction:column;gap:10px}
+.secbox{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface)}
+.secbox .sechead{margin:0 0 8px;padding-bottom:6px;border-bottom:1px dashed var(--line);color:var(--ink)}
+.side .cnt{border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface);color:var(--ink)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--ink)}.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;border:1.5px solid;margin-right:5px;vertical-align:-2px}
+@media(min-width:900px){
+  .qview{height:var(--qh,70vh);align-items:stretch;grid-template-rows:minmax(0,1fr)}
+  .side.card{height:var(--qh,70vh)!important;max-height:var(--qh,70vh)!important}
+  .qmain,.side{height:100%;max-height:none;overflow-y:auto;overscroll-behavior:contain;position:relative;top:auto;box-sizing:border-box;scrollbar-width:thin}
+}
+.side.card{background:var(--bg)!important;color:var(--ink)!important;border:1px solid var(--line)}
+.side .blk-h{color:var(--pri)}
 @media print{body{display:none}}
 </style>
 </head>
@@ -122,6 +150,8 @@ body{display:flex;flex-direction:column;min-height:100vh}
   <img src="assets/logo.png" alt="">
   <div class="nm" id="nm">Solutions<small>SSCAspirants_Official</small></div>
   <button class="tb" type="button" id="langBtn" hidden>हिन्दी</button>
+  <a class="tb" href="index.html" title="Home"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span class="lbl">Home</span></a>
+  <a class="tb" id="seriesLink" href="mock-tests.html" title="Back to test series"><span class="lbl">Test series</span></a>
   <a class="tb" id="backBtn" href="#">← Analytics</a>
 </header>
 <main class="wrapS" id="main"><p class="muted">Loading…</p></main>
@@ -130,6 +160,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
 <script src="data/notes.js"></script>
 <script src="data/subjects.js"></script>
 <script src="data/tests.js"></script>
+<script src="data/exams.js"></script>
 <script src="assets/site.js"></script>
 <script>
 main: {
@@ -147,7 +178,8 @@ const hasHindi = Q.some(q => q.qh);
 document.title = "Solutions – " + T.title + " – SSCAspirants_Official";
 $("nm").innerHTML = E(T.title) + "<small>Solutions · SSCAspirants_Official</small>";
 $("backBtn").href = (KEY === "polity-ch1-4" ? "test.html?view=result" : "test.html?id=" + encodeURIComponent(KEY) + "&view=result");
-if (N) $("backBtn").href = "account.html", $("backBtn").textContent = "← My results";
+$("seriesLink").innerHTML = "‹ " + $("seriesLink").innerHTML; $("seriesLink").href = KEY === "polity-ch1-4" ? "notes.html#polity" : SSCSeriesUrl(T);
+if (N) $("backBtn").href += "&n=" + N;
 
 // ---------- pictures and maths ----------
 const src = s => { s = String(s || "").trim(); if (!s) return ""; if (/^https:\/\//i.test(s)) return s; if (/^(assets\/|\/assets\/)/.test(s)) return s.replace(/^\//, ""); if (/^[a-z0-9._-]+$/i.test(s)) return "assets/uploads/" + s; return ""; };
@@ -179,6 +211,8 @@ async function load() {
   if (rec && rec.ans && rec.ans.length === Q.length) { ans = rec.ans; tm = rec.spent || []; bms = new Set(rec.bms || []); lang = rec.lang || "en"; if (rec.d && rec.d.stats) { ST = rec.d.stats; dist = ST.dist; } }
   else { try { const r = await fetch(`/api/me/attempt?test=${encodeURIComponent(KEY)}${N ? "&n=" + N : ""}`); const d = await r.json(); if (!r.ok || !d.ans) throw 0; ans = d.ans; tm = d.tm || []; } catch (e) {} }
   if (BMS) bms = new Set(BMS);
+  // saved questions kept in the account (so they show on every device)
+  try { const r = await fetch("/api/me/saved?test=" + encodeURIComponent(KEY)); if (r.ok) (await r.json()).saved.forEach(x => bms.add(x.q)); } catch (e) {}
   if (!ans || ans.length !== Q.length) { $("main").innerHTML = `<div class="card"><p>We couldn't find your answers for this test. Take the test first, then the solutions open here.</p><a class="btn btn-pri" href="${KEY === "polity-ch1-4" ? "test.html" : "test.html?id=" + encodeURIComponent(KEY)}">Take the test</a></div>`; return; }
   if (!dist) { try { const r = await fetch(`/api/attempts?test=${encodeURIComponent(KEY)}&stats=${Q.length}`); const d = await r.json(); if (d.stats) { ST = d.stats; dist = ST.dist; } } catch (e) {} }
   if (hasHindi) { $("langBtn").hidden = false; $("langBtn").textContent = lang === "hi" ? "English" : "हिन्दी"; }
@@ -242,33 +276,39 @@ function drawQ() {
         <span class="chipx" title="Your time">⏱ ${Math.round(tm[i] || 0)}s</span><span class="chipx" title="Students who got it right">◎ ${p == null ? "–" : p + "%"}</span><span class="diff ${d[0]}">${d[1]}</span>
         <button class="ib" type="button" id="bm" aria-pressed="${bms.has(i)}">${bms.has(i) ? "★ Saved" : "☆ Save"}</button>
         <button class="ib qdrawer" type="button" id="gridBtn">▦ Questions</button></div>
-      <p class="qtext${tx.hi ? " hi" : ""}">${E(tx.q)}</p>${pic(q.img, "Question picture")}
-      <div class="ops${inRetry && R.pick == null ? " retry" : ""}" id="ops">${tx.o.map((o, k) => { const c = optCls(k);
+      <div class="blk"><div class="blk-h">Question</div><p class="qtext${tx.hi ? " hi" : ""}">${E(tx.q)}</p>${pic(q.img, "Question picture")}</div>
+      <div class="blk"><div class="blk-h">Options</div><div class="ops${inRetry && R.pick == null ? " retry" : ""}" id="ops">${tx.o.map((o, k) => { const c = optCls(k);
         return `<button class="op ${c}${tx.hi ? " hi" : ""}" style="--d:${k * 70}ms" type="button" data-k="${k}" ${inRetry && R.pick == null ? "" : "tabindex='-1'"}><span class="lt">${L(k)}</span><span class="ot">${E(o)}${q.oimg ? pic(q.oimg[k], "Option " + L(k)) : ""}</span>
-          ${showAns && tot && !inRetry ? `<span class="who">${Math.round(dd[k] / tot * 100)}% chose</span>` : ""}${c === "c" ? '<span class="mk">✓</span>' : c === "w" ? '<span class="mk">✗</span>' : ""}</button>`; }).join("")}</div>
-      ${inRetry ? (R.pick == null ? `<div class="retrybar"><b>↻ Reattempt:</b> choose your answer again. <button class="ib" type="button" id="rCancel">Cancel</button></div>`
+          ${showAns && tot && !inRetry ? `<span class="who">${Math.round(dd[k] / tot * 100)}% chose</span>` : ""}${c === "c" ? '<span class="mk">✓</span>' : c === "w" ? '<span class="mk">✗</span>' : ""}</button>`; }).join("")}</div></div>
+      <div class="blk vblk">${inRetry ? (R.pick == null ? `<div class="retrybar"><b>↻ Reattempt:</b> choose your answer again. <button class="ib" type="button" id="rCancel">Cancel</button></div>`
           : `<div class="retrybar"><b class="${R.pick === q.a ? "ok-t" : "bad-t"}">${R.pick === q.a ? "✓ Correct this time!" : "✗ Not right – correct answer is " + L(q.a)}</b><button class="ib" type="button" id="rAgain">↻ Try again</button><button class="ib" type="button" id="rDone">Show my test answer</button></div>`)
         : `<p class="verdict ${st === "r" ? "ok-t" : st === "w" ? "bad-t" : "muted"}">${st === "r" ? "✓ You answered correctly" : st === "w" ? `✗ Your answer ${L(ans[i])} is wrong · Correct answer ${L(q.a)}` : `You didn't attempt this · Correct answer ${L(q.a)}`}</p>
-          <div><button class="btn btn-out" type="button" id="rStart">↻ Reattempt this question</button>${R && R.last != null ? ` <span class="muted" style="font-size:.88rem">Last retry: ${R.last ? "✓ correct" : "✗ wrong"}</span>` : ""}</div>`}
+          <div><button class="btn btn-out" type="button" id="rStart">↻ Reattempt this question</button>${R && R.last != null ? ` <span class="muted" style="font-size:.88rem">Last retry: ${R.last ? "✓ correct" : "✗ wrong"}</span>` : ""}</div>`}</div>
       ${showAns && !inRetry ? tv : ""}
       ${showAns && (why || wimg) ? `<div class="solbox"><h3>💡 Solution</h3>${why ? `<p class="${lang === "hi" && q.whyh ? "hi" : ""}">${E(why)}</p>` : ""}${pic(wimg, "Solution")}</div>` : ""}
     </section>
     <aside class="side card" id="side">
+      <div class="blk-h" style="margin:0">Your test</div>
       <div class="cnt"><div><b>${fmtT(t.time)}</b>Time</div><div><b>${t.acc}%</b>Accuracy</div><div><b>${t.score}</b>Score</div></div>
       <div class="cnt"><div><b class="ok-t">${t.r}</b>Right</div><div><b class="bad-t">${t.w}</b>Wrong</div><div><b>${t.s}</b>Skipped</div></div>
-      <div>${SECS.map((s, si) => `${SECS.length > 1 ? `<div class="sechead">${E(s.name)}</div>` : ""}<div class="grid2">${inSec(si).map(j => `<button type="button" class="s-${stOf(j)}${j === i ? " on" : ""}${retry[j] && retry[j].last != null ? " rt" : ""}" data-j="${j}" aria-label="Question ${j + 1}">${j + 1}</button>`).join("")}</div>`).join("")}</div>
+      <div class="blk-h" style="margin:4px 0 0">Question palette</div>
+      <div class="secs">${SECS.map((s, si) => `<div class="secbox">${SECS.length > 1 ? `<div class="sechead">${E(s.name)}</div>` : ""}<div class="grid2">${inSec(si).map(j => `<button type="button" class="s-${stOf(j)}${j === i ? " on" : ""}${retry[j] && retry[j].last != null ? " rt" : ""}" data-j="${j}" aria-label="Question ${j + 1}">${j + 1}</button>`).join("")}</div></div>`).join("")}</div>
+      <div class="legend"><span><i class="s-r"></i>Right</span><span><i class="s-w"></i>Wrong</span><span><i class="s-s"></i>Skipped</span></div>
     </aside></div>
     <nav class="navb"><button class="btn btn-out" type="button" id="prevB" ${i === 0 ? "disabled" : ""}>‹ Previous</button><button class="btn btn-pri" type="button" id="listB">☰ All questions</button><button class="btn btn-out" type="button" id="nextB" ${i === Q.length - 1 ? "disabled" : ""}>Next ›</button></nav>`;
   const go = j => { location.hash = "q=" + (j + 1); };
   $("prevB").onclick = () => go(i - 1); $("nextB").onclick = () => go(i + 1); $("listB").onclick = () => { location.hash = ""; };
   $("side").onclick = e => { const b = e.target.closest("[data-j]"); if (b) { document.body.classList.remove("grid-open"); go(+b.dataset.j); } };
   $("gridBtn").onclick = () => document.body.classList.add("grid-open"); $("ov").onclick = () => document.body.classList.remove("grid-open");
-  $("bm").onclick = () => { bms.has(i) ? bms.delete(i) : bms.add(i); try { const a = JSON.parse(SSC.store.get("ssc-bm", "{}")); a[KEY] = [...bms]; SSC.store.set("ssc-bm", JSON.stringify(a)); } catch (e) {} drawQ(); };
+  $("bm").onclick = () => { bms.has(i) ? bms.delete(i) : bms.add(i); try { const a = JSON.parse(SSC.store.get("ssc-bm", "{}")); a[KEY] = [...bms]; SSC.store.set("ssc-bm", JSON.stringify(a)); } catch (e) {}
+    fetch("/api/me/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ test: KEY, q: i, on: bms.has(i) }) }).catch(() => {}); drawQ(); };
   // reattempt this one question (practice only – your score and rank don't change)
   const rs = $("rStart"); if (rs) rs.onclick = () => { retry[i] = { ...(retry[i] || {}), on: true, pick: null }; saveRetry(); drawQ(); };
   if (inRetry && R.pick == null) { $("ops").onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; R.pick = +b.dataset.k; R.last = R.pick === q.a; saveRetry(); drawQ(); }; $("rCancel").onclick = () => { R.on = false; saveRetry(); drawQ(); }; }
   if ($("rAgain")) $("rAgain").onclick = () => { R.pick = null; saveRetry(); drawQ(); };
   if ($("rDone")) $("rDone").onclick = () => { R.on = false; R.pick = null; saveRetry(); drawQ(); };
+  fitPanes(); $("qcard").scrollTop = 0;
+  const onq = $("side").querySelector(".on"); if (onq) onq.scrollIntoView({ block: "nearest" });
   // swipe left / right on phones
   let sx = null, sy = 0; const qc = $("qcard");
   qc.addEventListener("touchstart", e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
@@ -276,6 +316,10 @@ function drawQ() {
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (dx < 0 && i < Q.length - 1) go(i + 1); if (dx > 0 && i > 0) go(i - 1); } });
   math($("main"));
 }
+// question and palette each scroll on their own (computer screens)
+function fitPanes() { const v = document.querySelector(".qview"), nb = document.querySelector(".navb"); if (!v) return;
+  const h = innerHeight - v.getBoundingClientRect().top - window.scrollY - (nb ? nb.offsetHeight : 0) - 14; v.style.setProperty("--qh", Math.max(360, h) + "px"); }
+addEventListener("resize", fitPanes);
 document.addEventListener("keydown", e => { if (!/q=/.test(location.hash) || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
   if (e.key === "ArrowRight" && cur < Q.length - 1) location.hash = "q=" + (cur + 2); if (e.key === "ArrowLeft" && cur > 0) location.hash = "q=" + cur; });
 load();

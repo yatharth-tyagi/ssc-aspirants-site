@@ -82,6 +82,7 @@ export async function onRequestGet({ request, env, data }) {
     const done = user ? (await env.DB.prepare("SELECT COUNT(*) AS c FROM attempts WHERE test = ?1 AND user = ?2").bind(test, user).first()).c || 0 : 0;
     const r = await env.DB.prepare("SELECT COUNT(*) AS total, MAX(score) AS top, AVG(score) AS avg FROM attempts WHERE test = ?1 AND (n = 1 OR n IS NULL)").bind(test).first();
     const q = Number(new URL(request.url).searchParams.get("stats")) || 0;
-    return json({ ...r, myAttempts: done, stats: q > 0 ? await stats(env.DB, test, Math.min(q, 500)) : undefined });
+    const history = user && done ? ((await env.DB.prepare("SELECT n, score, max, rank, total, pct, created FROM attempts WHERE test = ?1 AND user = ?2 ORDER BY created ASC LIMIT 50").bind(test, user).all()).results || []) : [];
+    return json({ ...r, myAttempts: done, history, stats: q > 0 ? await stats(env.DB, test, Math.min(q, 500)) : undefined });
   } catch (e) { return json({ total: 0, myAttempts: 0 }); }
 }
