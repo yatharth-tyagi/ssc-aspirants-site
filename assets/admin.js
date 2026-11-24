@@ -718,14 +718,14 @@
   // =====================================================================
   // WEBSITE (menu, name, footer, exams, subjects, topics, page edits)
   // =====================================================================
-  const NAVD = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["daily-quiz.html", "Daily Quiz"], ["leaderboard.html", "Leaderboard"], ["index.html#about", "About"]];
+  const NAVD = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["rank-calculator.html", "Rank Calculator"], ["daily-quiz.html", "Daily Quiz"], ["leaderboard.html", "Leaderboard"], ["index.html#about", "About"]];
   let navRows = [];
   function drawWebsite() {
-    const pages = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["daily-quiz.html", "Daily quiz"], ["leaderboard.html", "Leaderboard"], ["account.html", "Account details"], ...D.EXAMS.map(x => [x.page, x.name + " page"])];
+    const pages = [["index.html", "Home"], ["privacy.html", "Privacy Policy"], ["terms.html", "Terms of Use"], ["contact.html", "Contact"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["rank-calculator.html", "Rank Calculator"], ["pyq.html", "PYQ Papers"], ["rank-calculator.html", "Rank Calculator"], ["daily-quiz.html", "Daily quiz"], ["leaderboard.html", "Leaderboard"], ["account.html", "Account details"], ...D.EXAMS.map(x => [x.page, x.name + " page"])];
     const edited = (D.SITE.pages || {});
     $("wPages").innerHTML = pages.map(([u, n]) => `<div class="item"><span class="t"><b>${E(n)}</b><span>${E(u)}${edited[u.replace(/\.html$/, "")] ? " · has your edits" : ""}</span></span><a class="btn btn-out btn-sm" href="${E(u)}?edit=1" target="_blank" rel="noopener">✎ Edit page</a></div>`).join("");
     const sh = D.SITE.shell || {};
-    $("wBrand").value = sh.brand || ""; $("wFoot1").value = sh.foot1 ? sh.foot1.replace(/<[^>]+>/g, "") : ""; $("wFoot2").value = sh.foot2 ? sh.foot2.replace(/<[^>]+>/g, "") : "";
+    $("wBrand").value = sh.brand || ""; $("wEmail").value = sh.email || ""; $("wFoot1").value = sh.foot1 ? sh.foot1.replace(/<[^>]+>/g, "") : ""; $("wFoot2").value = sh.foot2 ? sh.foot2.replace(/<[^>]+>/g, "") : "";
     $("wFoot1").placeholder = "© SSCAspirants_Official · Created by Yatharth Tyagi"; $("wFoot2").placeholder = "Notes, mock tests and PYQs for SSC exams · @SSCAspirants_Official";
     const nv = sh.nav || {};
     navRows = NAVD.map(([h, n]) => ({ h, n: (nv[h] && nv[h].label) || n, def: n, hide: !!(nv[h] && nv[h].hide), own: false }))
@@ -749,6 +749,8 @@
     readNav();
     for (const r of navRows) if (r.own && !/^(https?:\/\/[^\s]+|[\w./#?=&-]+)$/i.test(r.h)) return say(`The link for "${r.n}" doesn't look right.`, "err");
     const sh = D.SITE.shell = D.SITE.shell || {};
+    const em = $("wEmail").value.trim(); if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return say("The contact email doesn't look right.", "err");
+    sh.email = em || undefined;
     sh.brand = $("wBrand").value.trim() || undefined; sh.foot1 = $("wFoot1").value.trim() ? E($("wFoot1").value.trim()) : undefined; sh.foot2 = $("wFoot2").value.trim() ? E($("wFoot2").value.trim()) : undefined;
     sh.nav = {}; navRows.filter(r => !r.own).forEach(r => { if (r.n !== r.def || r.hide) sh.nav[r.h] = { label: r.n, hide: r.hide }; });
     sh.links = navRows.filter(r => r.own).map(r => ({ label: r.n, href: r.h, hide: r.hide }));

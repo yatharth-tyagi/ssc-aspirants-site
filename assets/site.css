@@ -15,11 +15,12 @@
   --scale:1; --glow1:#E3E9FB; --glow2:#FBEFD6;
 }
 html[data-read="dark"]{
-  --gold:#E6B655; --gold-soft:#3A2F17;
-  --bg:#0C1222; --surface:#151D33; --ink:#E6EAF3; --muted:#A6AFC6; --line:#263155;
-  --pri:#93A8FF; --pri-ink:#0C1222; --pri-soft:#1F2A4F; --acc:#F2B45C; --acc-soft:#3A2B17;
-  --ok:#5FD3A8; --ok-soft:#12352B; --bad:#FF8A80; --bad-soft:#3A1D1D; --mark:#C3A6FF; --mark-soft:#2D2346;
-  --glow1:#1B2A5C; --glow2:#3A2E14; --side:#080D1A; --side-ink:#B9C0D8; --side-active:#1B2547; --shadow:0 8px 26px rgba(0,0,0,.35);
+  /* softer dark: slate grey instead of near-black, easier on the eyes */
+  --gold:#E8BC62; --gold-soft:#4A3D22;
+  --bg:#1F2637; --surface:#2A3348; --ink:#EEF1F7; --muted:#B8C0D4; --line:#3D4864;
+  --pri:#A3B5FF; --pri-ink:#18203A; --pri-soft:#34416B; --acc:#F2B45C; --acc-soft:#4A3A22;
+  --ok:#6FDDB4; --ok-soft:#1F4A3D; --bad:#FF9A90; --bad-soft:#4E2A2A; --mark:#CBB2FF; --mark-soft:#3D3360;
+  --glow1:#2B3A6E; --glow2:#4A3C1F; --side:#171D2D; --side-ink:#C6CCE0; --side-active:#2C3758; --shadow:0 8px 26px rgba(0,0,0,.25);
 }
 *{box-sizing:border-box;min-width:0}
 html{font-size:calc(16px * var(--scale));scroll-padding-top:80px}
@@ -54,9 +55,9 @@ body.nav-closed #side{margin-left:-264px}
 .side-ig:hover{text-decoration:none;opacity:.9}
 .main{flex:1;display:flex;flex-direction:column;position:relative;isolation:isolate}
 /* logo watermark behind every page */
-.main::before{content:"";position:fixed;inset:0;z-index:15;pointer-events:none;background:url("logo-mark.png") no-repeat calc(50% + 132px) 58% / min(56vw,560px);opacity:.09;mix-blend-mode:multiply}
+.main::before{content:"";position:fixed;inset:0;z-index:15;pointer-events:none;background:url("logo-mark.png") no-repeat calc(50% + 132px) 58% / min(56vw,520px);opacity:.045;mix-blend-mode:multiply}
 body.nav-closed .main::before{background-position:50% 58%}
-html[data-read="dark"] .main::before{opacity:.045;mix-blend-mode:screen}
+html[data-read="dark"] .main::before{opacity:.03;mix-blend-mode:screen}
 .overlay{display:none}
 
 .top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);
@@ -167,7 +168,7 @@ button.side-link{width:100%;background:transparent;border:0;font:inherit;text-al
 
 /* test card after the test is given */
 .tc-done{background:linear-gradient(180deg,#EAF8F1,#F6FCF9)!important;border:1.5px solid #6FCBA3!important}
-[data-read="dark"] .tc-done{background:#12322A!important;border-color:#2E7D62!important}
+[data-read="dark"] .tc-done{background:#244339!important;border-color:#3E8F73!important}
 .tc-done .tc-pill{align-self:flex-start}
 .tc-title{font-size:1.02rem}
 .tc-stats{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.92rem;color:var(--ink)}
@@ -186,7 +187,7 @@ button.side-link{width:100%;background:transparent;border:0;font:inherit;text-al
 .att-h .icon-btn{background:#ffffff1a;color:#fff;border-color:#ffffff33}
 .att-list{display:flex;flex-direction:column;gap:8px;padding:14px 18px}
 .att-row{display:grid;grid-template-columns:90px repeat(3,minmax(0,1fr)) minmax(0,1.4fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
-.att-row.off{border-color:#6FCBA3;background:#EAF8F1}[data-read="dark"] .att-row.off{background:#12322A}
+.att-row.off{border-color:#6FCBA3;background:#EAF8F1}[data-read="dark"] .att-row.off{background:#244339}
 .att-row small{display:block;font-size:.72rem;color:var(--muted);font-weight:500}
 .att-n{font:700 1rem "Poppins",sans-serif}
 .att-m b{font-size:1.05rem}.att-m b i{font-style:normal;font-weight:500;font-size:.8rem;color:var(--muted)}
@@ -195,3 +196,5 @@ button.side-link{width:100%;background:transparent;border:0;font:inherit;text-al
 .att-note{margin:0;padding:0 18px;font-size:.85rem}
 .att-f{padding:12px 18px 16px;display:flex;justify-content:flex-end}
 @media(max-width:700px){.att-row{grid-template-columns:repeat(3,minmax(0,1fr))}.att-n{grid-column:1/-1}.att-c{grid-column:1/-1}.att-b{grid-column:1/-1}.att-b .btn{flex:1}}
+.foot-links{flex-basis:100%;font-size:.85rem}
+.foot-links a{color:var(--muted)}

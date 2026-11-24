@@ -5,7 +5,8 @@
 // If the database isn't connected yet, the site stays open and only the admin pages are closed.
 import { currentUser, currentAdmin, json, safeNext } from "./_lib/auth.js";
 
-const OPEN = [/^\/login(\.html)?\/?$/, /^\/admin-login(\.html)?\/?$/, /^\/api\/auth\//, /^\/assets\/(?!uploads\/)/, /^\/favicon/, /^\/robots\.txt$/];
+const OPEN = [/^\/login(\.html)?\/?$/, /^\/admin-login(\.html)?\/?$/, /^\/api\/auth\//, /^\/assets\/(?!uploads\/)/, /^\/favicon/, /^\/robots\.txt$/,
+  /^\/(privacy|terms|contact)(\.html)?\/?$/, /^\/data\/(site|exams)\.js$/];
 // drafts of notes are only for admins
 const ADMIN_FILES = [/^\/data\/docs\//];
 // data files that can hold things scheduled for later: hidden from students until their time

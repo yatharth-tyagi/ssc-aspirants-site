@@ -1,10 +1,10 @@
 /* Notes reader: comfortable reading width, soft colours, watermark, copy protection */
 .protected{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:clamp(20px,4vw,40px);
   max-width:820px;width:100%;margin:0 auto;font-size:1.06rem;line-height:1.8;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.protected::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:18px;z-index:2;background-repeat:repeat;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='340' height='200'><text x='20' y='120' transform='rotate(-24 170 100)' font-family='Arial,sans-serif' font-size='22' font-weight='700' fill='%23808080' fill-opacity='0.14'>SSCAspirants_Official</text></svg>")}
-.protected::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:18px;z-index:2;opacity:.10;mix-blend-mode:multiply;
-  background:url("logo-mark.png") repeat 30px 30px / 150px 150px}
+.protected::after{content:none}
+.protected::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:18px;z-index:2;opacity:.045;mix-blend-mode:multiply;
+  background:url("logo-mark.png") repeat 40px 60px / 230px 230px}
+html[data-read="dark"] .protected::before{opacity:.022;mix-blend-mode:screen}
 .protected img{pointer-events:none;-webkit-user-drag:none}
 .protected h1{font-size:clamp(1.6rem,3.4vw,2.2rem);margin:10px 0 12px}
 .protected h2{font-size:1.35rem;margin:34px 0 10px;padding-top:10px;border-top:1px solid var(--line)}
@@ -39,7 +39,7 @@ body.shield .protected{filter:blur(14px)}
 /* printing is blocked unless the owner allowed "Download PDF" (the button adds sk-printing / note-printing) */
 @media print{body:not(.sk-printing):not(.note-printing) *{display:none!important}body:not(.sk-printing):not(.note-printing)::before{content:"Printing is disabled – SSCAspirants_Official";display:block!important}}
 @media (max-width:600px){.tl>li{grid-template-columns:1fr;gap:2px}}
-html[data-read="dark"] .protected::before{opacity:.10;mix-blend-mode:screen}
+
 .doc img{max-width:100%;height:auto;border-radius:8px}
 .doc table{border-collapse:collapse;width:100%;display:block;overflow-x:auto}
 .doc td,.doc th{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}

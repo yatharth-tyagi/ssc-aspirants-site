@@ -23,6 +23,7 @@ window.SSCSeriesUrl = function (t) {
     ["live-tests.html", "Live Tests", "live", '<circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/>'],
     ["notes.html", "Notes", "notes", '<path d="M4 5h7v14H4zM13 5h7v14h-7z"/>'],
     ["pyq.html", "PYQ Papers", "pyq", '<path d="M6 3h9l4 4v14H6zM14 3v5h5"/>'],
+    ["rank-calculator.html", "Rank Calculator", "rank", '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 11h2M14 11h2M8 15h2M14 15h2M8 19h2M14 19h2"/>'],
     ["daily-quiz.html", "Daily Quiz", "daily", '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14l2 2 4-4"/>'],
     ["leaderboard.html", "Leaderboard", "leaderboard", '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'],
     ["index.html#about", "About", "about", '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>']
@@ -117,6 +118,7 @@ window.SSCSeriesUrl = function (t) {
   foot.className = "foot"; foot.id = "about";
   foot.innerHTML = `<span data-shell="foot1">${SH.foot1 != null ? clean(SH.foot1) : `© ${new Date().getFullYear()} SSCAspirants_Official · Created by <b>Yatharth Tyagi</b>`}</span>
     <span data-shell="foot2">${SH.foot2 != null ? clean(SH.foot2) : `Notes, mock tests and PYQs for SSC exams · <a href="${IG}" target="_blank" rel="noopener">@SSCAspirants_Official</a>`}</span>`;
+  foot.insertAdjacentHTML("beforeend", `<span class="foot-links"><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a> · <a href="contact.html">Contact</a></span>`);
   main.appendChild(foot);
 
   // ---- page edits made with "✎ Edit page" (stored in data/site.js) ----
@@ -213,6 +215,7 @@ window.SSCSeriesUrl = function (t) {
     const items = [
       { t: "Mock Tests", s: "Full, sectional and chapter tests", h: "mock-tests.html" },
       { t: "PYQ Papers", s: "Previous year papers, exam-wise", h: "pyq.html" },
+      { t: "Rank calculator", s: "Marks and rank from your SSC answer key", h: "rank-calculator.html" },
       { t: "Daily quiz", s: "A new quiz every day, keep your streak", h: "daily-quiz.html" },
       { t: "Leaderboard", s: "Top students of each test", h: "leaderboard.html" },
       { t: "Indian Polity – Chapter Test", s: "Demo test in the Eduquity style", h: "test.html" }

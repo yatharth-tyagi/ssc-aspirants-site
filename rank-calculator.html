@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- ssc-build 2/7 dGg= -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SSC Rank Calculator – SSCAspirants_Official</title>
+<meta name="description" content="Mock tests on the latest Eduquity CBT pattern, chapter-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
+</head>
+<body data-page="rank" data-title="Rank Calculator">
+<main id="content" class="content">
+<style>
+.rc-hero{position:relative;overflow:hidden;border-radius:22px;padding:clamp(20px,4vw,32px);color:#fff;background:radial-gradient(circle at 90% 120%,#C9962E55 0,transparent 45%),linear-gradient(135deg,#1F3A93,#141B38);box-shadow:var(--shadow)}
+.rc-hero h2{color:#fff;font-size:clamp(1.5rem,3.4vw,2.2rem);margin:6px 0}.rc-hero p{margin:0;color:#DDE3FF}
+.rc-steps{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.rc-steps span{background:#ffffff1a;border:1px solid #ffffff33;border-radius:999px;padding:5px 12px;font-size:.86rem;font-weight:600}
+.rc-form{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.rc-form label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:.92rem}
+.rc-form select,.rc-form input,.rc-in input{min-height:46px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px;padding:0 12px}
+.rc-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 12px}
+.rc-tabs button{min-height:44px;padding:8px 16px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
+.rc-tabs button[aria-selected="true"]{background:var(--pri);color:#fff;border-color:var(--pri)}
+.rc-in{display:flex;flex-direction:column;gap:10px}
+.rc-in .help{font-size:.88rem;color:var(--muted)}
+.rc-man{width:100%;border-collapse:collapse}.rc-man th,.rc-man td{padding:8px;border-bottom:1px solid var(--line);text-align:left}.rc-man input{width:90px;min-height:40px}
+.rc-res{display:flex;flex-direction:column;gap:14px}
+.rc-ranks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.rc-rk{border-radius:16px;padding:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.rc-rk b{display:block;font:700 1.7rem "Poppins",sans-serif;color:var(--pri)}.rc-rk b small{font-size:.9rem;color:var(--muted);font-weight:500}.rc-rk span{color:var(--muted);font-size:.88rem}
+.rc-rk.big{background:linear-gradient(135deg,#1F3A93,#141B38);border:0;color:#fff}.rc-rk.big b{color:#F5C451}.rc-rk.big span,.rc-rk.big b small{color:#C9D3FF}
+.rc-tbl{overflow-x:auto}.rc-tbl table{width:100%;border-collapse:collapse;min-width:520px}.rc-tbl th,.rc-tbl td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}.rc-tbl th{font-size:.78rem;text-transform:uppercase;color:var(--muted)}.rc-tbl tfoot td{font-weight:700}
+.rc-who{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--ink)}.rc-who span b{font-weight:700}
+.rc-err{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad);border-radius:12px;padding:10px 14px;font-weight:600}
+.rc-mine{background:var(--ok-soft);border:1px solid var(--ok);border-radius:12px;padding:10px 14px}
+</style>
+<section class="rc-hero"><span class="pill gold">Free tool</span><h2>SSC Rank Calculator</h2><p>Paste your answer-key link from SSC. See your marks, section-wise score and your rank among SSCAspirants_Official students.</p>
+<div class="rc-steps"><span>1 · Pick exam</span><span>2 · Paste link</span><span>3 · See marks &amp; rank</span></div></section>
+<section class="card">
+  <div class="rc-form">
+    <label for="rExam">Exam<select id="rExam"></select></label>
+    <label for="rTier" id="rTierW">Tier<select id="rTier"></select></label>
+    <label for="rCat">Category<select id="rCat"><option>UR</option><option>OBC</option><option>EWS</option><option>SC</option><option>ST</option></select></label>
+  </div>
+  <div id="rMine"></div>
+  <div class="rc-tabs" role="tablist"><button type="button" data-m="link" aria-selected="true">🔗 Answer-key link</button><button type="button" data-m="file">⤒ Upload saved page</button><button type="button" data-m="man">✎ Enter manually</button></div>
+  <div class="rc-in" data-mp="link"><input id="rLink" type="url" placeholder="https://ssc.digialm.com/…/….html" inputmode="url"><span class="help">Open the answer key on SSC's website, copy the address of your response sheet (it has <b>digialm.com</b> in it) and paste it here.</span></div>
+  <div class="rc-in" data-mp="file" hidden><input id="rFile" type="file" accept=".html,.htm,text/html"><span class="help">On a computer, open your response sheet and press <b>Ctrl + S</b> to save it, then upload that file here.</span></div>
+  <div class="rc-in" data-mp="man" hidden><div class="rc-tbl"><table class="rc-man"><thead><tr><th>Section</th><th>Correct</th><th>Wrong</th></tr></thead><tbody id="rManBody"></tbody></table></div>
+    <div class="rc-form"><label for="rDate">Exam date (optional)<input id="rDate" type="date"></label><label for="rShift">Shift (optional)<select id="rShift"><option value="">–</option><option>Shift 1</option><option>Shift 2</option><option>Shift 3</option><option>Shift 4</option></select></label></div></div>
+  <div style="margin-top:14px"><button class="btn btn-pri" type="button" id="rGo">Calculate my marks &amp; rank</button></div>
+</section>
+<div id="rOut" data-dyn="1"></div>
+</main>
+<script src="data/exams.js"></script>
+<script src="data/site.js"></script>
+<script src="assets/site.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id), E=SSC.esc, EX=(window.EXAMS||[]).filter(e=>!e.hide);
+const fx=v=>+(+v).toFixed(2);
+let mode="link";
+$("rExam").innerHTML=EX.map(e=>`<option value="${e.id}">${E(e.name)}</option>`).join("");
+const tiers=()=>SSCTiers(EX.find(e=>e.id===$("rExam").value));
+const tier=()=>tiers().find(t=>t.id===$("rTier").value)||tiers()[0];
+function fillTier(){const T=tiers();$("rTier").innerHTML=T.map(t=>`<option value="${t.id}">${E(t.name)}</option>`).join("");$("rTierW").hidden=T.length<2;fillMan();mine();}
+function fillMan(){$("rManBody").innerHTML=(tier().pattern||[]).map((r,i)=>`<tr><td>${E(r[0])}<br><small class="muted">${r[1]} questions</small></td><td><input type="number" min="0" max="${r[1]}" data-c="${i}" inputmode="numeric"></td><td><input type="number" min="0" max="${r[1]}" data-w="${i}" inputmode="numeric"></td></tr>`).join("");}
+$("rExam").addEventListener("change",fillTier); $("rTier").addEventListener("change",()=>{fillMan();mine();});
+document.querySelector(".rc-tabs").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b)return;mode=b.dataset.m;document.querySelectorAll(".rc-tabs [data-m]").forEach(x=>x.setAttribute("aria-selected",x===b));document.querySelectorAll("[data-mp]").forEach(p=>p.hidden=p.dataset.mp!==mode);});
+async function mine(){ $("rMine").innerHTML=""; try{const r=await fetch(`/api/rank?exam=${$("rExam").value}&tier=${tier().id}`);const d=await r.json();
+  if(d.mine) $("rMine").innerHTML=`<p class="rc-mine">Your saved marks for this exam: <b>${fx(d.mine.score)}${d.mine.max?" / "+fx(d.mine.max):""}</b> (${E(d.mine.cat||"UR")}) · ${d.count} students have used the calculator. Calculate again to see your latest rank.</p>`;
+  else if(d.count) $("rMine").innerHTML=`<p class="muted" style="margin:10px 0 0">${d.count} students have used the calculator for this exam.</p>`;}catch(e){} }
+
+// read SSC's response sheet (digialm page)
+function parseSheet(html){
+  const d=new DOMParser().parseFromString(html,"text/html"), info={};
+  d.querySelectorAll("tr").forEach(tr=>{const td=tr.querySelectorAll(":scope > td");if(td.length!==2)return;const k=td[0].textContent.replace(/\s+/g," ").trim().toLowerCase(),v=td[1].textContent.replace(/\s+/g," ").trim();
+    if(/candidate name|participant name/.test(k))info.name=v;else if(/roll/.test(k))info.roll=v;else if(/test date|exam date/.test(k))info.date=v;else if(/test time|exam time/.test(k))info.time=v;else if(/^subject|exam name/.test(k))info.subject=v;});
+  const secs=[];let cur=null;
+  d.querySelectorAll(".section-lbl, .question-pnl").forEach(n=>{
+    if(n.classList.contains("section-lbl")){cur={name:n.textContent.replace(/section\s*:/i,"").replace(/\s+/g," ").trim()||"Section "+(secs.length+1),n:0,r:0,w:0,s:0,b:0};secs.push(cur);return;}
+    if(!cur){cur={name:"All questions",n:0,r:0,w:0,s:0,b:0};secs.push(cur);}
+    const right=n.querySelector(".rightAns"),rn=right?parseInt(right.textContent.trim()):NaN;let ch=null;
+    n.querySelectorAll("tr").forEach(tr=>{const td=tr.querySelectorAll("td");if(td.length>=2&&/chosen option/i.test(td[0].textContent))ch=td[1].textContent.trim();});
+    const c=parseInt(ch);cur.n++;
+    if(isNaN(rn)){cur.b++;cur.r++;}            // question dropped by SSC: marks to everyone
+    else if(!ch||isNaN(c))cur.s++; else if(c===rn)cur.r++; else cur.w++;
+  });
+  return {info,secs:secs.filter(s=>s.n)};
+}
+function show(info,secs,ranks){
+  const t=tier(), ex=$("rExam").value;
+  secs.forEach((s,i)=>{const minus=ex==="mts"&&i<2?0:t.minus; s.m=s.r*t.plus-s.w*minus; s.max=s.n*t.plus;});
+  const tot=secs.reduce((a,s)=>a+s.m,0), max=secs.reduce((a,s)=>a+s.max,0), R=secs.reduce((a,s)=>a+s.r,0),W=secs.reduce((a,s)=>a+s.w,0),S=secs.reduce((a,s)=>a+s.s,0),B=secs.reduce((a,s)=>a+s.b,0);
+  $("rOut").innerHTML=`<section class="card rc-res">
+    <div class="sec-head" style="margin:0"><h2>Your marks</h2><p>${E(EX.find(e=>e.id===ex).name)} ${tiers().length>1?E(t.name):""} · +${t.plus} / −${t.minus}</p></div>
+    ${info.name||info.date?`<div class="rc-who">${info.name?`<span>Name: <b>${E(info.name)}</b></span>`:""}${info.date?`<span>Date: <b>${E(info.date)}</b></span>`:""}${info.time?`<span>Time: <b>${E(info.time)}</b></span>`:""}</div>`:""}
+    <div class="rc-ranks"><div class="rc-rk big"><b>${fx(tot)} <small>/ ${fx(max)}</small></b><span>Total marks</span></div>
+      <div class="rc-rk"><b>${ranks?ranks.overall.rank+" <small>/ "+ranks.overall.total+"</small>":"…"}</b><span>Overall rank</span></div>
+      <div class="rc-rk"><b>${ranks&&ranks.shift?ranks.shift.rank+" <small>/ "+ranks.shift.total+"</small>":"–"}</b><span>Rank in your shift</span></div>
+      <div class="rc-rk"><b>${ranks?ranks.category.rank+" <small>/ "+ranks.category.total+"</small>":"…"}</b><span>${E($("rCat").value)} category rank</span></div>
+      <div class="rc-rk"><b>${ranks?fx(ranks.overall.percentile):"…"}</b><span>Percentile</span></div></div>
+    <div class="rc-tbl"><table><thead><tr><th>Section</th><th>Questions</th><th>Correct</th><th>Wrong</th><th>Skipped</th><th>Marks</th></tr></thead>
+      <tbody>${secs.map(s=>`<tr><td>${E(s.name)}</td><td>${s.n}</td><td class="ok-t">${s.r}</td><td class="bad-t">${s.w}</td><td>${s.s}</td><td><b>${fx(s.m)}</b> / ${fx(s.max)}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td>Total</td><td>${secs.reduce((a,s)=>a+s.n,0)}</td><td>${R}</td><td>${W}</td><td>${S}</td><td>${fx(tot)} / ${fx(max)}</td></tr></tfoot></table></div>
+    ${B?`<p class="muted" style="margin:0">${B} question${B>1?"s were":" was"} dropped by SSC – marks given to everyone.</p>`:""}
+    <p class="muted" style="margin:0">Ranks are among students who used this calculator on SSCAspirants_Official. These are raw marks (before SSC's normalisation), so your final SSC result can differ.</p></section>`;
+  $("rOut").scrollIntoView({behavior:"smooth",block:"start"});
+  return {tot,max};
+}
+async function rank(info,secs,manual){
+  const {tot,max}=show(info,secs,null);
+  const date=manual?$("rDate").value:(info.date||""), shift=manual?$("rShift").value:(info.time||"");
+  try{const r=await fetch("/api/rank",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({exam:$("rExam").value,tier:tier().id,score:+tot.toFixed(2),max,cat:$("rCat").value,date,shift})});
+    const d=await r.json(); if(r.ok) show(info,secs,d); mine();}catch(e){}
+}
+const fail=m=>{$("rOut").innerHTML=`<p class="rc-err">${E(m)}</p>`;};
+$("rGo").addEventListener("click",async()=>{
+  const b=$("rGo"); b.disabled=true; const old=b.textContent; b.textContent="Calculating…";
+  try{
+    if(mode==="man"){ const P=tier().pattern||[]; const secs=P.map((r,i)=>{const c=+document.querySelector(`[data-c="${i}"]`).value||0,w=+document.querySelector(`[data-w="${i}"]`).value||0;return {name:r[0],n:+r[1],r:c,w,s:Math.max(0,r[1]-c-w),b:0};});
+      if(secs.some(s=>s.r+s.w>s.n)) return fail("Correct + wrong can't be more than the questions in a section.");
+      if(!secs.some(s=>s.r||s.w)) return fail("Type how many you got correct and wrong in each section.");
+      return await rank({},secs,true); }
+    let html="";
+    if(mode==="file"){ const f=$("rFile").files[0]; if(!f) return fail("Choose the saved answer-key file first."); html=await f.text(); }
+    else { const u=$("rLink").value.trim(); if(!u) return fail("Paste your answer-key link first.");
+      const r=await fetch("/api/rank?url="+encodeURIComponent(u)); const d=await r.json(); if(!r.ok) return fail(d.error||"Could not open the link."); html=d.html; }
+    const p=parseSheet(html); if(!p.secs.length) return fail("We couldn't read questions from this page. Make sure it is your response sheet (the page with your answers), or enter your marks manually.");
+    await rank(p.info,p.secs,false);
+  } finally { b.disabled=false; b.textContent=old; }
+});
+fillTier();
+}
+</script>
+</body>
+</html>

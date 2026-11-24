@@ -142,6 +142,9 @@ body{display:flex;flex-direction:column;min-height:100vh}
 }
 .side.card{background:var(--bg)!important;color:var(--ink)!important;border:1px solid var(--line)}
 .side .blk-h{color:var(--pri)}
+.wrapS{position:relative;isolation:isolate}
+.wrapS::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;background:url("assets/logo-mark.png") no-repeat center 60% / min(60vw,480px)}
+html[data-read="dark"] .wrapS::before,html[data-read="dark"] .qmain::before{mix-blend-mode:screen;opacity:.03}
 @media print{body{display:none}}
 </style>
 </head>

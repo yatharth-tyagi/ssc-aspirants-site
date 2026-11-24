@@ -93,6 +93,7 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
       <label class="fl">Password<span class="pw"><input id="pass" type="password" autocomplete="current-password" maxlength="128" required><button type="button" id="show">Show</button></span></label>
       <label class="fl" id="pass2Row" hidden>Confirm password<input id="pass2" type="password" autocomplete="new-password" maxlength="128"></label>
       <button class="btn btn-pri" id="go" type="submit">Log in</button>
+      <p class="small" id="agreeNote" hidden style="margin:2px 0 0">By creating an account you agree to our <a href="terms.html">Terms of Use</a> and <a href="privacy.html">Privacy Policy</a>.</p>
     </form>
     <p class="small" id="forgot"><a href="#" id="fpOpen">Forgot password?</a></p>
     <div id="fpBox" hidden>
@@ -109,7 +110,7 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
       </form>
       <p class="small"><a href="#" id="fpBack">← Back to log in</a></p>
     </div>
-    <p class="foot2">© <span id="yr"></span> SSCAspirants_Official · Created by <b>Yatharth Tyagi</b></p>
+    <p class="foot2">© <span id="yr"></span> SSCAspirants_Official · Created by <b>Yatharth Tyagi</b><br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a> · <a href="contact.html">Contact</a></p>
   </div>
 </main>
 <script src="assets/site.js"></script>
@@ -137,7 +138,7 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
     $("tLogin").setAttribute("aria-selected", !r); $("tReg").setAttribute("aria-selected", r);
     $("head").textContent = r ? "Create your account" : "Welcome back";
     $("subhead").textContent = r ? "Join free and start practising today." : "Log in to continue your preparation.";
-    $("nameRow").hidden = !r; $("pass2Row").hidden = !r; $("forgot").hidden = r; if ($("fpBox")) { $("fpBox").hidden = true; $("form").hidden = false; }
+    $("nameRow").hidden = !r; $("pass2Row").hidden = !r; $("agreeNote").hidden = !r; $("forgot").hidden = r; if ($("fpBox")) { $("fpBox").hidden = true; $("form").hidden = false; }
     $("pass").autocomplete = r ? "new-password" : "current-password";
     $("go").textContent = r ? "Create account" : "Log in";
     history.replaceState(null, "", location.pathname + location.search + (r ? "#register" : ""));
