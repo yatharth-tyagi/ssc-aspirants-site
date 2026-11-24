@@ -183,7 +183,7 @@
   function drawVideo() { const id = ytId($("vUrl").value); $("vPrev").innerHTML = id ? `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1" title="Video preview" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>` : ($("vUrl").value.trim() ? `<p class="bad-t" style="margin:0">This doesn't look like a YouTube link.</p>` : ""); paintStatus(); }
   $("vUrl").addEventListener("input", drawVideo);
   $("vDel").addEventListener("click", () => { $("vUrl").value = ""; $("vTitle").value = ""; drawVideo(); });
-  function loadChapter() {
+  function loadChapter(userPick) {
     const s = D.SUBJECTS.find(x => x.id === $("nSub").value), cid = $("nChap").value;
     const c = s && s.chapters.find(x => x.id === cid), n = D.NOTES[cid] || {};
     nCid = cid === "__new" ? "" : cid;
@@ -195,22 +195,31 @@
     pQs = JSON.parse(JSON.stringify(n.quiz || [])); pOpen = -1; drawP();
     $("nView").href = nCid ? "note.html?id=" + encodeURIComponent(nCid) : "notes.html";
     docLoaded = pptLoaded = false; $("docFrame").src = "about:blank"; $("pptFrame").src = "about:blank";
-    openNt(nTab); paintStatus();
+    openNt(nTab, userPick ? true : undefined); paintStatus();
   }
   $("nSub").addEventListener("change", () => fillChapters());
-  $("nChap").addEventListener("change", loadChapter);
+  $("nChap").addEventListener("change", () => loadChapter(true));
   $("nTitle").addEventListener("input", paintStatus);
 
   // ---------- Doc / PPT / Video / Practice tabs ----------
-  function openNt(t) {
+  // Doc and PPT editors open in full screen; "Exit full screen" goes back to the normal view
+  function setFs(on) {
+    document.querySelectorAll(".nt-ed").forEach(p => p.classList.toggle("fs", on && !p.hidden));
+    document.body.classList.toggle("nt-fs", on && (nTab === "doc" || nTab === "ppt"));
+    document.querySelectorAll("[data-chtitle]").forEach(x => x.textContent = $("nTitle").value || "New chapter");
+  }
+  document.addEventListener("click", e => { const g = e.target.closest("[data-ntgo]"); if (g) { const t = g.dataset.ntgo; openNt(t, t === "doc" || t === "ppt"); return; } const f = e.target.closest("[data-fs]"); if (f) setFs(f.dataset.fs === "1"); if (e.target.closest("[data-fspub]")) $("nSave").click(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("nt-fs")) setFs(false); });
+  function openNt(t, full) {
     nTab = t;
     document.querySelectorAll("#ntabs [data-nt]").forEach(b => b.setAttribute("aria-selected", b.dataset.nt === t));
     document.querySelectorAll("[data-np]").forEach(p => p.hidden = p.dataset.np !== t);
     const n = D.NOTES[nCid] || {};
     if (t === "doc" && !docLoaded) { docLoaded = true; $("docFrame").src = "docs-editor.html?embed=1" + (nCid ? "&ch=" + encodeURIComponent(nCid) : ""); }
     if (t === "ppt" && !pptLoaded) { pptLoaded = true; $("pptFrame").src = "slide-editor.html?embed=1" + (n.deck ? "&id=" + encodeURIComponent(n.deck) : "&title=" + encodeURIComponent($("nTitle").value || "Slides")); }
+    if (full !== undefined) setFs(full && (t === "doc" || t === "ppt")); else setFs(document.body.classList.contains("nt-fs") && (t === "doc" || t === "ppt"));
   }
-  $("ntabs").addEventListener("click", e => { const b = e.target.closest("[data-nt]"); if (b) openNt(b.dataset.nt); });
+  $("ntabs").addEventListener("click", e => { const b = e.target.closest("[data-nt]"); if (b) openNt(b.dataset.nt, true); });
   function paintStatus() {
     const n = D.NOTES[nCid] || {}, mark = (id, on, txt) => { $(id).textContent = on ? txt : "Not added"; $(id).className = on ? "ok" : ""; };
     mark("stDoc", n.html || (n.phases || []).length, "✓ Added"); mark("stPpt", n.deck, "✓ Added");
@@ -355,8 +364,8 @@
       <button class="btn btn-out btn-sm" type="button" data-edit="${E(id)}">Edit</button><button class="btn btn-out btn-sm" type="button" data-copy="${E(id)}">Copy</button><button class="btn btn-del btn-sm" type="button" data-del="${E(id)}">Delete</button></div>`;
   $("tList").addEventListener("click", async e => {
     const ed = e.target.closest("[data-edit]"), cp = e.target.closest("[data-copy]"), del = e.target.closest("[data-del]");
-    if (ed) loadTest(ed.dataset.edit);
-    if (cp) { loadTest(cp.dataset.copy); editing = null; $("tTitle").value += " (copy)"; $("tFormTitle").textContent = "New test (copy)"; $("tOpen").hidden = true; }
+    if (ed) { edTo(tEdHome); loadTest(ed.dataset.edit); }
+    if (cp) { edTo(tEdHome); loadTest(cp.dataset.copy); editing = null; $("tTitle").value += " (copy)"; $("tFormTitle").textContent = "New test (copy)"; $("tOpen").hidden = true; }
     if (del) { const id = del.dataset.del; if (!confirmBox(`Delete the test "${D.TESTS[id].title}"? Students' old results stay saved.`)) return;
       delete D.TESTS[id]; D.LIVE = D.LIVE.filter(l => l.link !== "test.html?id=" + id);
       try { await save("TESTS"); await save("LIVE"); drawTests(); drawLive(); if (editing === id) closeEd(); say("Test deleted.", "ok"); } catch (er) { say("Could not delete: " + er.message, "err"); } }
@@ -605,7 +614,7 @@
     $("tLive").checked = true; $("tSect").checked = false; $("tStrict").checked = false; whenSet("tWhen", null);
     if (curTier()) $("tPreset").click(); else { drawSecs(); drawQs(); }
   }
-  $("tNew").addEventListener("click", () => { resetTest(); openEd(); });
+  $("tNew").addEventListener("click", () => { edTo(tEdHome); resetTest(); openEd(); });
   function loadTest(id) {
     const t = D.TESTS[id]; editing = id; tQs = JSON.parse(JSON.stringify(t.questions)); openQ = -1; qLang = "en";
     fillExamSel(); $("tExam").value = examById(t.exam) || t.exam === "all" ? t.exam : "all"; fillTierSel(t.tier || "t1");
@@ -656,26 +665,27 @@
   // LIVE TESTS
   // =====================================================================
   function drawLive() {
-    $("lList").innerHTML = D.LIVE.length ? D.LIVE.map((l, i) => `<div class="item"><span class="t"><b>${E(l.name)}</b><span>${E(l.type)} · ${l.questions} questions · ${l.minutes} min</span></span>
+    $("lList").innerHTML = D.LIVE.length ? D.LIVE.map((l, i) => { const id = (/[?&]id=([^&]+)/.exec(l.link) || [])[1];
+      return `<div class="item"><span class="t"><b>${E(l.name)}</b><span>${E(l.type)} · ${E(l.exams || "")} · ${l.questions} questions · ${l.minutes} min · ${E(l.marking || "")}${whenText(l.publishAt)}</span></span>
+      <a class="btn btn-out btn-sm" href="${E(l.link)}" target="_blank" rel="noopener">Open</a>
+      ${id && D.TESTS[id] ? `<button class="btn btn-out btn-sm" type="button" data-ledit="${E(id)}">Edit</button>` : ""}
       <button class="btn btn-out btn-sm" type="button" data-up="${i}" ${i ? "" : "disabled"} aria-label="Move up">↑</button>
       <button class="btn btn-out btn-sm" type="button" data-down="${i}" ${i < D.LIVE.length - 1 ? "" : "disabled"} aria-label="Move down">↓</button>
-      <button class="btn btn-del btn-sm" type="button" data-rm="${i}">Remove</button></div>`).join("") : `<p class="muted" style="margin:0">No live tests.</p>`;
-    const opts = [{ v: "test.html", n: "Indian Polity – Chapters 1 to 4 (built-in)" }, ...Object.entries(D.TESTS).map(([id, t]) => ({ v: "test.html?id=" + id, n: t.title }))];
-    $("lPick").innerHTML = opts.map(o => `<option value="${E(o.v)}">${E(o.n)}</option>`).join("");
+      <button class="btn btn-del btn-sm" type="button" data-rm="${i}">Remove</button></div>`; }).join("") : `<p class="muted" style="margin:0">No live tests yet. Press ＋ New live test.</p>`;
   }
+  // the same test editor as Mock tests, shown here
+  const tEdHome = $("tEd").parentNode;
+  const edTo = host => { if ($("tEd").parentNode !== host) host.appendChild($("tEd")); };
+  $("lNew").addEventListener("click", () => { edTo($("lEdHost")); resetTest(); $("tLive").checked = true; $("tFormTitle").textContent = "New live test"; openEd(); });
   $("lList").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.ledit) { edTo($("lEdHost")); loadTest(b.dataset.ledit); $("tFormTitle").textContent = "Edit live test"; return; }
     const i = +(b.dataset.up ?? b.dataset.down ?? b.dataset.rm);
     if (b.dataset.up) [D.LIVE[i - 1], D.LIVE[i]] = [D.LIVE[i], D.LIVE[i - 1]];
     if (b.dataset.down) [D.LIVE[i + 1], D.LIVE[i]] = [D.LIVE[i], D.LIVE[i + 1]];
+    if (b.dataset.rm && !confirmBox(`Remove "${D.LIVE[i].name}" from Live tests? The test itself stays in Mock tests.`)) return;
     if (b.dataset.rm) D.LIVE.splice(i, 1);
-    drawLive();
-  });
-  $("lAdd").addEventListener("click", () => {
-    const v = $("lPick").value; if (D.LIVE.some(l => l.link === v)) return say("That test is already in Live tests.", "err");
-    if (v === "test.html") D.LIVE.push({ name: "Indian Polity – Chapters 1 to 4", type: "Subject-wise test", exams: "All SSC exams", questions: 19, minutes: 15, marking: "+2 / −0.50", link: v });
-    else { const id = v.split("=")[1], t = D.TESTS[id]; D.LIVE.push({ name: t.title, type: t.type, exams: examName(t.exam), questions: t.questions.length, minutes: t.minutes, marking: `+${t.plus} / −${t.minus}`, link: v }); }
-    drawLive();
+    drawLive(); say("Press Save order / removals to publish this change.", "info");
   });
   $("lSave").addEventListener("click", async () => { try { say("Publishing…", "info", true); await save("LIVE"); say("Live tests published.", "ok"); } catch (e) { say("Could not publish: " + e.message, "err"); } });
 

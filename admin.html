@@ -53,6 +53,16 @@
 .nt-tabs button small{font-size:.75rem;color:var(--muted);min-height:1em}
 .nt-tabs button[aria-selected="true"]{border-color:var(--pri);background:var(--pri-soft);color:var(--pri)}
 .nt-tabs button small.ok{color:var(--ok);font-weight:700}
+.nt-fbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.nt-ft{margin-right:auto;font-size:.95rem}
+.nt-sw{display:inline-flex;gap:4px}.nt-sw button{min-height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;cursor:pointer}
+.nt-ed[data-np="doc"] .nt-sw [data-ntgo="doc"],.nt-ed[data-np="ppt"] .nt-sw [data-ntgo="ppt"]{background:var(--pri);color:#fff;border-color:var(--pri)}
+.nt-ed:not(.fs) .nt-onlyfs,.nt-ed.fs .nt-onlysmall{display:none}
+.nt-ed.fs{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;padding:8px 10px;margin:0}
+.nt-ed.fs .nt-fbar{margin-bottom:6px;padding:4px 4px 0}
+.nt-ed.fs .nt-frame{flex:1;height:auto;min-height:0;border-radius:10px}
+body.nt-fs{overflow:hidden}
+body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
 .nt-frame{width:100%;height:78vh;min-height:520px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
 .vprev{margin-top:12px;max-width:760px}.vprev iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#000}
 .nt-pub{position:sticky;bottom:0;background:var(--surface);padding:12px 0;border-top:1px solid var(--line);z-index:5;margin-top:14px}
@@ -205,8 +215,8 @@
     <button type="button" role="tab" data-nt="video"><span class="nt-ic">▶</span><b>Video</b><small id="stVid"></small></button>
     <button type="button" role="tab" data-nt="practice"><span class="nt-ic">❓</span><b>Practice</b><small id="stPra"></small></button>
   </div>
-  <div class="nt-pane" data-np="doc"><iframe id="docFrame" title="Doc editor" class="nt-frame"></iframe></div>
-  <div class="nt-pane" data-np="ppt" hidden><iframe id="pptFrame" title="PPT editor" class="nt-frame"></iframe></div>
+  <div class="nt-pane nt-ed" data-np="doc"><div class="nt-fbar"><span class="nt-ft">📄 <b>Doc editor</b> · <span data-chtitle></span></span><span class="nt-onlyfs nt-sw"><button type="button" data-ntgo="doc">📄 Doc</button><button type="button" data-ntgo="ppt">📊 PPT</button><button type="button" data-ntgo="video">▶ Video</button><button type="button" data-ntgo="practice">❓ Practice</button></span><button class="btn btn-out btn-sm nt-onlysmall" type="button" data-fs="1">⤢ Full screen</button><button class="btn btn-out btn-sm nt-onlyfs" type="button" data-fs="0">⤡ Exit full screen</button><button class="btn btn-pri btn-sm nt-onlyfs" type="button" data-fspub>Publish chapter</button></div><iframe id="docFrame" title="Doc editor" class="nt-frame"></iframe></div>
+  <div class="nt-pane nt-ed" data-np="ppt" hidden><div class="nt-fbar"><span class="nt-ft">📊 <b>PPT editor</b> · <span data-chtitle></span></span><span class="nt-onlyfs nt-sw"><button type="button" data-ntgo="doc">📄 Doc</button><button type="button" data-ntgo="ppt">📊 PPT</button><button type="button" data-ntgo="video">▶ Video</button><button type="button" data-ntgo="practice">❓ Practice</button></span><button class="btn btn-out btn-sm nt-onlysmall" type="button" data-fs="1">⤢ Full screen</button><button class="btn btn-out btn-sm nt-onlyfs" type="button" data-fs="0">⤡ Exit full screen</button><button class="btn btn-pri btn-sm nt-onlyfs" type="button" data-fspub>Publish chapter</button></div><iframe id="pptFrame" title="PPT editor" class="nt-frame"></iframe></div>
   <div class="nt-pane" data-np="video" hidden>
     <div class="form">
       <label class="f wide" for="vUrl">YouTube link<small>Paste the video link. It plays inside your website – students don't leave the page.</small><input id="vUrl" placeholder="https://www.youtube.com/watch?v=…"></label>
@@ -302,11 +312,11 @@
 
 <!-- LIVE -->
 <section class="card" data-p="live" hidden>
-  <div class="sec-head"><h2>Live tests on Home</h2><p>Order, add or remove</p></div>
+  <div class="sec-head"><h2>Live tests</h2><p>Tests shown to every student in Live Tests (and on Home) until you remove them</p></div>
+  <div class="bar" style="margin-bottom:14px"><button class="btn btn-pri" id="lNew" type="button">＋ New live test</button></div>
   <div class="list" id="lList"></div>
-  <h3 style="font:700 1.05rem Poppins,sans-serif;margin:20px 0 10px">Add a test to Live tests</h3>
-  <div class="bar"><select id="lPick" class="f" style="min-height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--bg);color:var(--ink);font:inherit"></select><button class="btn btn-out" id="lAdd" type="button">Add</button></div>
-  <div class="bar" style="margin-top:16px"><button class="btn btn-pri" id="lSave" type="button">Publish Live tests</button></div>
+  <div class="bar" style="margin-top:14px"><button class="btn btn-out" id="lSave" type="button">Save order / removals</button></div>
+  <div id="lEdHost"></div>
 </section>
 
 <!-- NEWS -->

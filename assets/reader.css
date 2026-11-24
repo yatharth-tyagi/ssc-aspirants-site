@@ -86,3 +86,4 @@ body.shield .protected{filter:blur(14px)}
 .donebar.on{border-style:solid;border-color:var(--ok);background:var(--ok-soft)}
 .donebar.on b{color:var(--ok)}
 @media print{.donebar{display:none!important}}
+.doc .docbg{border-radius:14px;padding:clamp(14px,3vw,28px);color:#1E2433}

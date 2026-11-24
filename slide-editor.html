@@ -28,7 +28,10 @@ body{display:flex;flex-direction:column;height:100vh;overflow:hidden;margin:0}
 .etools select,.props select,.props input[type=number],.props input[type=text]{min-height:36px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 .88rem "Inter",sans-serif;padding:0 8px}
 .etools label{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted)}
 input[type=color]{width:38px;height:34px;padding:0;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer}
-body.embed .ebar{display:none}body.embed .rg.own{display:none}
+body.embed .ebar{display:none}
+body.embed .ebody{grid-template-columns:160px minmax(0,1fr) 250px}
+body.embed .cwrap{padding:14px}
+body.embed #canvas{max-width:none}body.embed .rg.own{display:none}
 .rlab{display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--ink)}
 .ebody{flex:1;display:grid;grid-template-columns:190px minmax(0,1fr) 270px;min-height:0}
 .thumbs{overflow:auto;padding:12px 12px 12px 30px;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:12px}
@@ -336,7 +339,9 @@ const dupSel = () => change(() => { const copies = selEls().map(o => ({ ...JSON.
 // ---------- insert ----------
 const topZ = () => Math.max(1, ...slide().els.map(x => x.z || 1)) + 1;
 const add = o => change(() => { o.id = K.uid(); o.z = topZ(); slide().els.push(o); sels = [o.id]; });
-$("addText").onclick = () => add({ t: "text", x: 140, y: 200, w: 700, h: 120, html: "Double-click to type", fs: 32, color: "#1E2433", font: "Inter", align: "left", lh: 1.35 });
+// text is white on dark slides and dark on light slides, so a new box is always readable
+const inkFor = bg => { const m = /^#([0-9a-f]{6})$/i.exec(bg || "#ffffff"); if (!m) return "#1E2433"; const n = parseInt(m[1], 16), l = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)); return l < 140 ? "#FFFFFF" : "#1E2433"; };
+$("addText").onclick = () => add({ t: "text", x: 140, y: 200, w: 700, h: 120, html: "Double-click to type", fs: 32, color: inkFor(slide().bg), font: "Inter", align: "left", lh: 1.35 });
 $("addShape").innerHTML = `<option value="">＋ Shape…</option>` + Object.entries(K.SHAPES).map(([v, n]) => `<option value="${v}">${E(n)}</option>`).join("");
 $("addShape").onchange = e => { const s = e.target.value; e.target.value = ""; if (!s) return;
   add(s === "line" ? { t: "shape", shape: "line", x: 200, y: 340, w: 600, h: 20, stroke: "#1F3A93", sw: 6 } : { t: "shape", shape: s, x: 440, y: 200, w: 300, h: s === "ellipse" || s === "star" || s === "hexagon" ? 300 : 220, fill: "#EEF2FC", stroke: "#1F3A93", sw: 3 }); };
@@ -393,7 +398,7 @@ function drawProps() {
   }
   const o = list[0];
   const num = (k2, label, step = 1, mn, mx) => `<label>${label}<input type="number" data-k="${k2}" value="${o[k2] == null ? "" : Math.round(o[k2] * 100) / 100}" step="${step}"${mn != null ? ` min="${mn}"` : ""}${mx != null ? ` max="${mx}"` : ""}></label>`;
-  const col = (k2, label) => `<label>${label}<span style="display:flex;gap:6px;align-items:center"><input type="color" data-k="${k2}" value="${/^#[0-9a-f]{6}$/i.test(o[k2] || "") ? o[k2] : "#ffffff"}"><button class="tbtn" type="button" data-clear="${k2}" style="min-height:30px;padding:0 8px">None</button></span></label>`;
+  const col = (k2, label) => `<label>${label}<span style="display:flex;gap:6px;align-items:center"><button class="tbtn" type="button" data-pal="${k2}" title="More colours" style="min-height:30px;padding:0 8px">🎨</button><input type="color" data-k="${k2}" value="${/^#[0-9a-f]{6}$/i.test(o[k2] || "") ? o[k2] : "#ffffff"}"><button class="tbtn" type="button" data-clear="${k2}" style="min-height:30px;padding:0 8px">None</button></span></label>`;
   let h = `<h3>${{ text: "Text box", img: "Picture", shape: "Shape", table: "Table" }[o.t]}${o.lock ? " 🔒" : ""}</h3>`;
   if (o.t === "text") h += `<div class="grp">
       <button type="button" data-tog="bold" aria-pressed="${!!o.bold}" title="Bold"><b>B</b></button><button type="button" data-tog="italic" aria-pressed="${!!o.italic}" title="Italic"><i>I</i></button><button type="button" data-tog="underline" aria-pressed="${!!o.underline}" title="Underline"><u>U</u></button><button type="button" data-tog="strike" aria-pressed="${!!o.strike}" title="Strikethrough"><s>S</s></button>
@@ -428,6 +433,8 @@ $("props").addEventListener("change", e => { const t = e.target, key = t.dataset
   change(() => { const o = elById(sels[0]); let v = t.type === "number" ? (t.value === "" ? null : +t.value) : t.value;
     if (v === null || v === "") delete o[key]; else o[key] = v; if (key === "op" && o.op >= 1) delete o.op; }); });
 $("props").addEventListener("input", e => { const t = e.target; if (t.type === "color" && sels.length) { elById(sels[0])[t.dataset.k] = t.value; drawCanvas(); } });
+$("props").addEventListener("click", e => { const pb = e.target.closest("[data-pal]"); if (pb && sels.length) { const k = pb.dataset.pal;
+    Ribbon.palette(pb, c => { const inp = $("props").querySelector(`input[type=color][data-k="${k}"]`); if (c) { if (inp) { inp.value = c; inp.dispatchEvent(new Event("change", { bubbles: true })); } } else { const cl = $("props").querySelector(`[data-clear="${k}"]`); if (cl) cl.click(); } }); return; } });
 $("props").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || !sels.length) return; const list = selEls(), o = list[0];
   if (b.id === "delBtn") return delSel();
