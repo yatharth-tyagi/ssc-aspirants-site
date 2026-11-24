@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin login – SSC Aspirants Official</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
+<style>
+body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.brandside{position:relative;overflow:hidden;color:#fff;padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:center;gap:18px;
+  background:radial-gradient(circle at 20% 20%,#C9962E40 0,transparent 50%),linear-gradient(160deg,#141B38 0%,#0A0F22 100%)}
+.badge{align-self:flex-start;background:#C9962E;color:#141B38;font:700 .78rem "Inter",sans-serif;letter-spacing:.12em;padding:6px 12px;border-radius:999px}
+@media (max-width:860px){.badge{align-self:center}}
+.brandside img{width:clamp(110px,14vw,170px);height:auto;border-radius:50%;background:#fff;padding:6px;box-shadow:0 10px 40px #0006}
+.brandside h1{font:700 clamp(1.6rem,3vw,2.4rem)/1.2 "Poppins",sans-serif;margin:0}
+.brandside .tag{color:#F5C451;font:600 1.05rem "Poppins",sans-serif;margin:0}
+.brandside ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:10px;color:#DDE3F5}
+.brandside li{display:flex;gap:10px;align-items:center}
+.brandside li b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#ffffff1f;color:#F5C451;flex:none}
+.formside{display:grid;place-items:center;padding:clamp(20px,4vw,48px)}
+.box{width:min(420px,100%)}
+.tabs2{display:flex;background:var(--line);border-radius:12px;padding:4px;margin-bottom:22px}
+.tabs2 button{flex:1;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:600 1rem "Inter",sans-serif}
+.tabs2 button[aria-selected="true"]{background:var(--surface);color:var(--pri);box-shadow:var(--shadow)}
+.box h2{font:700 1.5rem "Poppins",sans-serif;margin:0 0 4px}
+.box .sub{color:var(--muted);margin:0 0 20px}
+.fl{display:grid;gap:6px;margin-bottom:14px;font-weight:600;font-size:.95rem}
+.fl input{min-height:48px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:400 16px "Inter",sans-serif;padding:0 14px}
+.fl input:focus{outline:2px solid var(--pri);outline-offset:1px;border-color:transparent}
+.pw{position:relative}
+.pw input{width:100%;box-sizing:border-box;padding-right:64px}
+.pw button{position:absolute;right:6px;top:6px;height:36px;border:0;background:transparent;color:var(--pri);font-weight:600}
+.box .btn{width:100%}
+.gbtn{background:var(--surface);color:var(--ink);border:1px solid var(--line);width:100%}
+.gbtn svg{flex:none}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.9rem;margin:18px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.msg{display:none;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.95rem}
+.msg.show{display:block}
+.msg.err{background:#FDECEA;color:#B42318;border:1px solid #F5C2BC}
+.msg.ok{background:#E8F5EC;color:#1E7A3C;border:1px solid #B9E0C6}
+[data-read="dark"] .msg.err{background:#3A1A1A;color:#F7B4AB;border-color:#5A2A2A}
+[data-read="dark"] .msg.ok{background:#14301F;color:#9FE0B4;border-color:#22492F}
+.small{font-size:.88rem;color:var(--muted);margin-top:16px;text-align:center}
+.small a{color:var(--pri);font-weight:600}
+.foot2{margin-top:26px;text-align:center;font-size:.85rem;color:var(--muted)}
+.mode{position:fixed;top:12px;right:12px;z-index:5}
+@media (max-width:860px){
+  body{grid-template-columns:1fr}
+  .brandside{padding:28px 20px 24px;align-items:center;text-align:center}
+  .brandside ul{display:none}
+  .brandside img{width:96px}
+  .brandside h1{font-size:1.4rem}
+}
+</style>
+</head>
+<body data-shell="off">
+<button class="icon-btn mode" id="modeBtn" type="button" aria-label="Switch light or dark"></button>
+<aside class="brandside">
+  <img src="assets/logo.png" alt="SSC Aspirants Official logo" width="170" height="170">
+  <span class="badge">ADMIN PANEL</span>
+  <h1>SSC Aspirants Official</h1>
+  <p class="tag">For the site owner and team only</p>
+  <ul>
+    <li><b>✓</b>Add notes, mock tests and PYQs</li>
+    <li><b>✓</b>Manage Live tests and What's new</li>
+    <li><b>✓</b>Admin team and student accounts</li>
+  </ul>
+</aside>
+<main class="formside" id="content">
+  <div class="box">
+    <h2>Admin login</h2>
+    <p class="sub">Only admin accounts work here. Student accounts can't log in on this page.</p>
+    <div class="msg" id="msg" role="alert"></div>
+    <form id="form" novalidate>
+      <label class="fl">Admin email<input id="email" type="email" autocomplete="username" inputmode="email" maxlength="120" required></label>
+      <label class="fl">Password<span class="pw"><input id="pass" type="password" autocomplete="current-password" maxlength="128" required><button type="button" id="show">Show</button></span></label>
+      <button class="btn btn-pri" id="go" type="submit">Log in to admin</button>
+    </form>
+    <p class="small">Forgot your admin password? Ask the site owner to reset it from <b>Admin team</b>.</p>
+    <p class="foot2">© <span id="yr"></span> SSC Aspirants Official · Created by <b>Yatharth Tyagi</b></p>
+  </div>
+</main>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const qs = new URLSearchParams(location.search);
+  const next = /^\/(?![\/\\])/.test(qs.get("next") || "") ? qs.get("next") : "/admin";
+  $("yr").textContent = new Date().getFullYear();
+  const root = document.documentElement, mb = $("modeBtn");
+  const paintMode = () => { const d = root.dataset.read === "dark"; mb.textContent = d ? "☀" : "☾"; mb.title = d ? "Light mode" : "Dark mode"; };
+  mb.addEventListener("click", () => { root.dataset.read = root.dataset.read === "dark" ? "light" : "dark"; try { localStorage.setItem("ssc-read", root.dataset.read); } catch (e) {} paintMode(); });
+  paintMode();
+  const say = (t, k = "err") => { const m = $("msg"); m.textContent = t; m.className = "msg show " + k; };
+  $("show").addEventListener("click", () => { const p = $("pass"), s = p.type === "password"; p.type = s ? "text" : "password"; $("show").textContent = s ? "Hide" : "Show"; });
+  $("form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const body = { email: $("email").value.trim(), password: $("pass").value };
+    if (!body.email || !body.password) return say("Enter your admin email and password.");
+    const go = $("go"); go.disabled = true; go.textContent = "Logging in…";
+    try {
+      const r = await fetch("/api/auth/admin-login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Something went wrong. Please try again.");
+      say("Welcome, " + d.admin.name + "! Opening the admin panel…", "ok");
+      location.replace(next);
+    } catch (err) {
+      say(err.message === "Failed to fetch" || /JSON/.test(err.message) ? "Admin login works on the live website." : err.message);
+      go.disabled = false; go.textContent = "Log in to admin";
+    }
+  });
+})();
+</script>
+</body>
+</html>

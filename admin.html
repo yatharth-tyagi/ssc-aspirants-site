@@ -42,13 +42,18 @@
 .help{background:var(--gold-soft);border-radius:12px;padding:12px 16px;font-size:.92rem}
 .help code{background:var(--surface);padding:1px 6px;border-radius:6px}
 .lock{max-width:640px}
+.adminbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.adminbar span{margin-right:auto;color:var(--muted);font-size:.92rem;min-width:0;word-break:break-word}
 </style>
 </head>
 <body data-page="admin" data-title="Admin">
 <main id="content" class="content">
 
+<div class="adminbar"><span id="whoAdmin">Admin</span>
+  <a class="btn btn-out btn-sm" href="admin-team.html">Admin team &amp; students</a>
+  <button class="btn btn-out btn-sm" id="aLogout" type="button">Admin log out</button></div>
 <div class="atabs" role="tablist" aria-label="Admin sections" id="atabs">
-  <button type="button" role="tab" data-t="connect">1. Connect</button>
+  <button type="button" role="tab" data-t="connect">Status</button>
   <button type="button" role="tab" data-t="notes">Notes</button>
   <button type="button" role="tab" data-t="tests">Tests</button>
   <button type="button" role="tab" data-t="live">Live tests</button>
@@ -56,17 +61,12 @@
   <button type="button" role="tab" data-t="files">Files</button>
 </div>
 
-<!-- CONNECT -->
+<!-- STATUS -->
 <section class="card lock" data-p="connect">
-  <div class="sec-head"><h2>Connect to your website</h2></div>
-  <p class="muted">The admin page saves your changes straight into your website files on GitHub. Cloudflare then puts them live in about a minute. Only someone with your secret GitHub key can save, so keep the key private.</p>
-  <div class="form">
-    <label class="f wide" for="tok">GitHub key (token)<small>Made once on GitHub. Stays only in this browser.</small><input id="tok" type="password" autocomplete="off" placeholder="github_pat_…"></label>
-    <label class="f" for="own">GitHub username<input id="own" value="yatharth-tyagi"></label>
-    <label class="f" for="rep">Repository<input id="rep" value="ssc-aspirants-site"></label>
-    <label class="f" for="brn">Branch<input id="brn" value="main"></label>
-  </div>
-  <div class="bar" style="margin-top:14px"><button class="btn btn-pri" id="connectBtn" type="button">Connect and load data</button><button class="btn btn-out" id="forgetBtn" type="button">Forget key on this device</button></div>
+  <div class="sec-head"><h2>Admin panel</h2></div>
+  <p class="muted">Changes you publish here are saved to your website files on GitHub, and Cloudflare puts them live in about a minute. The GitHub key is kept safely in Cloudflare, so you don't need it here.</p>
+  <div class="bar" style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-pri" id="connectBtn" type="button">Reload data</button>
+</div>
   <p class="muted" id="connInfo" style="margin:12px 0 0"></p>
 </section>
 
