@@ -25,18 +25,14 @@
     clearTimeout(stT); if (!keep) stT = setTimeout(() => st.classList.remove("show"), kind === "err" ? 9000 : 5000);
   }
 
-  // ---------- settings (kept only in this browser) ----------
-  const KEY = "ssc-admin";
-  let cfg = {};
-  try { cfg = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
-  ["tok", "own", "rep", "brn"].forEach(k => { if (cfg[k]) $(k).value = cfg[k]; });
-
-  // ---------- GitHub ----------
-  const api = path => `https://api.github.com/repos/${encodeURIComponent(cfg.own)}/${encodeURIComponent(cfg.rep)}${path}`;
-  const H = (extra = {}) => ({ Authorization: "Bearer " + cfg.tok, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...extra });
+  // ---------- GitHub (through the site's own server) ----------
+  // You log in as an admin; the server adds the secret GitHub key, so no key is needed here.
+  const cfg = { brn: "main" };
+  const api = path => "/api/gh" + (path || "/repo");
+  const H = (extra = {}) => ({ Accept: "application/vnd.github+json", ...extra });
   async function gh(path, opt = {}) {
-    const r = await fetch(api(path), { cache: "no-store", ...opt, headers: H(opt.headers) });
-    if (!r.ok) { const t = await r.text(); let m = t; try { m = JSON.parse(t || "{}").message || t; } catch (x) {} const e = new Error(r.status + " " + m); e.status = r.status; throw e; }
+    const r = await fetch(api(path), { cache: "no-store", credentials: "same-origin", ...opt, headers: H(opt.headers) });
+    if (!r.ok) { const t = await r.text(); let m = t; try { m = JSON.parse(t || "{}").message || JSON.parse(t).error || t; } catch (x) {} const e = new Error(r.status + " " + m); e.status = r.status; throw e; }
     return r;
   }
   const b64FromBytes = bytes => { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); };
@@ -87,15 +83,12 @@
   const lockTabs = () => tabs.forEach(b => b.disabled = !connected && b.dataset.t !== "connect");
   lockTabs(); openTab("connect");
 
-  // ---------- connect ----------
-  $("connectBtn").addEventListener("click", async () => {
-    cfg = { tok: $("tok").value.trim(), own: $("own").value.trim(), rep: $("rep").value.trim(), brn: $("brn").value.trim() || "main" };
-    if (!cfg.tok) return say("Paste your GitHub key first.", "err");
-    say("Connecting…", "info", true);
+  // ---------- connect (runs by itself when the page opens) ----------
+  async function connect() {
+    say("Loading your website data…", "info", true);
     try {
       const repo = await (await gh("")).json();
-      if (!repo.permissions || !repo.permissions.push) throw new Error("This key cannot save to the repository. Give it Contents: Read and write.");
-      try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {}
+      if (repo.permissions && !repo.permissions.push) throw new Error("The GITHUB_TOKEN in Cloudflare can't save. Give it Contents: Read and write.");
       const [n, s, t, l, w] = await Promise.all([
         readData("data/notes.js", "NOTES", {}), readData("data/subjects.js", "SUBJECTS", window.SUBJECTS || []),
         readData("data/tests.js", "TESTS", {}), readData("data/live-tests.js", "LIVE_TESTS", []), readData("data/whats-new.js", "WHATS_NEW", [])]);
@@ -103,11 +96,19 @@
       connected = true; lockTabs();
       $("connInfo").textContent = `Connected to ${repo.full_name}. ${Object.keys(n).length} notes chapters, ${Object.keys(t).length} tests, ${l.length} live tests loaded.`;
       fillSubjects(); drawTests(); drawLive(); drawNews(); drawFiles();
-      say("Connected. You can now add notes and tests.", "ok");
-      openTab("notes");
-    } catch (e) { say("Could not connect: " + e.message, "err"); }
-  });
-  $("forgetBtn").addEventListener("click", () => { try { localStorage.removeItem(KEY); } catch (e) {} $("tok").value = ""; connected = false; lockTabs(); openTab("connect"); say("Key removed from this device.", "ok"); });
+      say("Ready. You can add notes and tests.", "ok");
+      if (!$("atabs").querySelector('[aria-selected="true"]:not([data-t="connect"])')) openTab("notes");
+    } catch (e) {
+      $("connInfo").textContent = "";
+      say(e.status === 401 || e.status === 403 ? "Please log in on the admin login page." : "Could not load: " + e.message, "err");
+    }
+  }
+  $("connectBtn").addEventListener("click", connect);
+  setTimeout(connect, 0);
+
+  // ---------- who is logged in + admin log out ----------
+  fetch("/api/admin/me").then(r => r.json()).then(d => { if (d.admin) $("whoAdmin").textContent = "Logged in as " + d.admin.name + (d.admin.owner ? " (owner)" : "") + " · " + d.admin.email; }).catch(() => {});
+  $("aLogout").addEventListener("click", async () => { try { await fetch("/api/auth/admin-logout", { method: "POST" }); } catch (e) {} location.href = "/admin-login"; });
 
   // =====================================================================
   // NOTES

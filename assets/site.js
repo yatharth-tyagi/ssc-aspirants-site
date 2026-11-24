@@ -40,6 +40,7 @@
       <div class="side-label">Exams</div>
       <nav aria-label="Exams" class="side-exams">${(window.EXAMS || []).map(e =>
         `<a class="side-link small" href="${e.page}"${"exam-" + e.id === page ? ' aria-current="page"' : ""}><span class="side-ab">${e.short}</span>${e.name}</a>`).join("")}</nav>
+      <div id="sideAcct"></div>
       <a class="side-ig" href="${IG}" target="_blank" rel="noopener">${svg('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>')}Follow on Instagram</a>
     </aside>
     <div class="overlay" id="overlay"></div>
@@ -61,6 +62,7 @@
             <button type="button" id="bigger" aria-label="Bigger text">A+</button>
           </div>
         </div>
+        <a class="avatar" id="avatar" href="account.html" hidden aria-label="Account details"></a>
         <div class="results" id="results" role="listbox" aria-label="Search results"></div>
       </header>
     </div>`;
@@ -132,5 +134,28 @@
   });
   document.addEventListener("click", e => { if (!e.target.closest(".search") && !e.target.closest("#results")) res.classList.remove("show"); });
 
-  window.SSC = { store, svg, esc };
+  // ---- account: who is logged in (student account and/or admin account – separate logins) ----
+  const logout = async () => { try { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }); } catch (e) {} location.href = "/login"; };
+  const paintAvatar = u => {
+    const av = document.getElementById("avatar");
+    av.innerHTML = u.photo ? `<img src="/api/me/photo?v=${u.photo}" alt="">` : esc((u.name || u.email).trim().charAt(0).toUpperCase());
+    av.title = u.name + " – Account details"; av.hidden = false;
+  };
+  fetch("/api/auth/me", { credentials: "same-origin" }).then(r => r.status === 401 ? { out: true } : r.json()).then(d => {
+    const sa = document.getElementById("sideAcct");
+    if (!d.user && !d.admin) { if (d.out) sa.innerHTML = `<div class="side-label">Account</div><a class="side-link" href="/login">${svg('<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>')}Log in</a>`; return; }
+    let h = `<div class="side-label">Account</div>`;
+    if (d.user) {
+      paintAvatar(d.user);
+      h += `<a class="side-link" href="account.html"${page === "account" ? ' aria-current="page"' : ""}>${svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>')}Account details</a>`;
+    }
+    if (d.admin) h += `<a class="side-link" href="admin.html"${page === "admin" || page === "admin-team" ? ' aria-current="page"' : ""}>${svg('<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>')}Admin panel</a>`;
+    if (d.user) h += `<button class="side-link" type="button" id="logoutBtn">${svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>')}Log out</button>`;
+    sa.innerHTML = h;
+    if (d.user) document.getElementById("logoutBtn").addEventListener("click", logout);
+    window.SSC.user = d.user; window.SSC.admin = d.admin;
+    document.dispatchEvent(new CustomEvent("ssc:user", { detail: d }));
+  }).catch(() => {});
+
+  window.SSC = { store, svg, esc, logout, paintAvatar };
 })();
