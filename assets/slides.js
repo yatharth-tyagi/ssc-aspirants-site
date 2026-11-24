@@ -118,7 +118,7 @@
       T({ x: 70, y: 150, w: 1140, h: 520, html: "<ol><li>Point</li><li>Point</li><li>Point</li></ol>", fs: 30 })] }) },
     blank: { name: "Blank", make: () => ({ bg: "#FFFFFF", els: [] }) }
   };
-  const newDeck = title => ({ title: title || "Untitled slides", slides: [TEMPLATES.cover.make(), TEMPLATES.topic.make()] });
+  const newDeck = title => ({ title: title || "Untitled slides", slides: [TEMPLATES.blank.make()] });
 
   // ---------- slide viewer (students) ----------
   function viewer(deck, host, opt = {}) {
