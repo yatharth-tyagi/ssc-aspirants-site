@@ -89,3 +89,9 @@ body.shield .protected{filter:blur(14px)}
 .doc .docbg{border-radius:14px;padding:clamp(14px,3vw,28px);color:#1E2433}
 .donebar[hidden]{display:none}
 .lockbox{z-index:3}
+
+/* the reading page uses the full width of the screen */
+.content.note-page{max-width:none;gap:18px}
+.note-page .protected{max-width:none}
+.note-page .protected p{max-width:none}
+.lockbox.soonbox::before{content:none}

@@ -185,7 +185,7 @@
   function fillChapters(keep) {
     const s = subsOf(nExamNow()).find(x => x.id === $("nSub").value);
     if (!s) { $("nChap").innerHTML = `<option value="">Add a subject first</option>`; loadChapter(); return; }
-    $("nChap").innerHTML = s.chapters.map((c, i) => `<option value="${E(c.id)}">${i + 1}. ${E(c.title)}${D.NOTES[c.id] ? " ✓" : ""}</option>`).join("") + `<option value="__new">+ New chapter</option>`;
+    $("nChap").innerHTML = s.chapters.map((c, i) => `<option value="${E(c.id)}">${i + 1}. ${E(c.title)}${D.NOTES[c.id] ? (D.NOTES[c.id].soon ? " · Coming soon" : " ✓") : ""}</option>`).join("") + `<option value="__new">+ New chapter</option>`;
     if (keep) $("nChap").value = keep;
     loadChapter();
   }
@@ -199,7 +199,7 @@
     nCid = cid === "__new" ? "" : cid;
     $("nTitle").value = n.title || (c ? c.title : ""); $("nDesc").value = c ? c.sub || "" : "";
     $("nRead").value = n.read || ""; $("nExams").value = (n.exams || []).join(", "); $("nIntro").value = n.intro || "";
-    $("nPdf").checked = !!n.pdf; $("nFree").checked = !!n.free; whenSet("nWhen", n.publishAt); $("nDel").hidden = !D.NOTES[cid];
+    $("nPdf").checked = !!n.pdf; $("nFree").checked = !!n.free; $("nAccess").value = D.NOTES[cid] ? (n.soon ? "soon" : "open") : "soon"; whenSet("nWhen", n.publishAt); $("nDel").hidden = !D.NOTES[cid];
     $("nDet").open = cid === "__new"; $("nDetInfo").textContent = cid === "__new" ? "– type the new chapter's title here" : "";
     $("vUrl").value = n.video ? "https://www.youtube.com/watch?v=" + n.video.id : ""; $("vTitle").value = n.video ? n.video.title || "" : ""; drawVideo();
     pQs = JSON.parse(JSON.stringify(n.quiz || [])); pOpen = -1; drawP();
@@ -306,6 +306,7 @@
     if (pQs.length) note.quiz = pQs.map(q => { const c = { ...q }; ["img", "wimg", "tag", "why"].forEach(k => { if (!c[k]) delete c[k]; }); return c; });
     if ($("nPdf").checked) note.pdf = true;
     if ($("nFree").checked) note.free = true;
+    if ($("nAccess").value === "soon") note.soon = true;
     const nw = whenVal("nWhen"); if (nw && nw > Date.now()) note.publishAt = nw;
     try {
       say("Publishing… saving slides", "info", true);
@@ -322,7 +323,7 @@
       if (doc) doc.saved();
       const keepTab = nTab, wasDoc = docLoaded, wasPpt = pptLoaded;
       fillChapters(cid); if (wasDoc) openNt("doc"); if (wasPpt) openNt("ppt"); openNt(keepTab);
-      say(`Published "${title}". Live in about a minute at note.html?id=${cid}`, "ok");
+      say(`Published "${title}". Live in about a minute at note.html?id=${cid}${note.soon ? " – students see it as Coming soon" : ""}`, "ok");
     } catch (e) { say("Could not publish: " + e.message, "err"); }
   });
 
@@ -378,7 +379,7 @@
     });
     $("tList").innerHTML = html || `<div class="mt-empty">No tests yet. Press ＋ New test to make your first one.</div>`;
   }
-  const testItem = ([id, t]) => `<div class="item"><span class="t"><b>${E(t.title)}</b><span>${t.questions.length} questions · ${t.minutes} min · +${t.plus}/−${t.minus}${t.section ? " · " + E(t.section) : ""}${t.year ? " · " + E(t.year) + (t.shift ? " " + E(t.shift) : "") : ""}${whenText(t.publishAt)}</span></span>
+  const testItem = ([id, t]) => `<div class="item"><span class="t"><b>${E(t.title)}${t.soon ? ' <span class="pill soon">Coming soon</span>' : ""}</b><span>${t.questions.length} questions · ${t.minutes} min · +${t.plus}/−${t.minus}${t.section ? " · " + E(t.section) : ""}${t.year ? " · " + E(t.year) + (t.shift ? " " + E(t.shift) : "") : ""}${whenText(t.publishAt)}</span></span>
       <a class="btn btn-out btn-sm" href="test.html?id=${encodeURIComponent(id)}" target="_blank" rel="noopener">Open</a>
       <button class="btn btn-out btn-sm" type="button" data-edit="${E(id)}">Edit</button><button class="btn btn-out btn-sm" type="button" data-copy="${E(id)}">Copy</button><button class="btn btn-del btn-sm" type="button" data-del="${E(id)}">Delete</button></div>`;
   $("tList").addEventListener("click", async e => {
@@ -630,7 +631,7 @@
     fillExamSel(); const fe = $("mfExam").value; if (fe) $("tExam").value = fe; fillTierSel($("mfTier").value);
     $("tType").value = $("mfType").value || "Full mock test"; typeUi();
     ["tTitle", "tYear", "tShift"].forEach(k => $(k).value = ""); $("tMin").value = 60; $("tPlus").value = 2; $("tMinus").value = 0.5;
-    $("tLive").checked = true; $("tSect").checked = false; $("tStrict").checked = false; $("tFree").checked = false; whenSet("tWhen", null);
+    $("tLive").checked = true; $("tSect").checked = false; $("tStrict").checked = false; $("tFree").checked = false; $("tAccess").value = "soon"; whenSet("tWhen", null);
     if (curTier()) $("tPreset").click(); else { drawSecs(); drawQs(); }
   }
   $("tNew").addEventListener("click", () => { edTo(tEdHome); resetTest(); openEd(); });
@@ -640,7 +641,7 @@
     $("tType").value = t.type; typeUi(); if (t.section) fillSecPick(t.section);
     $("tFormTitle").textContent = "Edit test"; $("tTitle").value = t.title; $("tYear").value = t.year || ""; $("tShift").value = t.shift || "";
     $("tMin").value = t.minutes; $("tPlus").value = t.plus; $("tMinus").value = t.minus; $("tLive").checked = D.LIVE.some(l => l.link === "test.html?id=" + id);
-    $("tSect").checked = !!t.sectional; $("tStrict").checked = !!t.strict; $("tFree").checked = !!t.free; whenSet("tWhen", t.publishAt);
+    $("tSect").checked = !!t.sectional; $("tStrict").checked = !!t.strict; $("tFree").checked = !!t.free; $("tAccess").value = t.soon ? "soon" : "open"; whenSet("tWhen", t.publishAt);
     const names = t.sections && t.sections.length ? t.sections.map(s => s.name) : [...new Set(tQs.map(q => q.section).filter(Boolean))];
     tSecs = names.map(n => ({ name: n, minutes: ((t.sections || []).find(s => s.name === n) || {}).minutes || 0, n: (t.plan || {})[n] || 0 }));
     $("tOpen").href = "test.html?id=" + encodeURIComponent(id); $("tOpen").hidden = false;
@@ -659,6 +660,7 @@
     if (type === "PYQ paper") { if ($("tYear").value.trim()) t.year = $("tYear").value.trim(); if ($("tShift").value.trim()) t.shift = $("tShift").value.trim(); }
     if ($("tStrict").checked) t.strict = true;
     if ($("tFree").checked) t.free = true; else delete t.free;
+    if ($("tAccess").value === "soon") t.soon = true; else delete t.soon;
     const tw = whenVal("tWhen"); if (tw && tw > Date.now()) t.publishAt = tw;
     const order = tSecs.map(s => s.name); qs.sort((a, b) => { const x = order.indexOf(a.section), y = order.indexOf(b.section); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); });
     if (tSecs.length) t.plan = Object.fromEntries(tSecs.filter(s => s.n).map(s => [s.name, s.n]));
@@ -676,7 +678,7 @@
       say("Publishing test… (1 of 2)", "info", true); await save("TESTS");
       say("Publishing test… (2 of 2)", "info", true); await save("LIVE");
       editing = id; tQs = JSON.parse(JSON.stringify(qs)); drawQs(); drawTests(); drawLive(); $("tFormTitle").textContent = "Edit test"; $("tOpen").href = link; $("tOpen").hidden = false;
-      say(`Published "${title}" with ${qs.length} questions under ${examName(exam)}${tr && exam !== "all" ? " → " + tr.name : ""} → ${type}. Live in about a minute.`, "ok");
+      say(`Published "${title}" with ${qs.length} questions under ${examName(exam)}${tr && exam !== "all" ? " → " + tr.name : ""} → ${type}. Live in about a minute.${t.soon ? " Students see it as Coming soon." : ""}`, "ok");
     } catch (e) { say("Could not publish: " + e.message, "err"); }
   });
   $("tSect").addEventListener("change", () => { if ($("tSect").checked && tSecs.length) $("tMin").value = tSecs.reduce((a, s) => a + (s.minutes || 0), 0) || $("tMin").value; });

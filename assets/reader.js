@@ -17,7 +17,7 @@
   const box = document.getElementById("note");
   if (!n) { box.innerHTML = '<h1>Note not found</h1><p><a href="notes.html">Back to all notes</a></p>'; return; }
   const sub = (window.SUBJECTS || []).find(s => s.chapters.some(c => c.id === id)) || { id: "polity", name: "Notes", chapters: [] };
-  const list = sub.chapters.filter(c => window.NOTES[c.id]);
+  const list = sub.chapters.filter(c => window.NOTES[c.id] && !window.NOTES[c.id].soonLock);
   const i = list.findIndex(c => c.id === id), prev = list[i - 1], next = list[i + 1];
   const chNo = sub.chapters.findIndex(c => c.id === id) + 1;
   const subEx = sub.exam && (window.EXAMS || []).find(e => e.id === sub.exam);
@@ -25,6 +25,9 @@
   document.title = n.title + " – SSCAspirants_Official";
   document.getElementById("crumb").textContent = "Chapter " + chNo;
   const cs = document.getElementById("crumbSub"); cs.textContent = subName; cs.href = subHref;
+  // set to "Coming soon" in Admin: only the name shows
+  if (n.soonLock) { box.innerHTML = `<div class="note-meta"><span class="pill">${esc(sub.name)} · Chapter ${chNo}</span></div><h1>${esc(n.title)}</h1>${n.intro ? `<p>${esc(n.intro)}</p>` : ""}
+    <div class="lockbox soonbox"><div aria-hidden="true" style="font-size:1.8rem">⏳</div><div class="lk-h">Coming soon</div><p class="muted">This chapter will open soon.</p><div class="acts"><a class="btn btn-out" href="${esc(subHref)}">← All ${esc(subName)} notes</a></div></div>`; return; }
   const head = (n.tableHead || []).filter(Boolean);
   const pager = `<div class="pager">${prev ? `<a class="btn btn-out" href="note.html?id=${prev.id}">← ${esc(prev.title)}</a>` : `<a class="btn btn-out" href="${esc(subHref)}">← All ${esc(subName)} notes</a>`}
       ${next ? `<a class="btn btn-pri" href="note.html?id=${next.id}">${esc(next.title)} →</a>` : ""}</div>`;

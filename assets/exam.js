@@ -23,7 +23,7 @@
   const tierOf = t => t.tier || "t1";
   const empty = what => `<div class="card empty"><b>${what} for ${esc(ex.name)}${TIERS.length > 1 ? " " + esc(tier.name) : ""} are coming soon.</b><span>New tests appear here as soon as they are published.</span></div>`;
   const testsOf = types => Object.entries(window.TESTS || {}).filter(([, t]) => (t.exam === ex.id || t.exam === "all") && types.includes(t.type) && (t.exam === "all" || tierOf(t) === tier.id));
-  const tcard = ([id, t]) => card(t.title, `<span>${t.questions.length} questions</span><span>${t.minutes} min</span><span>+${t.plus} / −${t.minus}</span>${t.section ? `<span>${esc(t.section)}</span>` : ""}${t.year ? `<span>${esc(t.year)}${t.shift ? " · " + esc(t.shift) : ""}</span>` : ""}`, "test.html?id=" + encodeURIComponent(id), id);
+  const tcard = ([id, t]) => card(t.title, `<span>${t.questions.length} questions</span><span>${t.minutes} min</span><span>+${t.plus} / −${t.minus}</span>${t.section ? `<span>${esc(t.section)}</span>` : ""}${t.year ? `<span>${esc(t.year)}${t.shift ? " · " + esc(t.shift) : ""}</span>` : ""}`, t.soonLock ? "" : "test.html?id=" + encodeURIComponent(id), t.soonLock ? "" : id);
   const listOf = (types, what) => { const l = testsOf(types); return l.length ? `<div class="tests">${l.map(tcard).join("")}</div>` : empty(what); };
 
   const TABS = [
@@ -32,7 +32,7 @@
   ];
   // ---------- this exam's own notes (Admin → Notes → Exam) ----------
   const XS = (window.SUBJECTS || []).filter(s => s.exam === ex.id && !s.hide).map(s => ({ ...s, chapters: s.chapters.filter(c => !c.hide) }));
-  const nready = c => !!(window.NOTES && window.NOTES[c.id]);
+  const nready = c => !!(window.NOTES && window.NOTES[c.id] && !window.NOTES[c.id].soonLock);
   let xcur = (XS[0] || {}).id, PR = {};
   const xdone = s => s.chapters.filter(c => nready(c) && PR[c.id] && PR[c.id].done).length;
   function notesPanel() {
