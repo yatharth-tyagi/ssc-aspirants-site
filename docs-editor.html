@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs editor – SSCAspirants_Official</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/ribbon.css">
+<link rel="stylesheet" href="assets/reader.css">
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light"}catch(e){}</script>
+<style>
+body{display:flex;flex-direction:column;min-height:100vh;margin:0;background:var(--bg)}
+.dbar{position:sticky;top:0;z-index:30}
+.dtop{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 14px;background:var(--side);color:#fff}
+.dtop img{width:34px;height:34px;border-radius:50%;border:2px solid #F5C451}
+.dtop input{flex:1 1 220px;min-width:0;min-height:38px;border-radius:9px;border:1px solid #ffffff40;background:#ffffff14;color:#fff;font:600 1rem "Poppins",sans-serif;padding:0 12px}
+.eb{min-height:38px;padding:0 12px;border-radius:9px;border:1px solid #ffffff40;background:transparent;color:#fff;font:600 .86rem Inter,sans-serif;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.eb:hover{background:#ffffff1a}.eb.gold{background:#F5C451;color:#141B38;border-color:#F5C451}
+.dstat{font-size:.82rem;color:#C9D3FF}
+.tools{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+body.embed .dtop{display:none}
+body.embed #page{max-width:980px;font-size:18px}
+body.embed .page-wrap{padding:18px 14px 60px}body.embed .rg.own{display:none}
+#page.w-narrow{max-width:640px}#page.w-wide{max-width:1040px}
+#page .bordered{border:2px solid #1F3A93;border-radius:10px;padding:10px 14px}
+#page hr.pb{border-top:2px dashed #C9962E}
+.tools .sep{width:1px;height:26px;background:var(--line);margin:0 4px}
+.tb{min-width:34px;height:34px;padding:0 8px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--ink);font:600 .9rem Inter,sans-serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.tb:hover{background:var(--pri-soft);border-color:var(--line)}
+.tb[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink)}
+.tools select{height:34px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 .86rem Inter,sans-serif;padding:0 6px}
+.clr{position:relative;display:inline-flex}
+.clr input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.clr .tb span{border-bottom:4px solid var(--c,#C00);line-height:1}
+.ctx{display:none;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 12px;background:var(--gold-soft);border-bottom:1px solid var(--line);font-size:.85rem}
+.ctx.show{display:flex}
+.page-wrap{flex:1;overflow:auto;padding:26px 14px 60px}
+#page{max-width:820px;margin:0 auto;background:#fff;color:#1E2433;min-height:1060px;padding:64px 72px;box-sizing:border-box;box-shadow:0 4px 24px rgba(20,27,56,.14);border-radius:4px;outline:none;font:400 16px/1.7 Inter,"Hind",sans-serif}
+[data-read="dark"] #page{background:#2A3348;color:#EEF1F7}
+#page:empty::before{content:"Start typing your notes here…";color:#999}
+#page img{max-width:100%;height:auto;cursor:pointer}
+#page img.sel{outline:3px solid #2F6BFF}
+#page table{border-collapse:collapse;width:100%;margin:12px 0}
+#page td,#page th{border:1px solid #CFC7B5;padding:8px 10px;vertical-align:top;min-width:40px}
+#page th{background:#EEF2FC;font-weight:700}
+#page hr{border:0;border-top:2px solid #E9E2D2;margin:20px 0}
+#page blockquote{border-left:4px solid #C9962E;margin:12px 0;padding:6px 16px;background:#FBF1DC66}
+.wc{position:fixed;right:14px;bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.82rem;color:var(--muted);box-shadow:var(--shadow)}
+.banner{display:none;gap:10px;align-items:center;padding:8px 14px;background:var(--gold-soft);font-size:.9rem;flex-wrap:wrap}.banner.show{display:flex}
+dialog{border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface);color:var(--ink);max-width:min(520px,calc(100vw - 32px));width:100%;box-sizing:border-box}
+dialog::backdrop{background:rgba(10,14,30,.55)}
+dialog label{display:flex;flex-direction:column;gap:6px;font-weight:600;margin-bottom:12px}
+dialog select,dialog input[type=text],dialog input[type=number]{min-height:42px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;padding:0 10px}
+.ck{flex-direction:row!important;align-items:center;gap:10px!important}.ck input{width:20px;height:20px}
+.tpick{display:grid;grid-template-columns:repeat(8,22px);gap:3px;margin:8px 0}
+.tpick i{width:22px;height:22px;border:1px solid var(--line);border-radius:3px;background:var(--bg)}
+.tpick i.on{background:var(--pri-soft);border-color:var(--pri)}
+@media(max-width:700px){#page{padding:28px 18px;min-height:70vh}.tools{overflow-x:auto;flex-wrap:nowrap}}
+@media print{.dbar,.wc,.banner{display:none!important}#page hr.pb{break-after:page;border:0}#page{box-shadow:none;padding:0;max-width:none}}
+</style>
+</head>
+<body data-shell="off">
+<div class="dbar">
+  <div class="dtop">
+    <a class="eb" href="admin.html#notes">← Admin</a><img src="assets/logo.png" alt="">
+    <input id="title" placeholder="Chapter title" maxlength="140" aria-label="Chapter title">
+    <button class="eb" type="button" id="saveTop">Save draft</button><button class="eb gold" type="button" id="pubTop">Publish</button>
+    <span class="dstat" id="stat"></span>
+  </div>
+  <div class="ribbon" id="ribbon">
+    <div class="rtabs" role="tablist" aria-label="Editor menus"><button type="button" data-rt="home">Home</button><button type="button" data-rt="insert">Insert</button><button type="button" data-rt="layout">Layout</button><button type="button" data-rt="file">File</button><span class="rstat" id="rstat"></span></div>
+    <div class="tools" role="toolbar" aria-label="Formatting">
+    <div class="rpane" data-rp="home">
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-c="undo" title="Undo"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span><span class="rl">Undo</span></button><button class="tb rb" type="button" data-c="redo" title="Redo"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span><span class="rl">Redo</span></button></div><span class="rgl">History</span></div>
+      <div class="rg"><div class="rgb stack"><div class="rrow"><select class="rsel" id="style" title="Style"><option value="p">Normal text</option><option value="h2">Heading 1</option><option value="h3">Heading 2</option><option value="h4">Heading 3</option><option value="blockquote">Quote</option></select>
+        <select class="rsel" id="font" title="Font"><option value="">Font</option><option value="Inter">Inter</option><option value="Poppins">Poppins</option><option value="Hind">Hind (हिन्दी)</option><option value="Merriweather">Merriweather</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Arial">Arial</option><option value="Courier New">Courier</option></select>
+        <select class="rsel" id="size" title="Text size" style="width:68px"><option value="">Size</option><option>10</option><option>12</option><option>14</option><option>16</option><option>18</option><option>20</option><option>24</option><option>28</option><option>32</option><option>40</option><option>48</option></select></div>
+        <div class="rrow"><button class="tb rb sm" type="button" data-c="bold" title="Bold"><span class="ri"><b>B</b></span><span class="rl">Bold</span></button><button class="tb rb sm" type="button" data-c="italic" title="Italic"><span class="ri"><i>I</i></span><span class="rl">Italic</span></button><button class="tb rb sm" type="button" data-c="underline" title="Underline"><span class="ri"><u>U</u></span><span class="rl">Underline</span></button><button class="tb rb sm" type="button" data-c="strikeThrough" title="Strike"><span class="ri"><s>S</s></span><span class="rl">Strike</span></button><button class="tb rb sm" type="button" data-c="superscript" title="Super"><span class="ri">x²</span><span class="rl">Super</span></button><button class="tb rb sm" type="button" data-c="subscript" title="Sub"><span class="ri">x₂</span><span class="rl">Sub</span></button></div></div><span class="rgl">Font</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="fc" id="fcBtn" title="Text colour"><span class="ri"><span>A</span></span><span class="rl">Text colour</span></button><button class="tb rb" type="button" data-pop="hc" id="hcBtn" title="Highlight"><span class="ri"><span style="background:#FFE066;padding:0 4px;border-radius:3px">ab</span></span><span class="rl">Highlight</span></button><button class="tb rb" type="button" data-c="removeFormat" title="Clear format"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16M3 21L21 3"/></svg></span><span class="rl">Clear format</span></button></div><span class="rgl">Colour</span></div>
+      <div class="rg"><div class="rgb stack"><div class="rrow"><button class="tb rb sm" type="button" data-c="justifyLeft" title="Left"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></span><span class="rl">Left</span></button><button class="tb rb sm" type="button" data-c="justifyCenter" title="Centre"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></span><span class="rl">Centre</span></button><button class="tb rb sm" type="button" data-c="justifyRight" title="Right"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></svg></span><span class="rl">Right</span></button><button class="tb rb sm" type="button" data-c="justifyFull" title="Justify"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span><span class="rl">Justify</span></button></div>
+        <div class="rrow"><button class="tb rb sm" type="button" data-c="insertUnorderedList" title="Bullets"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span><span class="rl">Bullets</span></button><button class="tb rb sm" type="button" data-c="insertOrderedList" title="Numbers"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h10M10 12h10M10 18h10M4 4h1v4M4 18h2l-2 2h2M4 11l2 0-2 3h2"/></svg></span><span class="rl">Numbers</span></button><button class="tb rb sm" type="button" data-c="outdent" title="Less"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6h9M11 12h9M11 18h9M7 9l-3 3 3 3"/></svg></span><span class="rl">Less</span></button><button class="tb rb sm" type="button" data-c="indent" title="More"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6h9M11 12h9M11 18h9M4 9l3 3-3 3"/></svg></span><span class="rl">More</span></button></div></div><span class="rgl">Paragraph</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="lh" title="Line spacing"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6h9M11 12h9M11 18h9M5 4v16M3 6l2-2 2 2M3 18l2 2 2-2"/></svg></span><span class="rl">Line spacing</span></button><button class="tb rb" type="button" data-c="find" title="Find"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span><span class="rl">Find</span></button></div><span class="rgl">Editing</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="zoom" title="Zoom"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M8 11h6M11 8v6"/></svg></span><span class="rl">Zoom</span></button></div><span class="rgl">View</span></div>
+    </div>
+    <div class="rpane" data-rp="insert">
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-c="image" title="Picture"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></span><span class="rl">Picture</span></button><input type="file" id="imgFile" accept="image/*" hidden><button class="tb rb" type="button" data-c="table" title="Table"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg></span><span class="rl">Table</span></button><button class="tb rb" type="button" data-c="link" title="Link"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span><span class="rl">Link</span></button></div><span class="rgl">Insert</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="box" title="Special box"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10h10M7 14h6"/></svg></span><span class="rl">Special box</span></button><button class="tb rb" type="button" data-c="quote" title="Quote"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h4v6H5V9a2 2 0 0 1 2-2zM15 7h4v6h-6V9a2 2 0 0 1 2-2zM5 13c0 3 2 4 4 4M13 13c0 3 2 4 4 4"/></svg></span><span class="rl">Quote</span></button><button class="tb rb" type="button" data-c="cols" title="2 columns"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></span><span class="rl">2 columns</span></button></div><span class="rgl">Boxes</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="sym" title="Symbol"><span class="ri">Ω</span><span class="rl">Symbol</span></button><button class="tb rb" type="button" data-c="date" title="Date"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span><span class="rl">Date</span></button><button class="tb rb" type="button" data-c="hr" title="Line"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/></svg></span><span class="rl">Line</span></button><button class="tb rb" type="button" data-c="pb" title="Page break"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v6h14V3M5 21v-6h14v6M3 12h3M9 12h2M13 12h2M18 12h3"/></svg></span><span class="rl">Page break</span></button></div><span class="rgl">Extras</span></div>
+    </div>
+    <div class="rpane" data-rp="layout">
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="case" title="Change case"><span class="ri">Aa</span><span class="rl">Change case</span></button><button class="tb rb" type="button" data-pop="shade" title="Shading"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16l5-12 5 12M9 12h6"/></svg></span><span class="rl">Shading</span></button><button class="tb rb" type="button" data-c="border" title="Border box"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2"/></svg></span><span class="rl">Border box</span></button></div><span class="rgl">Paragraph look</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="pagebg" title="Page colour"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 14l5-4 4 3 3-2 4 3"/></svg></span><span class="rl">Page colour</span></button></div><span class="rgl">Background</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" data-pop="lh" title="Line spacing"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6h9M11 12h9M11 18h9M5 4v16M3 6l2-2 2 2M3 18l2 2 2-2"/></svg></span><span class="rl">Line spacing</span></button><button class="tb rb" type="button" data-pop="pw" title="Page width"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></span><span class="rl">Page width</span></button></div><span class="rgl">Page</span></div>
+    </div>
+    <div class="rpane" data-rp="file">
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" id="importBtn" title="Upload Word"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13l1.5 5 2.5-5 2.5 5L16 13"/></svg></span><span class="rl">Upload Word</span></button><input type="file" id="docxFile" accept=".docx" hidden><button class="tb rb" type="button" id="pdfInBtn" title="Upload PDF"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 17v-4h1.5a1.5 1.5 0 0 1 0 3H8"/></svg></span><span class="rl">Upload PDF</span></button><input type="file" id="pdfFile" accept="application/pdf" hidden></div><span class="rgl">Upload</span></div>
+      <div class="rg"><div class="rgb"><button class="tb rb" type="button" id="printBtn" title="Save as PDF"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/></svg></span><span class="rl">Save as PDF</span></button><button class="tb rb" type="button" id="wordOut" title="Download Word"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg></span><span class="rl">Download Word</span></button></div><span class="rgl">Download</span></div>
+      <div class="rg own"><div class="rgb"><button class="tb rb" type="button" id="saveBtn" title="Save draft"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7M8 21v-7h8v7"/></svg></span><span class="rl">Save draft</span></button><button class="tb rb gold" type="button" id="pubBtn" title="Publish"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg></span><span class="rl">Publish</span></button></div><span class="rgl">Publish</span></div>
+    </div>
+    </div>
+  </div>
+  <div class="ctx" id="tblBar"><b>Table:</b><button class="tb" data-t="rowA">＋ Row above</button><button class="tb" data-t="rowB">＋ Row below</button><button class="tb" data-t="colL">＋ Column left</button><button class="tb" data-t="colR">＋ Column right</button><button class="tb" data-t="delRow">− Row</button><button class="tb" data-t="delCol">− Column</button><button class="tb" data-t="head">Heading row</button><button class="tb" data-t="delTbl">Delete table</button></div>
+  <div class="ctx" id="imgBar"><b>Picture:</b><button class="tb" data-i="25">25%</button><button class="tb" data-i="50">50%</button><button class="tb" data-i="75">75%</button><button class="tb" data-i="100">100%</button><button class="tb" data-i="left">Left</button><button class="tb" data-i="center">Centre</button><button class="tb" data-i="right">Right</button><button class="tb" data-i="del">Delete</button></div>
+  <div class="ctx" id="findBar"><input id="fFind" placeholder="Find" style="height:32px;border:1px solid var(--line);border-radius:7px;padding:0 8px"><input id="fRep" placeholder="Replace with" style="height:32px;border:1px solid var(--line);border-radius:7px;padding:0 8px"><button class="tb" id="fNext">Find next</button><button class="tb" id="fOne">Replace</button><button class="tb" id="fAll">Replace all</button><span id="fMsg"></span><button class="tb" id="fClose">✕</button></div>
+  <div class="banner" id="restore"><b>Unsaved writing from earlier was found on this device.</b><button class="tb" type="button" id="restoreYes" style="background:#fff">Restore it</button><button class="tb" type="button" id="restoreNo" style="background:#fff">Discard</button></div>
+</div>
+<div class="page-wrap"><article id="page" class="doc" contenteditable="true" spellcheck="true"></article></div>
+<div class="wc" id="wc">0 words</div>
+
+<dialog id="pubDlg">
+  <h2 style="margin-top:0">Publish notes</h2>
+  <label>Subject<select id="pSub"></select></label>
+  <label>Chapter<select id="pChap"></select></label>
+  <label id="pNewWrap" hidden>New chapter title<input type="text" id="pNew" maxlength="140"></label>
+  <label>Short line under the title<input type="text" id="pDesc" maxlength="160"></label>
+  <label>Reading time<input type="text" id="pRead" placeholder="10 min read" maxlength="30"></label>
+  <label>Exam tags (commas)<input type="text" id="pExams" placeholder="SSC CGL, CHSL, MTS"></label>
+  <label class="ck"><input type="checkbox" id="pPdf"> Allow students to download PDF</label>
+  <p class="muted" id="pMsg" style="margin:0 0 10px"></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-out" type="button" id="pCancel">Cancel</button><button class="btn btn-pri" type="button" id="pGo">Publish</button></div>
+</dialog>
+<dialog id="tblDlg"><h2 style="margin-top:0">Insert table</h2><div class="tpick" id="tpick"></div><p id="tsz" style="margin:0 0 12px">3 × 3</p>
+  <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-out" type="button" id="tCancel">Cancel</button></div></dialog>
+
+<script src="assets/site.js"></script>
+<script src="assets/ribbon.js"></script>
+<script>
+(function () {
+const $ = id => document.getElementById(id), E = SSC.esc, page = $("page");
+const qs = new URLSearchParams(location.search);
+let cid = qs.get("ch") || "", dirty = false, NOTES = {}, SUBS = [];
+const DRAFT = () => "ssc-doc-draft:" + (cid || "new");
+const EMBED = qs.get("embed") === "1";
+if (EMBED) document.body.classList.add("embed");
+const stat = t => { $("stat").textContent = t; $("rstat").textContent = t; };
+Ribbon.tabs($("ribbon"));
+document.execCommand("styleWithCSS", false, true);
+document.execCommand("defaultParagraphSeparator", false, "p");
+
+// ---------- GitHub (admins only, through /api/gh) ----------
+const gh = async (path, opt = {}) => { const r = await fetch("/api/gh" + path, { cache: "no-store", ...opt, headers: { Accept: "application/vnd.github+json", ...(opt.headers || {}) } });
+  if (!r.ok) { const t = await r.text(); let m = t; try { m = JSON.parse(t).message || t; } catch (e) {} const er = new Error(r.status + " " + m); er.status = r.status; throw er; } return r; };
+const readRaw = async p => { try { return await (await gh(`/contents/${p}?ref=main`, { headers: { Accept: "application/vnd.github.raw+json" } })).text(); } catch (e) { if (e.status === 404) return null; throw e; } };
+const b64 = bytes => { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); };
+const write = async (p, base64, msg) => { let sha = null; try { sha = (await (await gh(`/contents/${p}?ref=main&meta=1`)).json()).sha; } catch (e) {}
+  const body = { message: msg, content: base64, branch: "main" }; if (sha) body.sha = sha; await gh(`/contents/${p}`, { method: "PUT", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }); };
+const readData = async (p, name, fb) => { const code = await readRaw(p); if (code == null) return fb; const w = {}; new Function("window", code)(w); return w[name] === undefined ? fb : w[name]; };
+const writeData = (p, name, v, note) => write(p, b64(new TextEncoder().encode(`// ${note}\n// Saved from the admin page on ${new Date().toISOString().slice(0, 10)}.\nwindow.${name} = ${JSON.stringify(v, null, 1)};\n`)), "Admin: update " + p);
+const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "chapter";
+
+// keep only safe HTML (no scripts, no event handlers)
+function safe(html) {
+  const doc = new DOMParser().parseFromString(html || "", "text/html");
+  doc.querySelectorAll("script,iframe,object,embed,style,link,meta,form,base,input,button").forEach(x => x.remove());
+  doc.querySelectorAll("*").forEach(el => [...el.attributes].forEach(a => { const v = a.value.trim().toLowerCase();
+    if (a.name.startsWith("on") || a.name === "contenteditable" || ((a.name === "href" || a.name === "src") && (v.startsWith("javascript:") || (v.startsWith("data:") && !v.startsWith("data:image/"))))) el.removeAttribute(a.name); }));
+  doc.querySelectorAll("font").forEach(f => { const s = doc.createElement("span"); if (f.face) s.style.fontFamily = f.face; if (f.color) s.style.color = f.color; s.innerHTML = f.innerHTML; f.replaceWith(s); });
+  doc.querySelectorAll("img.sel").forEach(i => i.classList.remove("sel"));
+  return doc.body.innerHTML;
+}
+
+// ---------- toolbar ----------
+const exec = (c, v) => { page.focus(); restoreSel(); document.execCommand(c, false, v); changed(); paintState(); };
+let savedRange = null;
+document.addEventListener("selectionchange", () => { const s = getSelection(); if (s.rangeCount && page.contains(s.anchorNode)) { savedRange = s.getRangeAt(0).cloneRange(); paintState(); ctx(); } });
+const restoreSel = () => { if (!savedRange) return; const s = getSelection(); if (s.rangeCount && page.contains(s.anchorNode)) return; s.removeAllRanges(); s.addRange(savedRange); };
+function paintState() {
+  ["bold", "italic", "underline", "strikeThrough", "superscript", "subscript", "insertUnorderedList", "insertOrderedList", "justifyLeft", "justifyCenter", "justifyRight", "justifyFull"].forEach(c => {
+    const b = document.querySelector(`.tb[data-c="${c}"]`); if (b) { let st = false; try { st = document.queryCommandState(c); } catch (e) {} b.setAttribute("aria-pressed", st); } });
+  const blk = blockOf(); $("style").value = blk && /^(H2|H3|H4|BLOCKQUOTE)$/.test(blk.tagName) ? blk.tagName.toLowerCase() : "p";
+}
+const blockOf = () => { const s = getSelection(); let n = s.anchorNode; while (n && n !== page) { if (n.nodeType === 1 && /^(P|H2|H3|H4|BLOCKQUOTE|LI|DIV|TD|TH)$/.test(n.tagName)) return n; n = n.parentNode; } return null; };
+document.querySelector(".tools").addEventListener("mousedown", e => { if (e.target.closest(".tb")) e.preventDefault(); });
+document.querySelector(".tools").addEventListener("click", e => {
+  const b = e.target.closest("[data-c]"); if (!b) return; const c = b.dataset.c;
+  if (c === "link") { const u = prompt("Link (https://…)"); if (u && /^https?:\/\//i.test(u)) exec("createLink", u); return; }
+  if (c === "image") return $("imgFile").click();
+  if (c === "table") return openTable();
+  if (c === "hr") return exec("insertHTML", "<hr><p><br></p>");
+  if (c === "find") return openFind();
+  if (c === "quote") return exec("formatBlock", "<blockquote>");
+  if (c === "cols") return exec("insertHTML", `<div class="cols2"><div><p>Left column</p></div><div><p>Right column</p></div></div><p><br></p>`);
+  if (c === "date") return exec("insertText", new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }));
+  if (c === "pb") return exec("insertHTML", `<hr class="pb"><p><br></p>`);
+  if (c === "border") { const b = blockOf(); if (b) { b.classList.toggle("bordered"); changed(); } return; }
+  exec(c);
+});
+$("style").onchange = e => { exec("formatBlock", "<" + e.target.value + ">"); };
+// font and size: wrap the selected words in a span
+function wrapStyle(prop, val) {
+  page.focus(); restoreSel(); const s = getSelection(); if (!s.rangeCount || s.isCollapsed) return stat("Select some words first");
+  document.execCommand("fontName", false, "__x__");
+  page.querySelectorAll('span[style*="__x__"],font[face="__x__"]').forEach(el => { const sp = document.createElement("span"); sp.innerHTML = el.innerHTML; sp.style[prop] = val; el.replaceWith(sp); });
+  changed();
+}
+const FONTS = { Inter: "Inter,sans-serif", Poppins: "Poppins,sans-serif", Hind: "Hind,sans-serif", Merriweather: "Merriweather,serif", Georgia: "Georgia,serif", "Courier New": "'Courier New',monospace" };
+$("font").onchange = e => { if (e.target.value) wrapStyle("fontFamily", FONTS[e.target.value]); e.target.value = ""; };
+$("size").onchange = e => { if (e.target.value) wrapStyle("fontSize", e.target.value + "px"); e.target.value = ""; };
+// pop-ups: colours, boxes, symbols, line spacing, case, shading, page width
+const BOXES = { info: "ℹ Note", trick: "💡 Memory trick", imp: "⚠ Important", exam: "🎯 Asked in exam", formula: "🧮 Formula", example: "✏ Example", def: "📖 Definition" };
+document.querySelector(".tools").addEventListener("click", e => {
+  const b = e.target.closest("[data-pop]"); if (!b) return; const k = b.dataset.pop;
+  if (k === "fc") Ribbon.palette(b, c => { exec("foreColor", c || "#1E2433"); if (c) b.querySelector(".ri span").style.color = c; }, { noneLabel: "Automatic" });
+  if (k === "hc") Ribbon.palette(b, c => exec("hiliteColor", c || "transparent"));
+  if (k === "shade") Ribbon.palette(b, c => { const bl = blockOf(); if (!bl) return stat("Click inside a paragraph first"); bl.style.background = c || ""; bl.style.padding = c ? "6px 10px" : ""; bl.style.borderRadius = c ? "6px" : ""; changed(); });
+  if (k === "box") Ribbon.menu(b, Object.entries(BOXES), v => exec("insertHTML", `<div class="callout ${v}"><p><b>${BOXES[v]}:</b> type here</p></div><p><br></p>`));
+  if (k === "sym") Ribbon.symbols(b, t => exec("insertText", t));
+  if (k === "lh") Ribbon.menu(b, [["1", "Single (1.0)"], ["1.3", "1.3"], ["1.5", "1.5"], ["1.7", "Normal (1.7)"], ["2", "Double (2.0)"]], v => { const bl = blockOf(); const sel = getSelection(); const blocks = bl ? [bl] : [];
+    if (sel.rangeCount && !sel.isCollapsed) page.querySelectorAll("p,li,h2,h3,h4,blockquote").forEach(x => { if (sel.containsNode(x, true)) blocks.push(x); });
+    if (!blocks.length) return stat("Click inside a paragraph first"); blocks.forEach(x => x.style.lineHeight = v); changed(); });
+  if (k === "case") Ribbon.menu(b, [["up", "UPPERCASE"], ["low", "lowercase"], ["title", "Title Case"], ["sent", "Sentence case"]], v => { page.focus(); restoreSel(); const t = getSelection().toString(); if (!t) return stat("Select some words first");
+    const r = v === "up" ? t.toUpperCase() : v === "low" ? t.toLowerCase() : v === "title" ? t.toLowerCase().replace(/\b\w/g, m => m.toUpperCase()) : t.charAt(0).toUpperCase() + t.slice(1).toLowerCase(); exec("insertText", r); });
+  if (k === "zoom") Ribbon.menu(b, [["1", "100%"], ["1.15", "115%"], ["1.3", "130%"], ["1.5", "150%"], ["1.75", "175%"]], v => { page.style.zoom = v; try { localStorage.setItem("ssc-doc-zoom", v); } catch (e) {} });
+  if (k === "pagebg") Ribbon.palette(b, c => { page.dataset.bg = c || ""; page.style.background = c || ""; changed(); }, { noneLabel: "White" });
+  if (k === "pw") Ribbon.menu(b, [["n", "Narrow page"], ["", "Normal page"], ["w", "Wide page"]], v => { page.classList.remove("w-narrow", "w-wide"); if (v) page.classList.add(v === "n" ? "w-narrow" : "w-wide"); });
+});
+
+// pictures (made smaller, saved to the website)
+$("imgFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { stat("Adding picture…");
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("That file isn't a picture.")); i.src = URL.createObjectURL(f); });
+    const r = Math.min(1, 1400 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * r); c.height = Math.round(img.naturalHeight * r); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const png = /png|gif|webp/.test(f.type), data = c.toDataURL(png ? "image/png" : "image/jpeg", 0.88), path = `assets/uploads/doc-${Date.now().toString(36)}.${png ? "png" : "jpg"}`;
+    exec("insertHTML", `<p style="text-align:center"><img src="${data}" data-path="${path}" alt="" style="width:75%"></p>`);
+    await write(path, data.split(",")[1], "Admin: notes picture"); stat("Picture saved");
+  } catch (er) { stat("Could not add picture: " + er.message); }
+};
+// picture tools
+let curImg = null;
+page.addEventListener("click", e => { page.querySelectorAll("img.sel").forEach(i => i.classList.remove("sel")); curImg = e.target.tagName === "IMG" ? e.target : null; if (curImg) curImg.classList.add("sel"); ctx(); });
+$("imgBar").addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (!b || !curImg) return; const v = b.dataset.i, p = curImg.closest("p") || curImg.parentNode;
+  if (/^\d+$/.test(v)) curImg.style.width = v + "%"; else if (v === "del") { curImg.remove(); curImg = null; } else p.style.textAlign = v;
+  changed(); ctx(); });
+// tables
+function openTable() {
+  $("tpick").innerHTML = Array.from({ length: 64 }, (_, i) => `<i data-r="${Math.floor(i / 8) + 1}" data-c="${i % 8 + 1}"></i>`).join(""); $("tblDlg").showModal(); }
+$("tpick").addEventListener("mouseover", e => { const t = e.target.closest("i"); if (!t) return; const r = +t.dataset.r, c = +t.dataset.c; $("tsz").textContent = `${r} × ${c}`;
+  $("tpick").querySelectorAll("i").forEach(x => x.classList.toggle("on", +x.dataset.r <= r && +x.dataset.c <= c)); });
+$("tpick").addEventListener("click", e => { const t = e.target.closest("i"); if (!t) return; const r = +t.dataset.r, c = +t.dataset.c; $("tblDlg").close();
+  exec("insertHTML", `<table><thead><tr>${"<th>Heading</th>".repeat(c)}</tr></thead><tbody>${`<tr>${"<td><br></td>".repeat(c)}</tr>`.repeat(Math.max(1, r - 1))}</tbody></table><p><br></p>`); });
+$("tCancel").onclick = () => $("tblDlg").close();
+const cell = () => { const s = getSelection(); let n = s.anchorNode; while (n && n !== page) { if (n.nodeType === 1 && /^(TD|TH)$/.test(n.tagName)) return n; n = n.parentNode; } return null; };
+$("tblBar").addEventListener("mousedown", e => e.preventDefault());
+$("tblBar").addEventListener("click", e => {
+  const b = e.target.closest("[data-t]"); const td = cell(); if (!b || !td) return; const tr = td.parentNode, tbl = td.closest("table"), ci = [...tr.children].indexOf(td), a = b.dataset.t;
+  const newRow = () => { const r = document.createElement("tr"); [...tr.children].forEach(() => { const d = document.createElement("td"); d.innerHTML = "<br>"; r.appendChild(d); }); return r; };
+  if (a === "rowA") (tr.parentNode.tagName === "THEAD" ? tbl.tBodies[0].prepend(newRow()) : tr.before(newRow()));
+  if (a === "rowB") (tr.parentNode.tagName === "THEAD" ? tbl.tBodies[0].prepend(newRow()) : tr.after(newRow()));
+  if (a === "colL" || a === "colR") tbl.querySelectorAll("tr").forEach(r => { const ref = r.children[ci]; const d = document.createElement(r.parentNode.tagName === "THEAD" ? "th" : "td"); d.innerHTML = "<br>"; a === "colL" ? ref.before(d) : ref.after(d); });
+  if (a === "delRow" && tbl.rows.length > 1) tr.remove();
+  if (a === "delCol" && tr.children.length > 1) tbl.querySelectorAll("tr").forEach(r => r.children[ci] && r.children[ci].remove());
+  if (a === "head") { if (tbl.tHead) { const r = tbl.tHead.rows[0]; const nr = document.createElement("tr"); [...r.children].forEach(h => { const d = document.createElement("td"); d.innerHTML = h.innerHTML; nr.appendChild(d); }); tbl.tBodies[0].prepend(nr); tbl.tHead.remove(); }
+    else { const r = tbl.tBodies[0].rows[0]; const th = tbl.createTHead(), nr = document.createElement("tr"); [...r.children].forEach(d => { const h = document.createElement("th"); h.innerHTML = d.innerHTML; nr.appendChild(h); }); th.appendChild(nr); r.remove(); } }
+  if (a === "delTbl") tbl.remove();
+  changed(); ctx();
+});
+function ctx() { $("tblBar").classList.toggle("show", !!cell()); $("imgBar").classList.toggle("show", !!(curImg && curImg.isConnected)); }
+
+// find and replace
+const openFind = () => { $("findBar").classList.add("show"); $("fFind").focus(); };
+$("fClose").onclick = () => $("findBar").classList.remove("show");
+$("fNext").onclick = () => { const t = $("fFind").value; if (!t) return; page.focus(); const ok = window.find && window.find(t, false, false, true); $("fMsg").textContent = ok ? "" : "Not found"; };
+$("fOne").onclick = () => { const s = getSelection(); if (!s.isCollapsed && s.toString().toLowerCase() === $("fFind").value.toLowerCase()) exec("insertText", $("fRep").value); $("fNext").click(); };
+$("fAll").onclick = () => { const t = $("fFind").value; if (!t) return; let n = 0; const re = new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  const w = document.createTreeWalker(page, NodeFilter.SHOW_TEXT); const list = []; while (w.nextNode()) list.push(w.currentNode);
+  list.forEach(nd => { const v = nd.nodeValue.replace(re, () => { n++; return $("fRep").value; }); if (v !== nd.nodeValue) nd.nodeValue = v; }); $("fMsg").textContent = n + " replaced"; changed(); };
+document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "h") { e.preventDefault(); openFind(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); $("saveBtn").click(); } });
+
+// paste: keep text formatting, drop anything unsafe
+page.addEventListener("paste", e => { const h = e.clipboardData.getData("text/html"); if (!h) return; e.preventDefault(); document.execCommand("insertHTML", false, safe(h)); changed(); });
+
+// word count + autosave on this device
+function changed() { dirty = true; stat("Not saved"); const w = (page.innerText.trim().match(/\S+/g) || []).length; $("wc").textContent = `${w} words`;
+  clearTimeout(changed.t); changed.t = setTimeout(() => { try { localStorage.setItem(DRAFT(), JSON.stringify({ at: Date.now(), title: $("title").value, html: page.innerHTML })); } catch (e) {} }, 600); }
+page.addEventListener("input", changed); $("title").addEventListener("input", changed);
+window.addEventListener("beforeunload", e => { if (dirty && !EMBED) { e.preventDefault(); e.returnValue = ""; } });
+
+// Word import
+$("importBtn").onclick = () => $("docxFile").click();
+$("docxFile").onchange = async e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { stat("Reading Word file…");
+    if (!window.mammoth) await new Promise((ok, no) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"; s.onload = ok; s.onerror = () => no(new Error("Could not load the Word reader")); document.head.appendChild(s); });
+    const r = await mammoth.convertToHtml({ arrayBuffer: await f.arrayBuffer() });
+    page.focus(); document.execCommand("insertHTML", false, safe(r.value)); if (!$("title").value) $("title").value = f.name.replace(/\.docx$/i, ""); changed(); stat("Word file added");
+  } catch (er) { stat("Could not read the file: " + er.message); } };
+$("printBtn").onclick = () => window.print();
+$("wordOut").onclick = () => { const html = `<html><head><meta charset="utf-8"><title>${E($("title").value || "Notes")}</title></head><body>${finalHtml()}</body></html>`;
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + html], { type: "application/msword" })); a.download = (slug($("title").value || "notes")) + ".doc"; a.click(); };
+// PDF → each page becomes a picture in the document
+$("pdfInBtn").onclick = () => $("pdfFile").click();
+$("pdfFile").onchange = async e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { stat("Reading PDF…");
+    const pages = await Ribbon.pdfPages(await f.arrayBuffer(), 1.6, (i, n) => stat(`Reading PDF page ${i} of ${n}…`));
+    let html = "";
+    for (let i = 0; i < pages.length; i++) { stat(`Saving page ${i + 1} of ${pages.length}…`);
+      const data = pages[i].toDataURL("image/jpeg", 0.85), path = `assets/uploads/pdf-${Date.now().toString(36)}-${i + 1}.jpg`;
+      await write(path, data.split(",")[1], "Admin: notes PDF page");
+      html += `<p style="text-align:center"><img src="${path}" alt="Page ${i + 1}" style="width:100%"></p>`; }
+    page.focus(); document.execCommand("insertHTML", false, html + "<p><br></p>"); if (!$("title").value) $("title").value = f.name.replace(/\.pdf$/i, ""); changed(); stat(`PDF added: ${pages.length} pages`);
+  } catch (er) { stat("Could not read the PDF: " + er.message); } };
+
+// form notes (older style) → document
+const esc = s => E(s == null ? "" : s);
+function notesToHtml(n) {
+  if (n.html) return n.html;
+  let h = n.intro && !EMBED ? `<p>${esc(n.intro)}</p>` : ""; // in the admin Notes tab the introduction has its own box
+  (n.phases || []).forEach(p => { h += `<h2>${esc(p.h)}</h2>`; p.items.forEach(it => { h += `<h3>${esc([it.yr, it.t].filter(Boolean).join(" – "))}</h3>${it.s ? `<p><i>${esc(it.s)}</i></p>` : ""}<ul>${it.pts.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`; }); });
+  const hd = (n.tableHead || []).filter(Boolean);
+  if (n.table) h += `<h2>${esc(n.tableTitle || "Important facts")}</h2><table><thead><tr>${hd.map(x => `<th>${esc(x)}</th>`).join("")}</tr></thead><tbody>${n.table.map(r => `<tr>${r.slice(0, hd.length).map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  if ((n.tricks || []).length) h += `<div class="callout trick"><p><b>💡 Memory tricks:</b></p><ul>${n.tricks.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>`;
+  return h;
+}
+
+// ---------- open ----------
+async function open() {
+  stat("Loading…");
+  try { [NOTES, SUBS] = await Promise.all([readData("data/notes.js", "NOTES", {}), readData("data/subjects.js", "SUBJECTS", [])]); }
+  catch (e) { stat(""); alert(/401|403/.test(e.message) ? "Please log in on the admin login page." : "Could not load: " + e.message); }
+  const n = cid && NOTES[cid];
+  let draft = null; if (cid) { try { draft = await readRaw(`data/docs/${cid}.html`); } catch (e) {} }
+  if (n) { $("title").value = n.title || ""; page.innerHTML = safe(notesToHtml(n)); }
+  if (draft) { page.innerHTML = safe(draft); if (!$("title").value) $("title").value = cid.replace(/-/g, " "); }
+  try { const d = JSON.parse(localStorage.getItem(DRAFT()) || "null"); if (d && d.html !== page.innerHTML) { $("restore").classList.add("show");
+    $("restoreYes").onclick = () => { page.innerHTML = safe(d.html); $("title").value = d.title || $("title").value; $("restore").classList.remove("show"); changed(); };
+    $("restoreNo").onclick = () => { localStorage.removeItem(DRAFT()); $("restore").classList.remove("show"); }; } } catch (e) {}
+  unwrapBg(); try { const z = localStorage.getItem("ssc-doc-zoom"); if (z) page.style.zoom = z; } catch (e) {}
+  changed(); dirty = false; stat(draft ? "Draft (not published yet)" : n ? "Published version" : "New – not saved");
+}
+// final HTML: pictures point to their saved files instead of the copy kept in memory
+const finalHtml = () => { const d = document.createElement("div"); d.innerHTML = safe(page.innerHTML); d.querySelectorAll("img[data-path]").forEach(i => { i.setAttribute("src", i.dataset.path); i.removeAttribute("data-path"); });
+  const bg = page.dataset.bg; return bg && /^#[0-9a-f]{3,8}$/i.test(bg) ? `<div class="docbg" style="background:${bg}">${d.innerHTML}</div>` : d.innerHTML; };
+// opening a document that has a page colour: take the colour off the wrapper and put it on the page
+const unwrapBg = () => { const w = page.firstElementChild; if (page.children.length === 1 && w && w.classList.contains("docbg")) { const c = (w.getAttribute("style") || "").match(/background:\s*(#[0-9a-f]{3,8})/i); page.innerHTML = w.innerHTML; if (c) { page.dataset.bg = c[1]; page.style.background = c[1]; } } };
+$("saveBtn").onclick = async () => {
+  // drafts are kept in data/docs/<chapter>.html until published
+  try { stat("Saving…"); const id = cid || slug($("title").value || "untitled");
+    await write(`data/docs/${id}.html`, b64(new TextEncoder().encode(finalHtml())), "Admin: notes draft " + id);
+    if (!cid) { cid = id; history.replaceState(null, "", "docs-editor.html?ch=" + id); }
+    try { localStorage.removeItem("ssc-doc-draft:new"); localStorage.removeItem(DRAFT()); } catch (e) {}
+    dirty = false; stat("Draft saved ✓ (students don't see drafts)");
+  } catch (er) { stat("Not saved"); alert("Could not save: " + er.message); }
+};
+
+// ---------- publish ----------
+$("pubBtn").onclick = () => {
+  const n = NOTES[cid] || {};
+  $("pSub").innerHTML = SUBS.map(s => `<option value="${E(s.id)}"${s.chapters.some(c => c.id === cid) ? " selected" : ""}>${E(s.name)}</option>`).join("");
+  fillCh(); $("pRead").value = n.read || ""; $("pExams").value = (n.exams || []).join(", "); $("pPdf").checked = !!n.pdf; $("pMsg").textContent = ""; $("pubDlg").showModal();
+};
+function fillCh() { const s = SUBS.find(x => x.id === $("pSub").value); if (!s) return;
+  $("pChap").innerHTML = s.chapters.map((c, i) => `<option value="${E(c.id)}"${c.id === cid ? " selected" : ""}>${i + 1}. ${E(c.title)}${NOTES[c.id] ? " (has notes)" : ""}</option>`).join("") + `<option value="__new"${s.chapters.some(c => c.id === cid) ? "" : " selected"}>+ New chapter</option>`;
+  newCh(); }
+const newCh = () => { const nw = $("pChap").value === "__new"; $("pNewWrap").hidden = !nw; if (nw && !$("pNew").value) $("pNew").value = $("title").value;
+  const s = SUBS.find(x => x.id === $("pSub").value), c = s && s.chapters.find(x => x.id === $("pChap").value); $("pDesc").value = c ? c.sub || "" : ""; };
+$("pSub").onchange = fillCh; $("pChap").onchange = newCh; $("pCancel").onclick = () => $("pubDlg").close();
+$("pGo").onclick = async () => {
+  const s = SUBS.find(x => x.id === $("pSub").value); if (!s) return;
+  let id = $("pChap").value, title = $("title").value.trim();
+  if (id === "__new") { const t = $("pNew").value.trim(); if (!t) return $("pMsg").textContent = "Type the chapter title."; title = title || t;
+    const same = s.chapters.find(c => !NOTES[c.id] && (c.id === slug(t) || c.title.toLowerCase() === t.toLowerCase())); // reuse a "coming soon" chapter
+    if (same) id = same.id; else { id = slug(t); const all = SUBS.flatMap(x => x.chapters.map(c => c.id)); let k = 2; const base = id; while (all.includes(id)) id = base + "-" + k++; s.chapters.push({ id, title: t, sub: "" }); } }
+  const c = s.chapters.find(x => x.id === id); title = title || c.title; c.title = title; c.sub = $("pDesc").value.trim(); c.ready = true;
+  if (!page.innerText.trim() && !page.querySelector("img,table")) return $("pMsg").textContent = "The document is empty.";
+  const old = NOTES[id] || {};
+  const n = { subject: s.id, title, read: $("pRead").value.trim() || "10 min read", exams: $("pExams").value.split(",").map(x => x.trim()).filter(Boolean), intro: "", html: finalHtml() };
+  if (old.deck) n.deck = old.deck; if (old.quiz) n.quiz = old.quiz; if ($("pPdf").checked) n.pdf = true; if (old.publishAt) n.publishAt = old.publishAt;
+  NOTES[id] = n;
+  try { $("pGo").disabled = true; $("pMsg").textContent = "Publishing… (1 of 2)"; await writeData("data/notes.js", "NOTES", NOTES, "All notes content.");
+    $("pMsg").textContent = "Publishing… (2 of 2)"; await writeData("data/subjects.js", "SUBJECTS", SUBS, "Subjects and chapters. ready: true shows a chapter on the site.");
+    // the draft copy is no longer needed
+    for (const d of new Set([cid, id].filter(Boolean))) { try { const sh = (await (await gh(`/contents/data/docs/${d}.html?ref=main&meta=1`)).json()).sha;
+      await gh(`/contents/data/docs/${d}.html`, { method: "DELETE", body: JSON.stringify({ message: "Admin: draft published", sha: sh, branch: "main" }), headers: { "Content-Type": "application/json" } }); } catch (e) {} }
+    if (cid !== id) { cid = id; history.replaceState(null, "", "docs-editor.html?ch=" + id); }
+    try { localStorage.removeItem(DRAFT()); localStorage.removeItem("ssc-doc-draft:new"); } catch (e) {}
+    dirty = false; stat("Published ✓"); $("pMsg").textContent = `Published! Live in about a minute at note.html?id=${id}`; setTimeout(() => $("pubDlg").close(), 1600);
+  } catch (er) { $("pMsg").textContent = "Could not publish: " + er.message; }
+  $("pGo").disabled = false;
+};
+$("saveTop").onclick = () => $("saveBtn").click(); $("pubTop").onclick = () => $("pubBtn").click();
+// inside the admin Notes tab: the admin page reads the document and publishes it with the chapter
+window.SSCEmbed = {
+  html: () => finalHtml(),
+  empty: () => !page.innerText.trim() && !page.querySelector("img,table"),
+  dirty: () => dirty,
+  saved: () => { dirty = false; try { localStorage.removeItem(DRAFT()); } catch (e) {} stat("Published ✓"); },
+  ready: false
+};
+open().then(() => { window.SSCEmbed.ready = true; });
+})();
+</script>
+</body>
+</html>

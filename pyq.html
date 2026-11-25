@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- ssc-build 5/7 IFQ= -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SSC Previous Year Papers – SSCAspirants_Official</title>
+<meta name="description" content="Mock tests on the latest Eduquity CBT pattern, chapter-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
+</head>
+<body data-page="pyq" data-title="PYQ Papers">
+<main id="content" class="content">
+<style>
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.filters label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem}
+.ptests{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.ptest{display:flex;flex-direction:column;gap:10px}.ptest .pill{align-self:flex-start}.ptest .meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:.92rem}
+.filters select{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;padding:0 12px;min-width:180px}
+</style>
+<section class="card"><div class="sec-head"><h2>Previous year papers</h2><p>Attempt any paper as a timed test, then see the solutions</p></div>
+<div class="filters">
+<label for="fExam">Exam<select id="fExam"></select></label>
+<label for="fTier" id="fTierW">Tier<select id="fTier"></select></label>
+<label for="fYear">Year<select id="fYear"></select></label>
+</div></section>
+<section id="list" style="display:flex;flex-direction:column;gap:10px"></section>
+</main>
+<script src="data/subjects.js"></script>
+<script src="data/exams.js"></script>
+<script src="data/tests.js"></script>
+<script src="data/site.js"></script>
+<script src="assets/site.js"></script>
+<script>
+{
+const E=SSC.esc, $=id=>document.getElementById(id), EX=(window.EXAMS||[]).filter(e=>!e.hide);
+const ALL=Object.entries(window.TESTS||{}).filter(([,t])=>t.type==="PYQ paper");
+$("fExam").innerHTML=`<option value="">All exams</option>`+EX.map(e=>`<option value="${e.id}">${E(e.name)}</option>`).join("");
+const h=(location.hash||"").slice(1); if(EX.some(e=>e.id===h)) $("fExam").value=h;
+function tiers(){const ex=EX.find(e=>e.id===$("fExam").value), T=ex?SSCTiers(ex):[];
+  $("fTierW").hidden=T.length<2; $("fTier").innerHTML=`<option value="">All</option>`+T.map(t=>`<option value="${t.id}">${E(t.name)}</option>`).join("");}
+function years(){const ys=[...new Set(ALL.map(([,t])=>String(t.year||"")).filter(Boolean))].sort().reverse(); const v=$("fYear").value;
+  $("fYear").innerHTML=`<option value="">All years</option>`+ys.map(y=>`<option>${E(y)}</option>`).join(""); $("fYear").value=v;}
+function draw(){
+  const ex=$("fExam").value, tr=$("fTier").value, yr=$("fYear").value;
+  const l=ALL.filter(([,t])=>(!ex||t.exam===ex||t.exam==="all")&&(!tr||(t.tier||"t1")===tr)&&(!yr||String(t.year)===yr));
+  if(!l.length){$("list").innerHTML=`<div class="card" style="text-align:center;border-style:dashed"><b>Papers for this choice are coming soon.</b><p class="muted" style="margin:4px 0 0">New papers appear here as soon as they are published.</p></div>`;return;}
+  const groups={}; l.forEach(x=>{const t=x[1], e=EX.find(e=>e.id===t.exam), k=(e?e.name:"All SSC exams")+(t.year?" "+t.year:"");(groups[k]=groups[k]||[]).push(x);});
+  $("list").innerHTML=Object.entries(groups).map(([k,v])=>`<h2 style="font-size:1.2rem;margin-top:10px">${E(k)}</h2>`+`<div class="ptests">`+v.map(([id,t])=>`<div class="card ptest" data-tcard="${E(id)}"><span class="pill ok">Available</span><b>${E(t.title)}</b><div class="meta"><span>${t.shift?E(t.shift):""}</span><span>${t.questions.length} questions</span><span>${t.minutes} min</span><span>+${t.plus} / −${t.minus}</span></div><a class="btn btn-pri" href="test.html?id=${encodeURIComponent(id)}">Start test</a></div>`).join("")+`</div>`).join("");
+  if(window.SSCTestCards) SSCTestCards();
+}
+$("fExam").addEventListener("change",()=>{history.replaceState(null,"","#"+$("fExam").value);tiers();draw();});
+[$("fTier"),$("fYear")].forEach(x=>x.addEventListener("change",draw));
+tiers();years();draw();
+}
+</script>
+</body>
+</html>
