@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily quiz – SSCAspirants_Official</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
+</head>
+<body data-page="daily" data-title="Daily quiz">
+<main id="content" class="content">
+<style>
+.dq-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.streak{display:flex;gap:10px;flex-wrap:wrap}
+.streak .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 16px;text-align:center;min-width:110px}
+.streak b{display:block;font:700 1.4rem "Poppins",sans-serif}
+.streak span{font-size:.85rem;color:var(--muted)}
+.dq{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0;background:var(--surface)}
+.dq p{margin:0 0 10px;font-weight:600}
+.dq button{display:block;width:100%;text-align:left;min-height:44px;margin:6px 0;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;padding:8px 12px;cursor:pointer}
+.dq button.pick{border-color:var(--pri);background:var(--pri-soft)}
+.dq button.right{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
+.dq button.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.dq .why{color:var(--muted);font-size:.95rem;margin-top:8px}
+.days{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 18px}
+.days a{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:.88rem}
+.days a[aria-current="true"]{background:var(--pri);color:var(--pri-ink);border-color:var(--pri)}
+</style>
+<section><div class="dq-head"><div class="sec-head" style="margin:0"><h2>Daily quiz</h2><p id="dqDate">A new quiz every day</p></div>
+<div class="streak" id="dqStreak" data-dyn></div></div>
+<div class="days" id="dqDays" data-dyn></div>
+<div id="dqBody" data-dyn><p class="muted">Loading…</p></div></section>
+</main>
+<script src="data/subjects.js"></script>
+<script src="data/exams.js"></script>
+<script src="data/daily.js"></script>
+<script src="data/site.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id), E = SSC.esc, ALL = window.DAILY || {};
+  const today = new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+  const days = Object.keys(ALL).filter(d => d <= today).sort().reverse().slice(0, 14);
+  const want = new URLSearchParams(location.search).get("day"); let day = days.includes(want) ? want : days.includes(today) ? today : days[0];
+  const nice = d => new Date(d + "T12:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+  const streak = s => { $("dqStreak").innerHTML = `<div class="stat"><b>🔥 ${s.streak}</b><span>Day streak</span></div><div class="stat"><b>${s.best}</b><span>Best streak</span></div><div class="stat"><b>${s.played}</b><span>Quizzes done</span></div>`; };
+  fetch("/api/daily").then(r => r.json()).then(streak).catch(() => streak({ streak: 0, best: 0, played: 0 }));
+  $("dqDays").innerHTML = days.map(d => `<a href="?day=${d}" aria-current="${d === day}">${d === today ? "Today" : nice(d)}</a>`).join("");
+  if (!day) { $("dqBody").innerHTML = `<div class="card"><p class="muted" style="margin:0">Today's quiz is coming soon. Check back later!</p></div>`; return; }
+  const Q = ALL[day]; let picks = Array(Q.questions.length).fill(null), done = false;
+  $("dqDate").textContent = (Q.title ? Q.title + " · " : "") + nice(day) + (day !== today ? " (past quiz – your streak counts only today's)" : "");
+  const draw = () => { $("dqBody").innerHTML = Q.questions.map((q, i) => `<div class="dq"><p>${i + 1}. ${E(q.q)}</p>${q.opts.map((o, k) => `<button type="button" data-q="${i}" data-o="${k}" class="${done ? (k === q.a ? "right" : picks[i] === k ? "wrong" : "") : picks[i] === k ? "pick" : ""}" ${done ? "disabled" : ""}>${String.fromCharCode(65 + k)}. ${E(o)}</button>`).join("")}${done && q.why ? `<div class="why">${E(q.why)}</div>` : ""}</div>`).join("") +
+    (done ? "" : `<button class="btn btn-pri" type="button" id="dqSubmit" style="margin-top:8px">Submit (${picks.filter(x => x !== null).length}/${Q.questions.length} answered)</button>`); };
+  $("dqBody").addEventListener("click", async e => {
+    const b = e.target.closest("[data-o]"); if (b && !done) { picks[+b.dataset.q] = +b.dataset.o; draw(); return; }
+    if (e.target.id !== "dqSubmit") return;
+    done = true; const score = Q.questions.reduce((a, q, i) => a + (picks[i] === q.a ? 1 : 0), 0); draw();
+    $("dqBody").insertAdjacentHTML("afterbegin", `<div class="card" id="dqRes" style="margin-bottom:10px;border-color:var(--gold)"><b style="font:700 1.3rem Poppins,sans-serif">You scored ${score} / ${Q.questions.length}</b><p class="muted" style="margin:4px 0 0" id="dqRank"></p></div>`);
+    window.scrollTo(0, 0);
+    try { const r = await fetch("/api/daily", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ day, score, total: Q.questions.length }) }); const d = await r.json(); if (!r.ok) throw 0;
+      streak(d); $("dqRank").textContent = `Rank ${d.rank} of ${d.players} students today · 🔥 ${d.streak}-day streak`; } catch (er) { $("dqRank").textContent = "Your streak is saved on the live website."; }
+  });
+  draw();
+})();
+</script>
+</body>
+</html>

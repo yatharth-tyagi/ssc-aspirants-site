@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slide editor – SSCAspirants_Official</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/slides.css">
+<link rel="stylesheet" href="assets/ribbon.css">
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light"}catch(e){}</script>
+<style>
+body{display:flex;flex-direction:column;height:100vh;overflow:hidden;margin:0}
+.ebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 14px;background:var(--side);color:#fff}
+.ebar img{width:36px;height:36px;border-radius:50%;border:2px solid #F5C451}
+.ebar input{flex:1 1 220px;min-width:0;min-height:38px;border-radius:9px;border:1px solid #ffffff40;background:#ffffff14;color:#fff;font:600 1rem "Poppins",sans-serif;padding:0 12px}
+.eb{min-height:38px;padding:0 12px;border-radius:9px;border:1px solid #ffffff40;background:transparent;color:#fff;font:600 .86rem "Inter",sans-serif;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.eb:hover{background:#ffffff1a}
+.eb.gold{background:#F5C451;color:#141B38;border-color:#F5C451}
+.eb:disabled{opacity:.45}
+.estat{font-size:.82rem;color:#C9D3FF;min-width:90px}
+.etools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+.tbtn{min-height:38px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 .86rem "Inter",sans-serif;display:inline-flex;align-items:center;gap:6px}
+.tbtn:hover{border-color:var(--pri)}
+.etools select,.props select,.props input[type=number],.props input[type=text]{min-height:36px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 .88rem "Inter",sans-serif;padding:0 8px}
+.etools label{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted)}
+input[type=color]{width:38px;height:34px;padding:0;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer}
+body.embed .ebar{display:none}
+body.embed .ebody{grid-template-columns:160px minmax(0,1fr) 250px}
+body.embed .cwrap{padding:14px}
+body.embed #canvas{max-width:none}body.embed .rg.own{display:none}
+.rlab{display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--ink)}
+.ebody{flex:1;display:grid;grid-template-columns:190px minmax(0,1fr) 270px;min-height:0}
+.thumbs{overflow:auto;padding:12px 12px 12px 30px;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:12px}
+.th{position:relative;cursor:pointer;border-radius:8px;outline:2px solid transparent}
+.th.on{outline:3px solid var(--pri);outline-offset:2px}
+.th .n{position:absolute;left:-24px;top:2px;background:var(--side);color:#fff;font:700 .7rem Inter;border-radius:6px;padding:1px 6px;z-index:2}
+.th .sk-host{border-radius:8px;border:1px solid var(--line);pointer-events:none}
+.th .acts{display:flex;gap:4px;justify-content:center;margin-top:4px}
+.th .acts button{width:30px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:.8rem;padding:0}
+.addslide{min-height:40px;border-radius:9px;border:2px dashed var(--line);background:transparent;color:var(--pri);font-weight:700}
+.cwrap{overflow:auto;padding:22px;display:flex;align-items:flex-start;justify-content:center;background:var(--bg)}
+#canvas{width:100%;max-width:1100px;box-shadow:0 8px 30px rgba(20,27,56,.18);border-radius:6px}
+#canvas .sk-el{cursor:move}
+#canvas .sk-el.editing{cursor:text}
+#canvas .sk-el.editing .sk-txt,#canvas td[contenteditable="true"]{outline:2px dashed #C9962E;outline-offset:-2px;cursor:text;user-select:text}
+#canvas .sk-wm{opacity:.6}
+.selbox{position:absolute;border:2px solid #2F6BFF;pointer-events:none;z-index:1000;box-sizing:border-box}
+.selbox i{position:absolute;width:16px;height:16px;background:#fff;border:2px solid #2F6BFF;border-radius:4px;pointer-events:auto;box-sizing:border-box}
+.selbox i[data-h=nw]{left:-9px;top:-9px;cursor:nwse-resize}.selbox i[data-h=ne]{right:-9px;top:-9px;cursor:nesw-resize}
+.selbox i[data-h=sw]{left:-9px;bottom:-9px;cursor:nesw-resize}.selbox i[data-h=se]{right:-9px;bottom:-9px;cursor:nwse-resize}
+.selbox i[data-h=n]{left:calc(50% - 8px);top:-9px;cursor:ns-resize}.selbox i[data-h=s]{left:calc(50% - 8px);bottom:-9px;cursor:ns-resize}
+.selbox i[data-h=w]{top:calc(50% - 8px);left:-9px;cursor:ew-resize}.selbox i[data-h=e]{top:calc(50% - 8px);right:-9px;cursor:ew-resize}
+.selbox i[data-h=rot]{left:calc(50% - 9px);top:-46px;width:18px;height:18px;border-radius:50%;cursor:grab;background:#2F6BFF}
+.selbox i[data-h=rot]::after{content:"";position:absolute;left:6px;top:16px;width:2px;height:22px;background:#2F6BFF}
+.selbox.multi{border-style:dashed}.selbox.locked{border-color:#B42318}
+.marq{position:absolute;border:1.5px dashed #2F6BFF;background:rgba(47,107,255,.08);z-index:1001;pointer-events:none}
+.guide{position:absolute;background:#E5368B;z-index:1002;pointer-events:none}
+.notesbox{max-width:1100px;width:100%;margin:12px auto 0}
+.notesbox textarea{width:100%;box-sizing:border-box;min-height:70px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:400 .92rem Inter,sans-serif;padding:8px 10px}
+.cwrap{flex-direction:column;align-items:stretch;justify-content:flex-start}
+#canvas{flex:none;margin:0 auto}
+.ebody{grid-template-rows:minmax(0,1fr)}
+.thumbs,.cwrap,.props{min-height:0;overscroll-behavior:contain}
+.present .pnotes{color:#C9D3FF;max-width:1100px;margin:0 auto;font-size:.95rem;white-space:pre-wrap}
+.props{overflow:auto;padding:14px;border-left:1px solid var(--line);background:var(--surface)}
+.props h3{font:700 1rem "Poppins",sans-serif;margin:0 0 10px}
+.props .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.props label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:var(--muted)}
+.props .grp{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.props .grp button{min-width:38px;min-height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700}
+.props .grp button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink);border-color:var(--pri)}
+.props hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+.props .help{font-size:.82rem;color:var(--muted);line-height:1.5}
+.props .del{width:100%;min-height:38px;border-radius:9px;border:1px solid #B42318;background:transparent;color:#B42318;font-weight:700}
+.banner{display:none;gap:10px;align-items:center;padding:8px 14px;background:var(--gold-soft);font-size:.9rem;flex-wrap:wrap}
+.banner.show{display:flex}
+dialog{border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface);color:var(--ink);max-width:min(520px,calc(100vw - 32px));box-sizing:border-box;width:100%}
+dialog::backdrop{background:rgba(10,14,30,.55)}
+dialog label{display:flex;flex-direction:column;gap:6px;font-weight:600;margin-bottom:12px}
+dialog select,dialog input[type=text]{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;padding:0 12px}
+.ck{flex-direction:row!important;align-items:center;gap:10px!important}
+.ck input{width:20px;height:20px}
+.present{position:fixed;inset:0;z-index:100;background:#0C1222;padding:16px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+.present .sk-view{flex:1;justify-content:center}
+.present .sk-screen{width:100%;max-width:calc((100vh - 140px) * 16 / 9);margin:0 auto}
+.present .sk-count{color:#fff}
+@media(max-width:1000px){.ebody{grid-template-columns:150px minmax(0,1fr)}.props{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);max-height:38vh}}
+@media(max-width:700px){body{height:auto;overflow:auto}.ebody{grid-template-columns:1fr}.thumbs{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.th{flex:0 0 140px}.addslide{flex:0 0 120px}.cwrap{padding:10px}}
+</style>
+</head>
+<body data-shell="off">
+<header class="ebar">
+  <a class="eb" href="admin.html#notes" title="Back to admin panel">← Admin</a>
+  <img src="assets/logo.png" alt="">
+  <input id="title" aria-label="Slides title" maxlength="120" placeholder="Slides title">
+  <button class="eb" type="button" id="saveTop">Save draft</button><button class="eb gold" type="button" id="pubTop">Publish</button>
+  <span class="estat" id="stat"></span>
+</header>
+<div class="banner" id="restore"><b>Unsaved changes from earlier were found on this device.</b><button class="tbtn" type="button" id="restoreYes">Restore them</button><button class="tbtn" type="button" id="restoreNo">Discard</button></div>
+<div class="ribbon" id="ribbon">
+  <div class="rtabs" role="tablist" aria-label="Editor menus"><button type="button" data-rt="home">Home</button><button type="button" data-rt="insert">Insert</button><button type="button" data-rt="design">Design</button><button type="button" data-rt="show">Slide show</button><button type="button" data-rt="file">File</button><span class="rstat" id="rstat"></span></div>
+  <div class="rpane" data-rp="home">
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="undo" title="Undo"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span><span class="rl">Undo</span></button><button class="rb" type="button" id="redo" title="Redo"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></span><span class="rl">Redo</span></button></div><span class="rgl">History</span></div>
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="newSlideBtn" title="New slide"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M12 9v4M10 11h4M8 21h8"/></svg></span><span class="rl">New slide</span></button><button class="rb" type="button" id="dupSlideBtn" title="Duplicate slide"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></span><span class="rl">Duplicate slide</span></button><button class="rb" type="button" id="delSlideBtn" title="Delete slide"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span><span class="rl">Delete slide</span></button></div><span class="rgl">Slides</span></div>
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="addText" title="Text box"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V4h16v2M12 4v16M9 20h6"/></svg></span><span class="rl">Text box</span></button><button class="rb" type="button" id="addImg" title="Picture"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></span><span class="rl">Picture</span></button><input type="file" id="imgFile" accept="image/*" hidden><button class="rb" type="button" id="shapeBtn" data-pop="shape" title="Shape"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5"/><rect x="11" y="11" width="10" height="10" rx="1"/></svg></span><span class="rl">Shape</span></button><button class="rb" type="button" id="addTable" title="Table"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg></span><span class="rl">Table</span></button></div><span class="rgl">Add</span></div>
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="bgBtn" data-pop="bg" title="Slide colour"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16l5-12 5 12M9 12h6"/></svg></span><span class="rl">Slide colour</span></button></div><span class="rgl">Colour</span></div>
+  </div>
+  <div class="rpane" data-rp="insert">
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="addText2" title="Text box"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V4h16v2M12 4v16M9 20h6"/></svg></span><span class="rl">Text box</span></button><button class="rb" type="button" id="addImg2" title="Picture"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></span><span class="rl">Picture</span></button><button class="rb" type="button" id="shapeBtn2" data-pop="shape" title="Shape"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5"/><rect x="11" y="11" width="10" height="10" rx="1"/></svg></span><span class="rl">Shape</span></button><button class="rb" type="button" id="addTable2" title="Table"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg></span><span class="rl">Table</span></button></div><span class="rgl">Insert</span></div>
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="symBtn" data-pop="sym" title="Symbol"><span class="ri">Ω</span><span class="rl">Symbol</span></button></div><span class="rgl">Text</span></div>
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="pdfInBtn2" title="PDF as slides"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 17v-4h1.5a1.5 1.5 0 0 1 0 3H8"/></svg></span><span class="rl">PDF as slides</span></button></div><span class="rgl">From file</span></div>
+  </div>
+  <div class="rpane" data-rp="design">
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="bgBtn2" data-pop="bg" title="Slide colour"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16l5-12 5 12M9 12h6"/></svg></span><span class="rl">Slide colour</span></button><button class="rb" type="button" id="bgAll" title="Colour to all"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><span class="rl">Colour to all</span></button></div><span class="rgl">Background</span></div>
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="themeBtn" data-pop="theme" title="Themes"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-3 1.5-2 3-2h1a4 4 0 0 0 4-4c0-4-4-7-9-7z"/></svg></span><span class="rl">Themes</span></button></div><span class="rgl">Themes</span></div>
+  </div>
+  <div class="rpane" data-rp="show">
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="present" title="Present"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg></span><span class="rl">Present</span></button></div><span class="rgl">Present</span></div>
+    <div class="rg"><div class="rgb stack"><label class="rlab">Zoom <select class="rsel" id="zoom"><option value="fit">Fit</option><option value="50">50%</option><option value="75">75%</option><option value="100">100%</option><option value="150">150%</option></select></label>
+      <label class="rlab"><input type="checkbox" id="snapOn" checked> Snap to guides</label></div><span class="rgl">View</span></div>
+  </div>
+  <div class="rpane" data-rp="file">
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="importPpt" title="Upload PowerPoint"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 18v-6h2.5a2 2 0 0 1 0 4H9"/></svg></span><span class="rl">Upload PowerPoint</span></button><input type="file" id="pptFile" accept=".pptx" hidden><button class="rb" type="button" id="pdfInBtn" title="Upload PDF"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 17v-4h1.5a1.5 1.5 0 0 1 0 3H8"/></svg></span><span class="rl">Upload PDF</span></button><input type="file" id="pdfFile" accept="application/pdf" hidden></div><span class="rgl">Upload</span></div>
+    <div class="rg"><div class="rgb"><button class="rb" type="button" id="xpdf" title="Save as PDF"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg></span><span class="rl">Save as PDF</span></button><button class="rb" type="button" id="xppt" title="Download PPTX"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg></span><span class="rl">Download PPTX</span></button></div><span class="rgl">Download</span></div>
+    <div class="rg own"><div class="rgb"><button class="rb" type="button" id="saveBtn" title="Save draft"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7M8 21v-7h8v7"/></svg></span><span class="rl">Save draft</span></button><button class="rb gold" type="button" id="pubBtn" title="Publish"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg></span><span class="rl">Publish</span></button></div><span class="rgl">Publish</span></div>
+  </div>
+</div>
+<input type="color" id="bg" hidden><select id="addShape" hidden></select><select id="addSlide" hidden></select>
+<div class="ebody">
+  <aside class="thumbs" id="thumbs" aria-label="Slides"></aside>
+  <main class="cwrap"><div id="canvas"></div></main>
+  <aside class="props" id="props" aria-label="Properties"></aside>
+</div>
+
+<dialog id="pubDlg">
+  <h2 style="margin-top:0">Publish to a chapter</h2>
+  <p class="muted" style="margin-top:0">Students will see these slides on the chapter's notes page.</p>
+  <label>Subject<select id="pSub"></select></label>
+  <label>Chapter<select id="pChap"></select></label>
+  <label id="pNewWrap" hidden>New chapter title<input type="text" id="pNew" maxlength="120"></label>
+  <label class="ck"><input type="checkbox" id="pPdf"> Allow students to download PDF</label>
+  <p class="muted" id="pMsg" style="margin:0 0 10px"></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-out" type="button" id="pCancel">Cancel</button><button class="btn btn-pri" type="button" id="pGo">Publish</button></div>
+</dialog>
+<div class="present" id="presentBox" hidden><div style="display:flex;justify-content:flex-end"><button class="eb" type="button" id="presentClose">✕ Close</button></div><div id="presentHost" style="flex:1;display:flex;flex-direction:column"></div><div class="pnotes" id="pNotes"></div></div>
+
+<script src="assets/site.js"></script>
+<script src="assets/slides.js"></script>
+<script src="assets/ribbon.js"></script>
+<script>
+(function () {
+const $ = id => document.getElementById(id), K = SlideKit, E = SSC.esc;
+const qs = new URLSearchParams(location.search);
+let deck = null, id = qs.get("id") || "", cur = 0, sel = null, editing = null, dirty = false, published = null;
+const hist = [], fut = [];
+const DRAFT = () => "ssc-slide-draft:" + (id || "new");
+const EMBED = qs.get("embed") === "1";
+if (EMBED) document.body.classList.add("embed");
+const stat = t => { $("stat").textContent = t; $("rstat").textContent = t; };
+Ribbon.tabs($("ribbon"));
+
+// ---------- GitHub (through the site's own server; admins only) ----------
+const gh = async (path, opt = {}) => { const r = await fetch("/api/gh" + path, { cache: "no-store", ...opt, headers: { Accept: "application/vnd.github+json", ...(opt.headers || {}) } });
+  if (!r.ok) { const t = await r.text(); let m = t; try { m = JSON.parse(t).message || t; } catch (e) {} const er = new Error(r.status + " " + m); er.status = r.status; throw er; } return r; };
+const readRaw = async p => { try { return await (await gh(`/contents/${p}?ref=main`, { headers: { Accept: "application/vnd.github.raw+json" } })).text(); } catch (e) { if (e.status === 404) return null; throw e; } };
+const shaOf = async p => { try { return (await (await gh(`/contents/${p}?ref=main&meta=1`)).json()).sha; } catch (e) { if (e.status === 404) return null; throw e; } };
+const b64 = bytes => { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); };
+const write = async (p, bytesB64, msg) => { const body = { message: msg, content: bytesB64, branch: "main" }, s = await shaOf(p); if (s) body.sha = s;
+  await gh(`/contents/${p}`, { method: "PUT", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }); };
+const writeText = (p, text, msg) => write(p, b64(new TextEncoder().encode(text)), msg);
+const readData = async (p, name, fb) => { const code = await readRaw(p); if (code == null) return fb; const w = {}; new Function("window", code)(w); return w[name] === undefined ? fb : w[name]; };
+const writeData = (p, name, v, note) => writeText(p, `// ${note}\n// Saved from the admin page on ${new Date().toISOString().slice(0, 10)}.\nwindow.${name} = ${JSON.stringify(v, null, 1)};\n`, "Admin: update " + p);
+const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) || "slides";
+
+// ---------- history (undo / redo) ----------
+const snap = () => JSON.stringify(deck);
+function change(fn, keepFut) { hist.push(snap()); if (hist.length > 80) hist.shift(); if (!keepFut) fut.length = 0; fn(); dirty = true; local(); draw(); }
+$("undo").onclick = () => { if (!hist.length) return; fut.push(snap()); deck = JSON.parse(hist.pop()); cur = Math.min(cur, deck.slides.length - 1); clearSel(); dirty = true; local(); draw(); };
+$("redo").onclick = () => { if (!fut.length) return; hist.push(snap()); deck = JSON.parse(fut.pop()); cur = Math.min(cur, deck.slides.length - 1); clearSel(); dirty = true; local(); draw(); };
+const local = () => { try { localStorage.setItem(DRAFT(), JSON.stringify({ at: Date.now(), deck })); } catch (e) {} stat(dirty ? "Not saved" : "Saved"); };
+
+// ---------- selection (one or many boxes) ----------
+let sels = [];                                   // selected element ids
+const slide = () => deck.slides[cur];
+const elById = i => slide().els.find(e => e.id === i);
+const selEls = () => sels.map(elById).filter(Boolean);
+const clearSel = () => { sels = []; };
+Object.defineProperty(window, "__sel", { get: () => sels });
+function draw() { drawThumbs(); drawCanvas(); drawProps(); $("title").value = deck.title || ""; $("bg").value = /^#[0-9a-f]{6}$/i.test(slide().bg || "") ? slide().bg : "#ffffff";
+  $("undo").disabled = !hist.length; $("redo").disabled = !fut.length; }
+function drawThumbs() {
+  const t = $("thumbs");
+  t.innerHTML = deck.slides.map((s, i) => `<div class="th${i === cur ? " on" : ""}" data-i="${i}" draggable="true"><span class="n">${i + 1}</span><div class="mini"></div>
+    <div class="acts"><button type="button" data-a="up" title="Move up" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" data-a="down" title="Move down" ${i === deck.slides.length - 1 ? "disabled" : ""}>↓</button><button type="button" data-a="dup" title="Copy slide">⧉</button><button type="button" data-a="del" title="Delete slide" ${deck.slides.length < 2 ? "disabled" : ""}>🗑</button></div></div>`).join("") +
+    `<button class="addslide" type="button" id="plusSlide">＋ Slide</button>`;
+  t.querySelectorAll(".mini").forEach((m, i) => { K.render(deck.slides[i], m); K.watch(m); });
+  $("plusSlide").onclick = () => addSlide("blank");
+}
+$("thumbs").addEventListener("click", e => {
+  const b = e.target.closest("[data-a]"), th = e.target.closest(".th"); if (!th) return; const i = +th.dataset.i;
+  if (!b) { stopEdit(); cur = i; clearSel(); draw(); return; }
+  const a = b.dataset.a;
+  change(() => {
+    const S = deck.slides;
+    if (a === "up" && i > 0) { [S[i - 1], S[i]] = [S[i], S[i - 1]]; cur = i - 1; }
+    if (a === "down" && i < S.length - 1) { [S[i + 1], S[i]] = [S[i], S[i + 1]]; cur = i + 1; }
+    if (a === "dup") { const c = JSON.parse(JSON.stringify(S[i])); c.els.forEach(x => x.id = K.uid()); S.splice(i + 1, 0, c); cur = i + 1; }
+    if (a === "del" && S.length > 1) { S.splice(i, 1); cur = Math.min(i, S.length - 1); }
+    clearSel();
+  });
+});
+// drag a slide thumbnail to a new place
+let dragSlide = null;
+$("thumbs").addEventListener("dragstart", e => { const th = e.target.closest(".th"); if (th) dragSlide = +th.dataset.i; });
+$("thumbs").addEventListener("dragover", e => { if (dragSlide != null) e.preventDefault(); });
+$("thumbs").addEventListener("drop", e => { const th = e.target.closest(".th"); if (dragSlide == null || !th) return; e.preventDefault(); const to = +th.dataset.i, from = dragSlide; dragSlide = null; if (to === from) return;
+  change(() => { const [m] = deck.slides.splice(from, 1); deck.slides.splice(to, 0, m); cur = to; clearSel(); }); });
+
+function drawCanvas() {
+  const st = K.render(slide(), $("canvas"), { edit: true, wm: true });
+  sels = sels.filter(i => elById(i));
+  selEls().forEach(e => {
+    const b = document.createElement("div"); b.className = "selbox" + (sels.length > 1 ? " multi" : "") + (e.lock ? " locked" : ""); b.dataset.for = e.id;
+    Object.assign(b.style, { left: e.x + "px", top: e.y + "px", width: e.w + "px", height: e.h + "px", transform: e.rot ? `rotate(${e.rot}deg)` : "" });
+    if (sels.length === 1 && !e.lock) b.innerHTML = ["nw", "n", "ne", "e", "se", "s", "sw", "w", "rot"].map(h => `<i data-h="${h}"></i>`).join("");
+    st.appendChild(b);
+  });
+  applyZoom();
+}
+K.watch($("canvas"));
+window.addEventListener("resize", () => K.fit($("canvas")));
+function applyZoom() { const z = $("zoom").value; $("canvas").style.width = z === "fit" ? "100%" : K.W * (+z / 100) + "px"; $("canvas").style.maxWidth = z === "fit" ? "1100px" : "none"; K.fit($("canvas")); }
+$("zoom").onchange = () => { applyZoom(); };
+
+// ---------- select, move, resize, rotate, box-select ----------
+let drag = null;
+const k = () => $("canvas").clientWidth / K.W;
+const stagePt = ev => { const r = $("canvas").getBoundingClientRect(), s = k(); return { x: (ev.clientX - r.left) / s, y: (ev.clientY - r.top) / s }; };
+$("canvas").addEventListener("pointerdown", e => {
+  if (e.target.closest("[contenteditable=true]")) return;
+  const h = e.target.closest(".selbox i"), el = e.target.closest(".sk-el");
+  if (h && sels.length === 1) { const o = elById(sels[0]); const p = stagePt(e);
+    drag = { mode: h.dataset.h, p0: p, o: { ...o }, moved: false, cx: o.x + o.w / 2, cy: o.y + o.h / 2 }; e.preventDefault(); return; }
+  if (!el) { stopEdit(); if (!e.shiftKey) clearSel(); drag = { mode: "marq", p0: stagePt(e), moved: false, base: [...sels] }; drawCanvas(); drawProps(); e.preventDefault(); return; }
+  if (editing && editing !== el.dataset.id) stopEdit();
+  const id = el.dataset.id;
+  if (e.shiftKey || e.ctrlKey || e.metaKey) { sels = sels.includes(id) ? sels.filter(x => x !== id) : [...sels, id]; drawCanvas(); drawProps(); return; }
+  if (!sels.includes(id)) { sels = [id]; drawCanvas(); drawProps(); }
+  drag = { mode: "move", p0: stagePt(e), start: selEls().map(o => ({ id: o.id, x: o.x, y: o.y })), moved: false };
+  e.preventDefault();
+});
+function guides(lines) { $("canvas").querySelectorAll(".guide").forEach(g => g.remove()); const st = $("canvas").querySelector(".sk-stage");
+  lines.forEach(([v, pos]) => { const g = document.createElement("div"); g.className = "guide"; Object.assign(g.style, v ? { left: pos + "px", top: 0, width: "1px", height: K.H + "px" } : { top: pos + "px", left: 0, height: "1px", width: K.W + "px" }); st.appendChild(g); }); }
+window.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const p = stagePt(e), dx = p.x - drag.p0.x, dy = p.y - drag.p0.y;
+  if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 3) return;
+  if (!drag.moved && drag.mode !== "marq") { hist.push(snap()); fut.length = 0; }
+  drag.moved = true;
+  const snapOn = $("snapOn").checked && !e.altKey, sn = v => snapOn ? Math.round(v / 5) * 5 : Math.round(v);
+  if (drag.mode === "marq") {
+    const x = Math.min(p.x, drag.p0.x), y = Math.min(p.y, drag.p0.y), w = Math.abs(dx), h = Math.abs(dy);
+    let m = $("canvas").querySelector(".marq"); if (!m) { m = document.createElement("div"); m.className = "marq"; $("canvas").querySelector(".sk-stage").appendChild(m); }
+    Object.assign(m.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px" });
+    drag.box = { x, y, w, h }; return;
+  }
+  if (drag.mode === "move") {
+    const lock = drag.start.some(s0 => elById(s0.id).lock); if (lock) return;
+    let mx = dx, my = dy, lines = [];
+    if (drag.start.length === 1 && snapOn) { const o = elById(drag.start[0].id), nx = drag.start[0].x + dx, ny = drag.start[0].y + dy;
+      const cx = nx + o.w / 2, cy = ny + o.h / 2;
+      if (Math.abs(cx - K.W / 2) < 8) { mx = K.W / 2 - o.w / 2 - drag.start[0].x; lines.push([1, K.W / 2]); }
+      if (Math.abs(cy - K.H / 2) < 8) { my = K.H / 2 - o.h / 2 - drag.start[0].y; lines.push([0, K.H / 2]); }
+      slide().els.forEach(q => { if (q.id === o.id) return; [[nx, q.x], [nx + o.w, q.x + q.w], [nx, q.x + q.w], [nx + o.w, q.x]].forEach(([a1, b1]) => { if (Math.abs(a1 - b1) < 6) { mx += b1 - a1; lines.push([1, b1]); } });
+        [[ny, q.y], [ny + o.h, q.y + q.h], [ny, q.y + q.h], [ny + o.h, q.y]].forEach(([a1, b1]) => { if (Math.abs(a1 - b1) < 6) { my += b1 - a1; lines.push([0, b1]); } }); }); }
+    drag.start.forEach(s0 => { const o = elById(s0.id); o.x = lines.length ? Math.round(s0.x + mx) : sn(s0.x + mx); o.y = lines.length ? Math.round(s0.y + my) : sn(s0.y + my); place(o); });
+    guides(lines.slice(0, 4)); return;
+  }
+  const o = elById(sels[0]), o0 = drag.o, m = drag.mode;
+  if (m === "rot") { let ang = Math.atan2(p.y - drag.cy, p.x - drag.cx) * 180 / Math.PI + 90; if (snapOn) ang = Math.round(ang / 15) * 15; o.rot = ((Math.round(ang) % 360) + 360) % 360; if (o.rot === 0) delete o.rot; place(o); return; }
+  let { x, y, w, h } = o0;
+  const keep = e.shiftKey && /^(nw|ne|sw|se)$/.test(m), ratio = o0.w / o0.h;
+  if (m.includes("e")) w = Math.max(20, o0.w + dx);
+  if (m.includes("s")) h = Math.max(10, o0.h + dy);
+  if (m.includes("w")) { w = Math.max(20, o0.w - dx); x = o0.x + o0.w - w; }
+  if (m.includes("n")) { h = Math.max(10, o0.h - dy); y = o0.y + o0.h - h; }
+  if (keep) { h = w / ratio; if (m.includes("n")) y = o0.y + o0.h - h; }
+  Object.assign(o, { x: sn(x), y: sn(y), w: sn(w), h: sn(h) }); place(o);
+});
+function place(o) { const node = $("canvas").querySelector(`.sk-el[data-id="${CSS.escape(o.id)}"]`), box = $("canvas").querySelector(`.selbox[data-for="${CSS.escape(o.id)}"]`);
+  [node, box].forEach(n => n && Object.assign(n.style, { left: o.x + "px", top: o.y + "px", width: o.w + "px", height: o.h + "px", transform: o.rot ? `rotate(${o.rot}deg)` : "" })); }
+window.addEventListener("pointerup", () => {
+  if (!drag) return;
+  if (drag.mode === "marq") { const m = $("canvas").querySelector(".marq"); if (m) m.remove();
+    if (drag.box && drag.box.w + drag.box.h > 6) { const b = drag.box; sels = [...new Set([...drag.base, ...slide().els.filter(o => o.x < b.x + b.w && o.x + o.w > b.x && o.y < b.y + b.h && o.y + o.h > b.y).map(o => o.id)])]; drawCanvas(); drawProps(); } }
+  else if (drag.moved) { dirty = true; local(); guides([]); drawThumbs(); drawCanvas(); drawProps(); $("undo").disabled = false; }
+  drag = null;
+});
+
+// double-click: type in a text box or table cell
+$("canvas").addEventListener("dblclick", e => {
+  const cell = e.target.closest("td"), el = e.target.closest(".sk-el"); if (!el) return;
+  const o = elById(el.dataset.id); if (!o) return;
+  if (o.t === "text") startEdit(el, el.querySelector(".sk-txt > div"), v => o.html = v);
+  if (o.t === "table" && cell) startEdit(el, cell, v => o.rows[+cell.dataset.r][+cell.dataset.c] = v);
+});
+let editDone = null;
+function startEdit(el, node, save) {
+  stopEdit(); hist.push(snap()); fut.length = 0;
+  editing = el.dataset.id; el.classList.add("editing"); node.contentEditable = "true"; node.focus();
+  const r = document.createRange(); r.selectNodeContents(node); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+  editDone = () => { save(K.clean(node.innerHTML)); node.contentEditable = "false"; el.classList.remove("editing"); editing = null; dirty = true; local(); drawThumbs(); };
+}
+function stopEdit() { if (editDone) { const f = editDone; editDone = null; f(); } }
+
+// ---------- keyboard ----------
+let clip = null;
+document.addEventListener("keydown", e => {
+  const typing = e.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName), ctrl = e.ctrlKey || e.metaKey, key = e.key.toLowerCase();
+  if (e.key === "Escape" && editing) { stopEdit(); drawCanvas(); return; }
+  if (e.key === "Escape" && sels.length && !e.target.closest("dialog")) { clearSel(); drawCanvas(); drawProps(); return; }
+  if (ctrl && key === "s") { e.preventDefault(); stopEdit(); saveDeck().catch(er => alert("Could not save: " + er.message)); return; }
+  if (typing) return;
+  if (ctrl && key === "z") { e.preventDefault(); e.shiftKey ? $("redo").click() : $("undo").click(); return; }
+  if (ctrl && key === "y") { e.preventDefault(); $("redo").click(); return; }
+  if (ctrl && key === "a") { e.preventDefault(); sels = slide().els.map(o => o.id); drawCanvas(); drawProps(); return; }
+  if (ctrl && key === "v" && clip) { e.preventDefault(); change(() => { const copies = JSON.parse(clip).map(o => ({ ...o, id: K.uid(), x: o.x + 20, y: o.y + 20 })); slide().els.push(...copies); sels = copies.map(o => o.id); clip = JSON.stringify(copies); }); return; }
+  if (!sels.length) return;
+  if (ctrl && (key === "c" || key === "x")) { e.preventDefault(); clip = JSON.stringify(selEls()); if (key === "x") delSel(); stat(key === "c" ? "Copied" : "Cut"); return; }
+  if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); delSel(); }
+  if (ctrl && key === "d") { e.preventDefault(); dupSel(); }
+  const mv = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (mv) { e.preventDefault(); const st = e.shiftKey ? 10 : 2; change(() => selEls().forEach(o => { if (!o.lock) { o.x += mv[0] * st; o.y += mv[1] * st; } })); }
+});
+const delSel = () => change(() => { slide().els = slide().els.filter(x => !sels.includes(x.id) || x.lock); clearSel(); });
+const dupSel = () => change(() => { const copies = selEls().map(o => ({ ...JSON.parse(JSON.stringify(o)), id: K.uid(), x: o.x + 20, y: o.y + 20, z: topZ() })); slide().els.push(...copies); sels = copies.map(o => o.id); });
+
+// ---------- insert ----------
+const topZ = () => Math.max(1, ...slide().els.map(x => x.z || 1)) + 1;
+const add = o => change(() => { o.id = K.uid(); o.z = topZ(); slide().els.push(o); sels = [o.id]; });
+// text is white on dark slides and dark on light slides, so a new box is always readable
+const inkFor = bg => { const m = /^#([0-9a-f]{6})$/i.exec(bg || "#ffffff"); if (!m) return "#1E2433"; const n = parseInt(m[1], 16), l = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)); return l < 140 ? "#FFFFFF" : "#1E2433"; };
+$("addText").onclick = () => add({ t: "text", x: 140, y: 200, w: 700, h: 120, html: "Double-click to type", fs: 32, color: inkFor(slide().bg), font: "Inter", align: "left", lh: 1.35 });
+$("addShape").innerHTML = `<option value="">＋ Shape…</option>` + Object.entries(K.SHAPES).map(([v, n]) => `<option value="${v}">${E(n)}</option>`).join("");
+$("addShape").onchange = e => { const s = e.target.value; e.target.value = ""; if (!s) return;
+  add(s === "line" ? { t: "shape", shape: "line", x: 200, y: 340, w: 600, h: 20, stroke: "#1F3A93", sw: 6 } : { t: "shape", shape: s, x: 440, y: 200, w: 300, h: s === "ellipse" || s === "star" || s === "hexagon" ? 300 : 220, fill: "#EEF2FC", stroke: "#1F3A93", sw: 3 }); };
+$("addTable").onclick = () => add({ t: "table", x: 100, y: 160, w: 1080, h: 360, fs: 24, head: true, headFill: "#1F3A93", headColor: "#FFFFFF", border: "#D9D2C2", color: "#1E2433", rows: [["Heading", "Heading", "Heading"], ["", "", ""], ["", "", ""]] });
+$("addSlide").innerHTML = `<option value="">＋ New slide…</option>` + Object.entries(K.TEMPLATES).map(([key, t]) => `<option value="${key}">${E(t.name)}</option>`).join("");
+$("addSlide").onchange = e => { const v = e.target.value; e.target.value = ""; if (v) addSlide(v); };
+const addSlide = key => change(() => { deck.slides.splice(cur + 1, 0, K.TEMPLATES[key].make()); cur++; clearSel(); });
+$("bg").oninput = e => { slide().bg = e.target.value; drawCanvas(); };
+$("bg").onchange = e => change(() => slide().bg = e.target.value);
+$("title").onchange = e => change(() => deck.title = e.target.value.trim());
+
+// pictures: shrink big photos, upload to assets/uploads, show at once from memory
+async function uploadPicture(file, prefix) {
+  const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("That file isn't a picture.")); i.src = URL.createObjectURL(file); });
+  const max = 1600, r = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+  c.width = Math.round(img.naturalWidth * r); c.height = Math.round(img.naturalHeight * r); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  const png = /png|gif|webp|svg/.test(file.type), data = c.toDataURL(png ? "image/png" : "image/jpeg", 0.88);
+  const path = `assets/uploads/${prefix || "slide"}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}.${png ? "png" : "jpg"}`;
+  K.memory[path] = data;
+  write(path, data.split(",")[1], "Admin: slide picture").catch(er => stat("Picture not saved: " + er.message));
+  return { path, w: c.width, h: c.height };
+}
+$("addImg").onclick = () => $("imgFile").click();
+$("imgFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { stat("Adding picture…"); const p = await uploadPicture(f);
+    const w = Math.min(600, p.w), h = Math.min(Math.round(w * p.h / p.w), 560);
+    add({ t: "img", src: p.path, x: Math.round((K.W - w) / 2), y: Math.round((K.H - h) / 2), w, h }); stat("Picture added");
+  } catch (er) { stat(""); alert("Could not add the picture: " + er.message); }
+};
+window.__uploadPicture = uploadPicture;
+
+// ---------- properties panel ----------
+const FONTN = { Inter: "Inter", Poppins: "Poppins (headings)", Hind: "Hind (हिन्दी)", Merriweather: "Merriweather", Georgia: "Georgia", Courier: "Courier", Arial: "Arial" };
+const ANIMS = { "": "None", fade: "Fade in", up: "Rise up", left: "Fly in from left", zoom: "Zoom in" };
+function drawProps() {
+  const p = $("props"), list = selEls();
+  if (!list.length) {
+    p.innerHTML = `<h3>Slide ${cur + 1}</h3>
+      <label>Transition to this slide<select id="trSel">${[["none", "None"], ["fade", "Fade"], ["slide", "Slide in"], ["zoom", "Zoom"]].map(([v, n]) => `<option value="${v}"${(slide().tr || "none") === v ? " selected" : ""}>${n}</option>`).join("")}</select></label>
+      <div class="grp" style="margin-top:10px"><button type="button" id="trAll">Use this transition on all slides</button></div><hr>
+      <p class="help"><b>Click</b> a box to select it, <b>Shift+click</b> or drag on empty space to select many. <b>Drag</b> to move, pull the white corners to resize (Shift keeps the shape), the blue dot rotates.<br><b>Double-click</b> text or a table cell to type.<br>Ctrl+C / Ctrl+V copy and paste (also to another slide), Ctrl+D duplicate, Ctrl+A select all, Delete, arrow keys, Ctrl+Z undo, Ctrl+S save. Hold Alt while dragging to stop snapping.</p>`;
+    p.querySelector("#trSel").onchange = e => change(() => slide().tr = e.target.value);
+    p.querySelector("#trAll").onclick = () => change(() => deck.slides.forEach(s => s.tr = slide().tr || "none"));
+    return;
+  }
+  if (list.length > 1) {
+    p.innerHTML = `<h3>${list.length} boxes selected</h3><p class="help">Line them up:</p>
+      <div class="grp">${[["l", "⯇ Left"], ["c", "Centre"], ["r", "Right ⯈"], ["t", "⯅ Top"], ["m", "Middle"], ["b", "Bottom ⯆"]].map(([v, n]) => `<button type="button" data-al2="${v}">${n}</button>`).join("")}</div>
+      <div class="grp"><button type="button" data-dist="h" ${list.length < 3 ? "disabled" : ""}>Space evenly ↔</button><button type="button" data-dist="v" ${list.length < 3 ? "disabled" : ""}>Space evenly ↕</button></div>
+      <div class="grp"><button type="button" data-z="front">Bring to front</button><button type="button" data-z="back">Send to back</button><button type="button" id="dupBtn">Copy</button></div>
+      <button class="del" type="button" id="delBtn">Delete all selected</button>`; return;
+  }
+  const o = list[0];
+  const num = (k2, label, step = 1, mn, mx) => `<label>${label}<input type="number" data-k="${k2}" value="${o[k2] == null ? "" : Math.round(o[k2] * 100) / 100}" step="${step}"${mn != null ? ` min="${mn}"` : ""}${mx != null ? ` max="${mx}"` : ""}></label>`;
+  const col = (k2, label) => `<label>${label}<span style="display:flex;gap:6px;align-items:center"><button class="tbtn" type="button" data-pal="${k2}" title="More colours" style="min-height:30px;padding:0 8px">🎨</button><input type="color" data-k="${k2}" value="${/^#[0-9a-f]{6}$/i.test(o[k2] || "") ? o[k2] : "#ffffff"}"><button class="tbtn" type="button" data-clear="${k2}" style="min-height:30px;padding:0 8px">None</button></span></label>`;
+  let h = `<h3>${{ text: "Text box", img: "Picture", shape: "Shape", table: "Table" }[o.t]}${o.lock ? " 🔒" : ""}</h3>`;
+  if (o.t === "text") h += `<div class="grp">
+      <button type="button" data-tog="bold" aria-pressed="${!!o.bold}" title="Bold"><b>B</b></button><button type="button" data-tog="italic" aria-pressed="${!!o.italic}" title="Italic"><i>I</i></button><button type="button" data-tog="underline" aria-pressed="${!!o.underline}" title="Underline"><u>U</u></button><button type="button" data-tog="strike" aria-pressed="${!!o.strike}" title="Strikethrough"><s>S</s></button>
+      <button type="button" data-al="left" aria-pressed="${(o.align || "left") === "left"}" title="Left">⯇</button><button type="button" data-al="center" aria-pressed="${o.align === "center"}" title="Centre">≡</button><button type="button" data-al="right" aria-pressed="${o.align === "right"}" title="Right">⯈</button>
+      <button type="button" data-va="top" aria-pressed="${(o.va || "top") === "top"}" title="Text at top">⤒</button><button type="button" data-va="middle" aria-pressed="${o.va === "middle"}" title="Text in middle">⇕</button><button type="button" data-va="bottom" aria-pressed="${o.va === "bottom"}" title="Text at bottom">⤓</button>
+      <button type="button" data-list="ul" title="Bullets">•</button><button type="button" data-list="ol" title="Numbers">1.</button><button type="button" data-fs="-2" title="Smaller">A−</button><button type="button" data-fs="2" title="Bigger">A+</button></div>
+    <div class="row2">${num("fs", "Size", 1, 8, 200)}<label>Font<select data-k="font">${Object.entries(FONTN).map(([v, n]) => `<option value="${v}"${o.font === v ? " selected" : ""}>${n}</option>`).join("")}</select></label></div>
+    <div class="row2">${col("color", "Text colour")}${col("fill", "Box colour")}</div>
+    <div class="row2">${num("lh", "Line spacing", 0.05, 0.8, 3)}${num("ls", "Letter spacing", 0.5, -5, 30)}</div>
+    <p class="help">While typing, select words and press Ctrl+B / Ctrl+I / Ctrl+U to format just those words.</p>`;
+  if (o.t === "shape") h += `<div class="row2"><label>Shape<select data-k="shape">${Object.entries(K.SHAPES).map(([v, n]) => `<option value="${v}"${o.shape === v ? " selected" : ""}>${n}</option>`).join("")}</select></label>${num("sw", "Border width", 1, 0, 40)}</div>
+    <div class="row2">${col("fill", "Fill")}${col("stroke", "Border")}</div>`;
+  if (o.t === "shape" || (o.t === "text" && o.fill)) h += `<div class="row2">${col("fill2", "Gradient to")}${num("gang", "Gradient angle", 15, 0, 360)}</div>${o.t === "shape" && /^(rect|round)$/.test(o.shape) || o.t === "text" ? `<div class="row2">${num("rad", "Round corners", 2, 0, 400)}</div>` : ""}`;
+  if (o.t === "img") h += `<label style="margin-bottom:10px">Picture file or https link<input type="text" data-k="src" value="${E(o.src || "")}"></label>
+    <div class="grp"><button type="button" id="replImg">Replace picture</button><button type="button" id="ratio">Fix stretched</button></div>
+    <div class="row2"><label>Fit<select data-k="fit">${[["contain", "Whole picture"], ["cover", "Fill box (crop)"], ["fill", "Stretch"]].map(([v, n]) => `<option value="${v}"${(o.fit || "contain") === v ? " selected" : ""}>${n}</option>`).join("")}</select></label>${num("rad", "Round corners", 2, 0, 400)}</div>
+    <div class="row2">${col("stroke", "Border")}${num("sw", "Border width", 1, 0, 40)}</div>`;
+  if (o.t === "table") h += `<div class="grp"><button type="button" data-tb="r+">＋ Row</button><button type="button" data-tb="r-">− Row</button><button type="button" data-tb="c+">＋ Column</button><button type="button" data-tb="c-">− Column</button><button type="button" data-tog="head" aria-pressed="${!!o.head}">Heading row</button></div>
+    <div class="row2">${num("fs", "Text size", 1, 8, 80)}${col("color", "Text colour")}</div><div class="row2">${col("headFill", "Heading fill")}${col("headColor", "Heading text")}</div><div class="row2">${col("border", "Lines")}</div>
+    <p class="help">Double-click a cell to type in it.</p>`;
+  h += `<hr><div class="row2">${num("op", "Opacity (0–1)", 0.05, 0.05, 1)}${num("rot", "Rotate (°)", 1, -360, 360)}</div>
+    <div class="grp"><button type="button" data-tog="shadow" aria-pressed="${!!o.shadow}">Shadow</button><button type="button" data-tog="lock" aria-pressed="${!!o.lock}">${o.lock ? "🔒 Locked" : "Lock"}</button></div>
+    <label>Animation (students see it)<select data-k="anim">${Object.entries(ANIMS).map(([v, n]) => `<option value="${v}"${(o.anim || "") === v ? " selected" : ""}>${n}</option>`).join("")}</select></label>
+    <label style="margin-top:8px">Link when clicked (https://…, page.html or slide number)<input type="text" data-k="link" value="${E(o.link || "")}"></label>
+    <hr><div class="row2">${num("x", "Left")}${num("y", "Top")}</div><div class="row2">${num("w", "Width")}${num("h", "Height")}</div>
+    <div class="grp"><button type="button" data-z="front">To front</button><button type="button" data-z="fwd">Forward</button><button type="button" data-z="bwd">Backward</button><button type="button" data-z="back">To back</button></div>
+    <div class="grp"><button type="button" data-al2="c">Centre on slide ↔</button><button type="button" data-al2="m">Centre on slide ↕</button><button type="button" id="dupBtn">Copy</button></div>
+    <button class="del" type="button" id="delBtn">Delete</button>`;
+  p.innerHTML = h;
+}
+$("props").addEventListener("change", e => { const t = e.target, key = t.dataset.k; if (!key || !sels.length) return;
+  change(() => { const o = elById(sels[0]); let v = t.type === "number" ? (t.value === "" ? null : +t.value) : t.value;
+    if (v === null || v === "") delete o[key]; else o[key] = v; if (key === "op" && o.op >= 1) delete o.op; }); });
+$("props").addEventListener("input", e => { const t = e.target; if (t.type === "color" && sels.length) { elById(sels[0])[t.dataset.k] = t.value; drawCanvas(); } });
+$("props").addEventListener("click", e => { const pb = e.target.closest("[data-pal]"); if (pb && sels.length) { const k = pb.dataset.pal;
+    Ribbon.palette(pb, c => { const inp = $("props").querySelector(`input[type=color][data-k="${k}"]`); if (c) { if (inp) { inp.value = c; inp.dispatchEvent(new Event("change", { bubbles: true })); } } else { const cl = $("props").querySelector(`[data-clear="${k}"]`); if (cl) cl.click(); } }); return; } });
+$("props").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || !sels.length) return; const list = selEls(), o = list[0];
+  if (b.id === "delBtn") return delSel();
+  if (b.id === "dupBtn") return dupSel();
+  if (b.id === "replImg") { const f = document.createElement("input"); f.type = "file"; f.accept = "image/*"; f.onchange = async () => { if (!f.files[0]) return; try { const p2 = await uploadPicture(f.files[0]); change(() => o.src = p2.path); } catch (er) { alert(er.message); } }; return f.click(); }
+  if (b.id === "ratio") { const im = $("canvas").querySelector(`.sk-el[data-id="${CSS.escape(o.id)}"] img`); if (im && im.naturalWidth) change(() => o.h = Math.round(o.w * im.naturalHeight / im.naturalWidth)); return; }
+  if (b.dataset.clear) return change(() => delete o[b.dataset.clear]);
+  if (b.dataset.tog) return change(() => { o[b.dataset.tog] = !o[b.dataset.tog]; if (!o[b.dataset.tog]) delete o[b.dataset.tog]; });
+  if (b.dataset.al) return change(() => o.align = b.dataset.al);
+  if (b.dataset.va) return change(() => { o.va = b.dataset.va; if (o.va === "top") delete o.va; });
+  if (b.dataset.fs) return change(() => o.fs = Math.max(8, (+o.fs || 28) + +b.dataset.fs));
+  if (b.dataset.z) return change(() => { const all = slide().els.slice().sort((p1, q1) => (p1.z || 1) - (q1.z || 1)); const zs = all.map(x => x.z || 1);
+    if (b.dataset.z === "front") list.forEach((x, n) => x.z = Math.max(...zs) + 1 + n);
+    if (b.dataset.z === "back") list.forEach((x, n) => x.z = Math.min(...zs) - list.length + n);
+    if (b.dataset.z === "fwd" || b.dataset.z === "bwd") { const i = all.indexOf(o), j = i + (b.dataset.z === "fwd" ? 1 : -1); if (all[j]) { all.splice(i, 1); all.splice(j, 0, o); all.forEach((x, n) => x.z = n + 1); } } });
+  if (b.dataset.al2) return change(() => {
+    const one = list.length === 1, L = one ? 0 : Math.min(...list.map(x => x.x)), R = one ? K.W : Math.max(...list.map(x => x.x + x.w)), T = one ? 0 : Math.min(...list.map(x => x.y)), B = one ? K.H : Math.max(...list.map(x => x.y + x.h));
+    list.forEach(x => { if (x.lock) return; const a = b.dataset.al2;
+      if (a === "l") x.x = L; if (a === "r") x.x = R - x.w; if (a === "c") x.x = Math.round((L + R) / 2 - x.w / 2);
+      if (a === "t") x.y = T; if (a === "b") x.y = B - x.h; if (a === "m") x.y = Math.round((T + B) / 2 - x.h / 2); }); });
+  if (b.dataset.dist) return change(() => { const hz = b.dataset.dist === "h", s2 = list.slice().sort((p1, q1) => hz ? p1.x - q1.x : p1.y - q1.y);
+    const total = s2.reduce((a, x) => a + (hz ? x.w : x.h), 0), span = hz ? s2[s2.length - 1].x + s2[s2.length - 1].w - s2[0].x : s2[s2.length - 1].y + s2[s2.length - 1].h - s2[0].y, gap = (span - total) / (s2.length - 1);
+    let pos = hz ? s2[0].x : s2[0].y; s2.forEach(x => { if (hz) { x.x = Math.round(pos); pos += x.w + gap; } else { x.y = Math.round(pos); pos += x.h + gap; } }); });
+  if (b.dataset.list) return change(() => { const tag = b.dataset.list, d = document.createElement("div"); d.innerHTML = K.clean(o.html);
+    const lis = d.querySelectorAll("li"); const lines = lis.length ? [...lis].map(l => l.innerHTML) : d.innerHTML.split(/<br>|<\/div><div>|<\/p><p>/).map(x => x.replace(/<\/?(div|p)>/g, "")).filter(x => x.trim());
+    const same = d.firstElementChild && d.firstElementChild.tagName.toLowerCase() === tag && lis.length;
+    o.html = same ? lines.join("<br>") : `<${tag}>${lines.map(x => `<li>${x}</li>`).join("")}</${tag}>`; });
+  if (b.dataset.tb) return change(() => { const R = o.rows, n = R[0].length;
+    if (b.dataset.tb === "r+") R.push(Array(n).fill("")); if (b.dataset.tb === "r-" && R.length > 1) R.pop();
+    if (b.dataset.tb === "c+") R.forEach(r => r.push("")); if (b.dataset.tb === "c-" && n > 1) R.forEach(r => r.pop()); });
+});
+
+// ---------- upload a PowerPoint (.pptx) – everything becomes editable ----------
+$("importPpt").onclick = () => $("pptFile").click();
+$("pptFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    stat("Reading PowerPoint…");
+    if (!window.PptxImport) await new Promise((ok, no) => { const s = document.createElement("script"); s.src = "assets/pptx-import.js"; s.onload = ok; s.onerror = () => no(new Error("Could not load the importer")); document.head.appendChild(s); });
+    const res = await PptxImport.read(f, { upload: async (blob, name) => { const p2 = await uploadPicture(new File([blob], name, { type: blob.type || "image/png" }), "ppt"); return p2.path; }, progress: m => stat(m) });
+    const mode = deck.slides.every(sl => !(sl.els || []).length) ? "replace" : (confirm(`Add the ${res.slides.length} slides after this slide? (Cancel = replace all slides)`) ? "add" : "replace");
+    change(() => { if (mode === "replace") { deck.slides = res.slides; cur = 0; if (!deck.title || /^Untitled/.test(deck.title)) deck.title = f.name.replace(/\.pptx$/i, ""); }
+      else { deck.slides.splice(cur + 1, 0, ...res.slides); cur++; } clearSel(); });
+    stat(`${res.slides.length} slides added from ${f.name}` + (res.skipped ? ` (${res.skipped} things simplified)` : ""));
+  } catch (er) { stat(""); alert("Could not read this PowerPoint: " + er.message); }
+};
+
+// ---------- open, restore, save ----------
+async function open() {
+  stat("Loading…");
+  try {
+    if (id) { const t = await readRaw(`data/slides/${id}.json`); if (t == null) throw new Error("These slides were not found."); deck = JSON.parse(t); published = deck.chapter || null; }
+    else deck = K.newDeck(qs.get("title") || "Untitled slides");
+  } catch (e) { if (!deck) { deck = K.newDeck("Untitled slides"); } alert(/401|403/.test(e.message) ? "Please log in on the admin login page." : "Could not load: " + e.message); }
+  if (!deck.slides || !deck.slides.length) deck.slides = [K.TEMPLATES.blank.make()];
+  try { const d = JSON.parse(localStorage.getItem(DRAFT()) || "null"); if (d && d.deck && JSON.stringify(d.deck) !== JSON.stringify(deck) && (!deck.updated || d.at > deck.updated)) {
+    $("restore").classList.add("show");
+    $("restoreYes").onclick = () => { hist.push(snap()); deck = d.deck; dirty = true; $("restore").classList.remove("show"); draw(); stat("Not saved"); };
+    $("restoreNo").onclick = () => { localStorage.removeItem(DRAFT()); $("restore").classList.remove("show"); };
+  } } catch (e) {}
+  dirty = false; stat(id ? "Saved" : "New – not saved"); draw();
+}
+async function saveDeck(extra) {
+  stopEdit();
+  deck.title = $("title").value.trim() || deck.title || "Untitled slides";
+  const oldDraft = DRAFT();
+  if (!id) { id = slug(deck.title); const idx = JSON.parse((await readRaw("data/slides/index.json")) || "[]"); let n = 2, base = id; while (idx.some(x => x.id === id)) id = base + "-" + n++; if (!EMBED) history.replaceState(null, "", "slide-editor.html?id=" + id); }
+  deck.id = id; deck.updated = Date.now(); if (extra) Object.assign(deck, extra);
+  stat("Saving…");
+  await writeText(`data/slides/${id}.json`, JSON.stringify(deck), "Admin: slides " + id);
+  const idx = JSON.parse((await readRaw("data/slides/index.json")) || "[]").filter(x => x.id !== id);
+  idx.unshift({ id, title: deck.title, slides: deck.slides.length, updated: deck.updated, chapter: deck.chapter || null, subject: deck.subject || null, pdf: !!deck.pdf });
+  await writeText("data/slides/index.json", JSON.stringify(idx, null, 1), "Admin: slides list");
+  try { localStorage.removeItem(oldDraft); localStorage.removeItem(DRAFT()); } catch (e) {}
+  dirty = false; stat("Saved ✓");
+}
+$("saveBtn").onclick = async () => { try { await saveDeck(); } catch (e) { stat("Not saved"); alert("Could not save: " + e.message); } };
+window.addEventListener("beforeunload", e => { if (dirty && !EMBED) { e.preventDefault(); e.returnValue = ""; } });
+
+// ---------- publish to a chapter ----------
+let SUBS = [], NOTES = {};
+$("pubBtn").onclick = async () => {
+  stopEdit(); $("pMsg").textContent = "Loading chapters…"; $("pubDlg").showModal();
+  try {
+    [SUBS, NOTES] = await Promise.all([readData("data/subjects.js", "SUBJECTS", []), readData("data/notes.js", "NOTES", {})]);
+    $("pSub").innerHTML = SUBS.map(s => `<option value="${E(s.id)}"${deck.subject === s.id ? " selected" : ""}>${E(s.name)}</option>`).join("");
+    fillCh(); $("pPdf").checked = !!deck.pdf; $("pMsg").textContent = "";
+  } catch (e) { $("pMsg").textContent = "Could not load chapters: " + e.message; }
+};
+function fillCh() {
+  const s = SUBS.find(x => x.id === $("pSub").value); if (!s) return;
+  $("pChap").innerHTML = s.chapters.map((c, i) => `<option value="${E(c.id)}"${deck.chapter === c.id ? " selected" : ""}>${i + 1}. ${E(c.title)}${NOTES[c.id] && NOTES[c.id].deck && NOTES[c.id].deck !== id ? " (has other slides)" : NOTES[c.id] ? " (has notes)" : ""}</option>`).join("") + `<option value="__new">+ New chapter</option>`;
+  newCh();
+}
+const newCh = () => { const n = $("pChap").value === "__new"; $("pNewWrap").hidden = !n; if (n && !$("pNew").value) $("pNew").value = $("title").value; };
+$("pSub").onchange = fillCh; $("pChap").onchange = newCh;
+$("pCancel").onclick = () => $("pubDlg").close();
+$("pGo").onclick = async () => {
+  const s = SUBS.find(x => x.id === $("pSub").value); if (!s) return;
+  let cid = $("pChap").value, title;
+  if (cid === "__new") { title = $("pNew").value.trim(); if (!title) return $("pMsg").textContent = "Type the new chapter's title.";
+    const same = s.chapters.find(c => !NOTES[c.id] && (c.id === slug(title) || c.title.toLowerCase() === title.toLowerCase())); // reuse a "coming soon" chapter
+    if (same) cid = same.id; else { cid = slug(title); const all = SUBS.flatMap(x => x.chapters.map(c => c.id)); let n = 2, base = cid; while (all.includes(cid)) cid = base + "-" + n++;
+    s.chapters.push({ id: cid, title, sub: "" }); } }
+  const c = s.chapters.find(x => x.id === cid); title = title || c.title; c.ready = true;
+  const pdf = $("pPdf").checked;
+  try {
+    $("pGo").disabled = true; $("pMsg").textContent = "Saving slides… (1 of 3)";
+    // if these slides were on another chapter before, take them off it
+    if (deck.chapter && deck.chapter !== cid && NOTES[deck.chapter] && NOTES[deck.chapter].deck === id) { delete NOTES[deck.chapter].deck; delete NOTES[deck.chapter].pdf;
+      if (!NOTES[deck.chapter].html && !(NOTES[deck.chapter].phases || []).length) { delete NOTES[deck.chapter]; SUBS.forEach(x => x.chapters.forEach(y => { if (y.id === deck.chapter) y.ready = false; })); } }
+    await saveDeck({ chapter: cid, subject: s.id, pdf });
+    const n = NOTES[cid] || { subject: s.id, title, read: deck.slides.length + " slides", exams: [], intro: "" };
+    n.deck = id; n.pdf = pdf; n.title = n.title || title; NOTES[cid] = n;
+    $("pMsg").textContent = "Linking to the chapter… (2 of 3)"; await writeData("data/notes.js", "NOTES", NOTES, "All notes content.");
+    $("pMsg").textContent = "Updating chapter list… (3 of 3)"; await writeData("data/subjects.js", "SUBJECTS", SUBS, "Subjects and chapters. ready: true shows a chapter on the site.");
+    $("pMsg").textContent = `Published! Live in about a minute at note.html?id=${cid}`; published = cid;
+    setTimeout(() => $("pubDlg").close(), 1800);
+  } catch (e) { $("pMsg").textContent = "Could not publish: " + e.message; }
+  $("pGo").disabled = false;
+};
+
+// ---------- present, PDF, PPTX ----------
+$("present").onclick = () => { stopEdit(); $("presentBox").hidden = false; K.viewer(deck, $("presentHost"), {}); const v = $("presentHost").firstChild; v.querySelector(".sk-screen") && K.fit(v.querySelector(".sk-screen")); };
+$("presentClose").onclick = () => { $("presentBox").hidden = true; $("presentHost").innerHTML = ""; };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("presentBox").hidden) $("presentClose").click(); });
+$("xpdf").onclick = () => { stopEdit(); deck.title = $("title").value.trim() || deck.title; K.printDeck(deck); };
+$("xppt").onclick = async () => { stopEdit(); stat("Making PPTX…"); try { await K.exportPptx({ ...deck, title: $("title").value.trim() || deck.title }); stat(dirty ? "Not saved" : "Saved"); } catch (e) { stat(""); alert("Could not make the PowerPoint file: " + e.message); } };
+
+// ---------- ribbon extras ----------
+const doShape = sh => add(sh === "line" ? { t: "shape", shape: "line", x: 200, y: 340, w: 600, h: 20, stroke: "#1F3A93", sw: 6 } : { t: "shape", shape: sh, x: 440, y: 200, w: 300, h: sh === "ellipse" || sh === "star" || sh === "hexagon" ? 300 : 220, fill: "#EEF2FC", stroke: "#1F3A93", sw: 3 });
+const THEMES = { navy: ["Navy and gold", "#141B38", "#FFFFFF"], royal: ["Royal blue", "#1F3A93", "#FFFFFF"], cream: ["Cream paper", "#FBF6EA", "#1E2433"], white: ["Clean white", "#FFFFFF", "#1E2433"], mint: ["Mint", "#E8F5EC", "#0F3D2E"], sky: ["Sky", "#EAF2FF", "#14213D"], rose: ["Rose", "#FDECEF", "#4C1130"] };
+$("ribbon").addEventListener("click", e => {
+  const b = e.target.closest("[data-pop]"); if (!b) return; const k = b.dataset.pop; stopEdit();
+  if (k === "shape") Ribbon.menu(b, Object.entries(K.SHAPES), v => doShape(v));
+  if (k === "bg") Ribbon.palette(b, c => change(() => slide().bg = c || "#FFFFFF"), { noneLabel: "White" });
+  if (k === "theme") Ribbon.menu(b, Object.entries(THEMES).map(([v, t]) => [v, `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid #0003;vertical-align:-2px;margin-right:8px;background:${t[1]}"></span>${t[0]}`]), v => {
+    const [, bgc, ink] = THEMES[v]; change(() => deck.slides.forEach(sl => { sl.bg = bgc; (sl.els || []).forEach(o => { if (o.t === "text") o.color = ink; }); })); stat("Theme applied to all slides"); });
+  if (k === "sym") Ribbon.symbols(b, t => { const ed = document.querySelector("#canvas .sk-el.editing .sk-txt"); if (!ed) return stat("Double-click a text box first, then pick a symbol");
+    ed.focus(); document.execCommand("insertText", false, t); });
+});
+$("ribbon").addEventListener("mousedown", e => { if (e.target.closest("[data-pop=sym]")) e.preventDefault(); });
+$("addText2").onclick = () => $("addText").click(); $("addImg2").onclick = () => $("addImg").click(); $("addTable2").onclick = () => $("addTable").click();
+$("newSlideBtn").onclick = () => addSlide("blank");
+$("dupSlideBtn").onclick = () => change(() => { deck.slides.splice(cur + 1, 0, JSON.parse(JSON.stringify(slide()))); deck.slides[cur + 1].els.forEach(o => o.id = K.uid()); cur++; clearSel(); });
+$("delSlideBtn").onclick = () => { if (deck.slides.length < 2) return stat("A deck needs at least one slide"); if (!confirm(`Delete slide ${cur + 1}?`)) return; change(() => { deck.slides.splice(cur, 1); cur = Math.min(cur, deck.slides.length - 1); clearSel(); }); };
+$("bgAll").onclick = () => change(() => { const c = slide().bg || "#FFFFFF"; deck.slides.forEach(sl => sl.bg = c); });
+// PDF → one slide per page
+$("pdfInBtn").onclick = $("pdfInBtn2").onclick = () => $("pdfFile").click();
+$("pdfFile").onchange = async e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { stat("Reading PDF…");
+    const pages = await Ribbon.pdfPages(await f.arrayBuffer(), 1.6, (i, n) => stat(`Reading PDF page ${i} of ${n}…`)), made = [];
+    for (let i = 0; i < pages.length; i++) { const c = pages[i], data = c.toDataURL("image/jpeg", 0.85), path = `assets/uploads/pdfslide-${Date.now().toString(36)}-${i + 1}.jpg`;
+      K.memory[path] = data; stat(`Saving page ${i + 1} of ${pages.length}…`); await write(path, data.split(",")[1], "Admin: PDF slide");
+      const r = Math.min(K.W / c.width, K.H / c.height), w = Math.round(c.width * r), h = Math.round(c.height * r);
+      made.push({ bg: "#FFFFFF", els: [{ t: "img", id: K.uid(), z: 1, src: path, x: Math.round((K.W - w) / 2), y: Math.round((K.H - h) / 2), w, h }] }); }
+    const blankDeck = deck.slides.every(sl => !(sl.els || []).length);
+    change(() => { if (blankDeck) { deck.slides = made; cur = 0; } else { deck.slides.splice(cur + 1, 0, ...made); cur++; } clearSel(); });
+    stat(`${made.length} slides added from the PDF`);
+  } catch (er) { stat("Could not read the PDF: " + er.message); } };
+$("saveTop").onclick = () => $("saveBtn").click(); $("pubTop").onclick = () => $("pubBtn").click();
+// inside the admin Notes tab: the admin page saves the slides with the chapter
+window.SSCEmbed = {
+  empty: () => !deck || deck.slides.every(sl => !(sl.els || []).length),
+  dirty: () => dirty,
+  async save(extra) { if (extra && extra.title) $("title").value = extra.title; await saveDeck(extra); return id; },
+  ready: false
+};
+open().then(() => { window.SSCEmbed.ready = true; });
+})();
+</script>
+</body>
+</html>

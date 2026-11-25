@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- ssc-build 2/7 dGg= -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact – SSCAspirants_Official</title>
+<meta name="description" content="Mock tests on the latest Eduquity CBT pattern, chapter-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+
+<script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
+</head>
+<body data-page="contact" data-title="Contact">
+<main id="content" class="content">
+<style>
+.legal{max-width:860px;width:100%;margin:0 auto}
+.legal h1{font-size:clamp(1.6rem,3.4vw,2.2rem);margin:0 0 6px}
+.legal h2{font-size:1.15rem;margin:26px 0 8px}
+.legal p,.legal li{line-height:1.75}
+.legal ul{padding-left:22px}
+.legal .upd{color:var(--muted);font-size:.92rem;margin:0 0 18px}
+.legal .box{background:var(--pri-soft);border-radius:14px;padding:14px 18px;margin:14px 0}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:16px 0}
+.cbox{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--bg)}
+.cbox .cic{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--pri-soft);color:var(--pri);font-size:1.2rem;margin-bottom:8px}
+.cbox p{margin:4px 0;font-weight:600;word-break:break-word}.cbox small{color:var(--muted)}
+</style>
+<article class="card legal">
+<h1>Contact us</h1>
+<p class="upd">We usually reply within 2–3 days.</p>
+<div class="cgrid">
+<div class="cbox"><span class="cic">✉</span><b>Email</b><p><a data-email href="#">(email)</a></p><small>For account help, mistakes in notes or tests, data requests and business enquiries.</small></div>
+<div class="cbox"><span class="cic">◎</span><b>Instagram</b><p><a href="https://www.instagram.com/sscaspirants_official/" target="_blank" rel="noopener">@SSCAspirants_Official on Instagram</a></p><small>Daily notes, quizzes and updates. You can also message us there.</small></div>
+</div>
+<h2>Found a mistake in a question?</h2>
+<p>Use the <b>Report</b> button on that question in the test – it reaches us with the question number, so we can fix it fastest.</p>
+<h2>Forgot your password?</h2>
+<p>Use <b>Forgot password?</b> on the login page to get a 6-digit code by email.</p>
+</article>
+</main>
+<script src="data/exams.js"></script>
+<script src="data/site.js"></script>
+<script src="assets/site.js"></script>
+<script>
+// the contact email is set once in Admin → Website
+{const em=(window.SITE&&SITE.shell&&SITE.shell.email)||"";document.querySelectorAll("[data-email]").forEach(a=>{if(em){a.textContent=em;a.href="mailto:"+em;}else{a.textContent="(email coming soon)";a.removeAttribute("href");}});}
+</script>
+</body>
+</html>
