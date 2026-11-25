@@ -80,6 +80,11 @@ function cutHtml(h) {
   const m = /<\/(p|h[1-6]|ul|ol|table|blockquote|li|div)>/gi; m.lastIndex = i; const r = m.exec(h);
   return h.slice(0, r ? r.index + r[0].length : i);
 }
+// "Coming soon" in Admin: students see the name only – none of the notes or questions are sent.
+// (soonLock marks the cut-down copy; the admin gets the full one and can still open it.)
+const soonNote = n => ({ subject: n.subject, title: n.title, read: n.read, exams: n.exams, intro: n.intro, soon: true, soonLock: true });
+const soonTest = t => { const o = {}; for (const k in t) if (!["questions", "secs"].includes(k)) o[k] = t[k];
+  o.questions = (t.questions || []).map(q => (q && q.section ? { section: q.section } : {})); o.soon = true; o.soonLock = true; return o; };
 const preview = n => {
   const out = { subject: n.subject, title: n.title, read: n.read, exams: n.exams, intro: n.intro, locked: true };
   if (n.html) out.html = cutHtml(n.html);
@@ -94,8 +99,8 @@ async function guestData(res, name) {
     if (!res.ok) throw new Error("missing");
     text = await res.text();
     const { data } = readData(text, name);
-    if (name === "NOTES") for (const k in data) { const n = data[k]; if (!later(n)) out[k] = n.free ? n : preview(n); }
-    if (name === "TESTS") for (const k in data) { const t = data[k]; if (t && t.free && !later(t)) out[k] = t; }
+    if (name === "NOTES") for (const k in data) { const n = data[k]; if (!later(n)) out[k] = n.soon ? soonNote(n) : n.free ? n : preview(n); }
+    if (name === "TESTS") for (const k in data) { const t = data[k]; if (t && t.free && !t.soon && !later(t)) out[k] = t; }
     if (name === "SUBJECTS") out = data.map(s => ({ ...s, chapters: s.chapters.map(c => later(c) ? { ...c, ready: false } : c) }));
   } catch (e) {
     // the chapter list holds no notes, so if it can't be read it is sent as it is; notes and tests are never sent unread
@@ -122,7 +127,8 @@ async function hideScheduled(res, name) {
   const body = text.slice(i + mark.length).trim().replace(/;\s*$/, "");
   const data = JSON.parse(body), now = Date.now(), later = o => o && o.publishAt && +o.publishAt > now;
   let out = data;
-  if (name === "TESTS" || name === "NOTES") { out = {}; for (const k in data) if (!later(data[k])) out[k] = data[k]; }
+  if (name === "NOTES") { out = {}; for (const k in data) if (!later(data[k])) out[k] = data[k] && data[k].soon ? soonNote(data[k]) : data[k]; }
+  if (name === "TESTS") { out = {}; for (const k in data) if (!later(data[k])) out[k] = data[k] && data[k].soon ? soonTest(data[k]) : data[k]; }
   if (name === "LIVE_TESTS") out = data.filter(x => !later(x));
   if (name === "SUBJECTS") out = data.map(s => ({ ...s, chapters: s.chapters.map(c => later(c) ? { ...c, ready: false } : c) }));
   if (name === "DAILY") { const today = new Date(now + 5.5 * 3600e3).toISOString().slice(0, 10); out = {}; for (const d in data) if (d <= today) out[d] = data[d]; }
