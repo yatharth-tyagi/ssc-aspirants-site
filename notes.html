@@ -48,7 +48,7 @@
 const subs=document.getElementById("subs"),chaps=document.getElementById("chaps"),E=SSC.esc;
 const SUBJECTS=window.SUBJECTS.filter(s=>!s.exam); // exam-wise subjects show on their exam page (Notes tab)
 let cur=(location.hash||"#polity").slice(1); if(!SUBJECTS.some(s=>s.id===cur)) cur=SUBJECTS.some(s=>s.id==="polity")?"polity":(SUBJECTS[0]||{}).id;
-const ready=c=>!!(window.NOTES&&NOTES[c.id]);
+const ready=c=>!!(window.NOTES&&NOTES[c.id]&&!NOTES[c.id].soonLock);
 let PR={}; // chapter → {done, seen} from the student's account
 const doneIn=s=>s.chapters.filter(c=>ready(c)&&PR[c.id]&&PR[c.id].done).length;
 function draw(){

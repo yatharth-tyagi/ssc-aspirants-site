@@ -329,6 +329,7 @@ let T = tid && window.TESTS && TESTS[tid];
 const toLogin = reg => "/login?next=" + encodeURIComponent(location.pathname + location.search) + (reg ? "#register" : "");
 // not logged in: only tests marked Free open; anything else goes to the login page
 if (window.SSC_GUEST && !T) { location.replace(toLogin()); break main; }
+if (T && T.soonLock) { document.body.innerHTML = `<div class="screen" style="text-align:center;padding:60px 16px"><img src="assets/logo.png" alt="" width="90" style="border-radius:50%"><h1>${E(T.title)}</h1><p class="muted">This test is coming soon.</p><p><a class="btn btn-pri" href="${SSCSeriesUrl(T)}">Back to test series</a></p></div>`; break main; }
 if (tid && !T) { document.body.innerHTML = `<div class="screen" style="text-align:center;padding:60px 16px"><img src="assets/logo.png" alt="" width="90" style="border-radius:50%"><h1>This test is not open yet</h1><p class="muted">It may be scheduled for later. Please check again soon.</p><p><a class="btn btn-pri" href="mock-tests.html">See all mock tests</a></p></div>`; break main; }
 if (!T) {
   const order = SUBJECTS.find(s => s.id === "polity").chapters.map(c => c.id).filter(id => NOTES[id]);

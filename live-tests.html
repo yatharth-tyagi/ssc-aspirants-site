@@ -36,10 +36,13 @@
 <script>
 {
 const E=SSC.esc, L=window.LIVE_TESTS||[];
-document.getElementById("liveTests").innerHTML=L.length?L.map(t=>`<div class="card" data-tcard="${E((/[?&]id=([^&]+)/.exec(t.link)||[,"polity-ch1-4"])[1])}" data-title="${E(t.name)}"><span class="pill ok"><span class="ldot"></span>Live now</span>
+document.getElementById("liveTests").innerHTML=L.length?L.map(t=>{const tk=decodeURIComponent((/[?&]id=([^&]+)/.exec(t.link)||[,"polity-ch1-4"])[1]),soon=!!(window.TESTS&&TESTS[tk]&&TESTS[tk].soonLock);return soon?`<div class="card" data-title="${E(t.name)}"><span class="pill soon">Coming soon</span>
 <b style="font-size:1.08rem">${E(t.name)}</b><div class="meta"><span>${E(t.type)}</span><span>${E(t.exams)}</span></div>
 <div class="meta"><span>${t.questions} questions</span><span>${t.minutes} min</span><span>${E(t.marking)}</span></div>
-<a class="btn btn-pri" href="${t.link}">Start test</a></div>`).join(""):`<p class="muted">New live tests are coming soon.</p>`;
+<span class="btn off" aria-disabled="true">Coming soon</span></div>`:`<div class="card" data-tcard="${E(tk)}" data-title="${E(t.name)}"><span class="pill ok"><span class="ldot"></span>Live now</span>
+<b style="font-size:1.08rem">${E(t.name)}</b><div class="meta"><span>${E(t.type)}</span><span>${E(t.exams)}</span></div>
+<div class="meta"><span>${t.questions} questions</span><span>${t.minutes} min</span><span>${E(t.marking)}</span></div>
+<a class="btn btn-pri" href="${t.link}">Start test</a></div>`;}).join(""):`<p class="muted">New live tests are coming soon.</p>`;
 if(window.SSCTestCards) SSCTestCards();
 }
 </script>

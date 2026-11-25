@@ -209,6 +209,7 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
       <label class="f wide" for="nIntro">Introduction (optional, shown at the top)<textarea id="nIntro" style="min-height:70px;font-family:inherit"></textarea></label>
       <label class="f" for="nWhen">Publish on (optional)<small>Empty = publish now</small><input id="nWhen" type="datetime-local"></label>
       <label class="f ck2" for="nPdf"><input id="nPdf" type="checkbox"> Allow students to download PDF</label>
+      <label class="f" for="nAccess">Students can<select id="nAccess"><option value="open">Read this chapter</option><option value="soon">Only see it as "Coming soon"</option></select></label>
       <label class="f ck2" for="nFree"><input id="nFree" type="checkbox"> Free – anyone can read the full chapter without logging in (otherwise visitors see only a preview)</label>
     </div></details>
   <div class="nt-tabs" role="tablist" aria-label="Chapter content" id="ntabs">
@@ -276,6 +277,7 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
           <div><button class="btn btn-out btn-sm" type="button" id="tSecAdd">＋ Add section</button></div></div>
         <label class="f ck2" for="tLive"><input id="tLive" type="checkbox" checked> Show in Live tests</label>
         <label class="f ck2" for="tStrict"><input id="tStrict" type="checkbox"> Live exam mode (no Pause button)</label>
+        <label class="f" for="tAccess">Students can<select id="tAccess"><option value="open">Take this test</option><option value="soon">Only see it as "Coming soon"</option></select></label>
         <label class="f ck2" for="tFree"><input id="tFree" type="checkbox"> Free – anyone can take this test without logging in</label>
         <label class="f" for="tWhen">Publish on (optional)<small>Empty = publish now</small><input id="tWhen" type="datetime-local"></label>
       </div></div></div>
