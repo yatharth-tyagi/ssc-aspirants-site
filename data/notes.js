@@ -61,7 +61,8 @@ window.NOTES = {
     "a": 1,
     "why": "The 1935 Act provided for the RBI, which began working in 1935."
    }
-  ]
+  ],
+  "pdf": true
  },
  "making": {
   "subject": "polity",
