@@ -1,7 +1,7 @@
 // Builds one exam page (ssc-cgl.html, ssc-chsl.html ...) from data/exams.js and data/topics.js.
 // The page's <body data-exam="cgl"> says which exam to show.
 // The page has tabs, each its own section: Exam pattern, Full mock tests, Section-wise tests,
-// Subject-wise tests, PYQ papers and Notes. The address ends in #pattern, #mock, #sectional, #subject, #pyq or #notes.
+// Subject-wise tests and PYQ papers. The address ends in #pattern, #mock, #sectional, #subject or #pyq.
 (function () {
   // same as SSCTiers in site.js (this file runs before site.js)
   const SSCTiers = window.SSCTiers || (ex => ex.tiers && ex.tiers.length ? ex.tiers : [{ id: "t1", name: ex.stage || "Tier 1", minutes: parseInt(ex.time) || 60, plus: 2, minus: 0.5, negative: ex.negative || "", pattern: ex.pattern || [] }]);
@@ -23,29 +23,13 @@
   const tierOf = t => t.tier || "t1";
   const empty = what => `<div class="card empty"><b>${what} for ${esc(ex.name)}${TIERS.length > 1 ? " " + esc(tier.name) : ""} are coming soon.</b><span>New tests appear here as soon as they are published.</span></div>`;
   const testsOf = types => Object.entries(window.TESTS || {}).filter(([, t]) => (t.exam === ex.id || t.exam === "all") && types.includes(t.type) && (t.exam === "all" || tierOf(t) === tier.id));
-  const tcard = ([id, t]) => card(t.title, `<span>${t.questions.length} questions</span><span>${t.minutes} min</span><span>+${t.plus} / −${t.minus}</span>${t.section ? `<span>${esc(t.section)}</span>` : ""}${t.year ? `<span>${esc(t.year)}${t.shift ? " · " + esc(t.shift) : ""}</span>` : ""}`, t.soonLock ? "" : "test.html?id=" + encodeURIComponent(id), t.soonLock ? "" : id);
+  const tcard = ([id, t]) => card(t.title, `<span>${t.questions.length} questions</span><span>${t.minutes} min</span><span>+${t.plus} / −${t.minus}</span>${t.section ? `<span>${esc(t.section)}</span>` : ""}${t.year ? `<span>${esc(t.year)}${t.shift ? " · " + esc(t.shift) : ""}</span>` : ""}`, "test.html?id=" + encodeURIComponent(id), id);
   const listOf = (types, what) => { const l = testsOf(types); return l.length ? `<div class="tests">${l.map(tcard).join("")}</div>` : empty(what); };
 
   const TABS = [
     ["pattern", "Exam pattern"], ["mock", "Full mock tests"], ["sectional", "Section-wise tests"],
-    ["subject", "Subject-wise tests"], ["pyq", "PYQ papers"], ["notes", "Notes"]
+    ["subject", "Subject-wise tests"], ["pyq", "PYQ papers"]
   ];
-  // ---------- this exam's own notes (Admin → Notes → Exam) ----------
-  const XS = (window.SUBJECTS || []).filter(s => s.exam === ex.id && !s.hide).map(s => ({ ...s, chapters: s.chapters.filter(c => !c.hide) }));
-  const nready = c => !!(window.NOTES && window.NOTES[c.id] && !window.NOTES[c.id].soonLock);
-  let xcur = (XS[0] || {}).id, PR = {};
-  const xdone = s => s.chapters.filter(c => nready(c) && PR[c.id] && PR[c.id].done).length;
-  function notesPanel() {
-    const head = `<div class="sec-head"><h2>${esc(ex.name)} notes</h2><p>Chapter-wise notes made for ${esc(ex.name)}</p></div>`;
-    if (!XS.length) return head + `<div class="card empty"><b>Notes for ${esc(ex.name)} are coming soon.</b><span>Chapters appear here as soon as they are published.</span></div>`;
-    const s = XS.find(x => x.id === xcur) || XS[0], n = s.chapters.filter(nready).length, d = xdone(s), pc = n ? Math.round(d / n * 100) : 0;
-    return head + `<div class="notes-wrap"><nav class="card subjects" aria-label="Subjects">${XS.map(x => { const r = x.chapters.filter(nready).length, dd = xdone(x);
-        return `<button type="button" data-xs="${esc(x.id)}" aria-pressed="${x.id === s.id}">${esc(x.name)}<span>${esc(x.hi || "")}</span>${r && dd ? `<span class="sp">✓ ${dd}/${r} done</span>` : ""}</button>`; }).join("")}</nav>
-      <div class="chapters"><div class="sec-head" style="margin:0;display:block"><h2>${esc(s.name)}</h2><p style="margin:2px 0 0">${n} of ${s.chapters.length} chapters ready${n ? ` · <b>${d} completed (${pc}%)</b>` : ""}</p>${n ? `<div class="pbar2" aria-label="${pc}% completed"><i style="width:${pc}%"></i></div>` : ""}</div>
-      ${s.chapters.map((c, i) => { const dn = nready(c) && PR[c.id] && PR[c.id].done; return `<div class="row${dn ? " dn" : ""}"><span class="num">${dn ? "✓" : String(i + 1).padStart(2, "0")}</span><span class="t"><b>${esc(c.title)}</b><span>${esc(c.sub || "")}</span></span>${nready(c)
-        ? `${dn ? `<span class="donepill">✓ Completed</span>` : ""}<a class="btn ${dn ? "btn-out" : "btn-pri"}" href="note.html?id=${encodeURIComponent(c.id)}">${dn ? "Read again" : PR[c.id] ? "Continue" : "Read notes"}</a>` : `<span class="pill soon">Coming soon</span>`}</div>`; }).join("")}</div></div>`;
-  }
-  const paintNotes = () => { const p = document.getElementById("panel-notes"); if (p) p.innerHTML = PANELS.notes = notesPanel(); };
 
   // ---------- panels (built for the chosen tier) ----------
   function build() {
@@ -94,7 +78,7 @@
     <div class="sec-head"><h2>${esc(ex.name)} ${esc(tier.name)} – previous year papers</h2><p>Year-wise and shift-wise, as timed tests</p></div>
     ${pyqs.length ? years.map(y => `<h3 class="grp">${esc(y)} <span>${pyqs.filter(([, t]) => String(t.year || "Other") === y).length} papers</span></h3><div class="tests">${pyqs.filter(([, t]) => String(t.year || "Other") === y).map(tcard).join("")}</div>`).join("") : empty("Previous year papers")}`;
 
-  return { pattern, mock, sectional, subject, pyq, notes: notesPanel() };
+  return { pattern, mock, sectional, subject, pyq };
   }
   let PANELS = build();
 
@@ -139,19 +123,6 @@
   .tierbar button[aria-pressed="true"]{background:linear-gradient(135deg,#1F3A93,#3F62D1);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(31,58,147,.25)}
   .empty{display:flex;flex-direction:column;gap:4px;text-align:center;padding:26px 18px;border-style:dashed}
   .empty span{color:var(--muted);font-size:.92rem}
-  .notes-wrap{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
-  .subjects{flex:1 1 230px;max-width:280px;display:flex;flex-direction:column;gap:4px}
-  .subjects button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);padding:10px 14px;border-radius:10px;min-height:44px}
-  .subjects button span{font-size:.85rem;color:var(--muted)}
-  .subjects button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink)}
-  .subjects button[aria-pressed="true"] span{color:var(--pri-ink);opacity:.85}
-  .subjects button .sp{font-size:.75rem;font-weight:700;color:var(--ok)}
-  .subjects button[aria-pressed="true"] .sp{color:#C8F2E2}
-  .chapters{flex:999 1 520px;display:flex;flex-direction:column;gap:10px}
-  .pbar2{height:8px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:6px}.pbar2 i{display:block;height:100%;background:linear-gradient(90deg,#25A386,#0F6B5B);border-radius:6px}
-  .row.dn .num{background:var(--ok);color:#fff;border-color:var(--ok)}
-  .donepill{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;font-weight:700;color:var(--ok);background:var(--ok-soft);border-radius:999px;padding:3px 10px;margin-right:6px}
-  @media(max-width:700px){.subjects{max-width:none;flex-direction:row;overflow-x:auto}.subjects button{flex:none}}
   </style>
   <section class="ex-hero">
     <span class="ex-ic" style="background:${ex.color}">${esc(ex.short)}</span>
@@ -201,8 +172,6 @@
     TABS.forEach(([id]) => document.getElementById("panel-" + id).innerHTML = PANELS[id]);
     if (window.SSCTestCards) window.SSCTestCards();
     const u = new URL(location.href); if (tier.id === TIERS[0].id) u.searchParams.delete("tier"); else u.searchParams.set("tier", tier.id); history.replaceState(null, "", u); });
-  box.addEventListener("click", e => { const b = e.target.closest("[data-xs]"); if (!b) return; xcur = b.dataset.xs; paintNotes(); });
-  if (XS.length) fetch("/api/me/progress").then(r => r.ok ? r.json() : null).then(d => { if (!d) return; PR = {}; d.progress.forEach(p => PR[p.chapter] = p); paintNotes(); }).catch(() => {});
   const start = location.hash.slice(1) === "tests" ? "mock" : location.hash.slice(1);
   open(start, !!PANELS[start]);
 

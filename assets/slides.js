@@ -7,6 +7,9 @@
 //   img   { src }
 //   shape { shape: rect | round | ellipse | line, fill, stroke, sw }
 //   table { rows: [[cell html]], head, fs, color, headFill, headColor, border }
+//   video { vid }  (YouTube video id – plays on the students' page)
+// Any element: flipH, flipV (pictures and shapes), bri / con / sat (%), gray (pictures).
+// Slide: hide (students don't see it). Deck: num (slide numbers on every slide).
 (function () {
   const W = 1280, H = 720;
   const FONTS = { Inter: "'Inter',system-ui,sans-serif", Poppins: "'Poppins','Inter',sans-serif", Hind: "'Hind','Inter',sans-serif", Merriweather: "'Merriweather',Georgia,serif", Georgia: "Georgia,serif", Courier: "'Courier New',monospace", Arial: "Arial,Helvetica,sans-serif" }; // single quotes: these go inside style="…"
@@ -15,12 +18,14 @@
   const uid = () => Math.random().toString(36).slice(2, 9);
 
   // only simple formatting is kept in text boxes (no scripts, links or styles)
-  const OK = new Set(["B", "STRONG", "I", "EM", "U", "BR", "DIV", "P", "SPAN", "UL", "OL", "LI", "SUB", "SUP"]);
+  const OK = new Set(["B", "STRONG", "I", "EM", "U", "S", "STRIKE", "MARK", "BR", "DIV", "P", "SPAN", "UL", "OL", "LI", "SUB", "SUP",
+    // equations (MathML)
+    "MATH", "MROW", "MI", "MN", "MO", "MFRAC", "MSQRT", "MROOT", "MSUP", "MSUB", "MSUBSUP", "MTEXT", "MSPACE", "MOVER", "MUNDER", "MUNDEROVER", "MTABLE", "MTR", "MTD"]);
   function clean(html) {
     const doc = new DOMParser().parseFromString("<div>" + (html || "") + "</div>", "text/html");
     const walk = el => [...el.childNodes].forEach(n => {
       if (n.nodeType === 3) return;
-      if (n.nodeType !== 1 || !OK.has(n.tagName)) { if (n.nodeType === 1 && !/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED)$/.test(n.tagName)) { walk(n); n.replaceWith(...n.childNodes); } else n.remove(); return; }
+      if (n.nodeType !== 1 || !OK.has(n.tagName.toUpperCase())) { if (n.nodeType === 1 && !/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED)$/.test(n.tagName)) { walk(n); n.replaceWith(...n.childNodes); } else n.remove(); return; }
       [...n.attributes].forEach(a => n.removeAttribute(a.name));
       walk(n);
     });
@@ -36,12 +41,20 @@
     triangle: "M50 2 98 98 2 98Z", rtri: "M2 2 98 98 2 98Z", diamond: "M50 2 98 50 50 98 2 50Z", hexagon: "M25 3 75 3 98 50 75 97 25 97 2 50Z",
     arrow: "M2 32H62V6L98 50 62 94V68H2Z", larrow: "M98 32H38V6L2 50 38 94V68H98Z", star: "M50 3 62 37 98 37 69 59 80 95 50 73 20 95 31 59 2 37 38 37Z",
     bubble: "M8 4H92Q98 4 98 10V64Q98 70 92 70H42L22 94 26 70H8Q2 70 2 64V10Q2 4 8 4Z", pentagon: "M50 2 98 38 80 98 20 98 2 38Z", chevron: "M2 4H70L98 50 70 96H2L30 50Z",
-    plus: "M36 2H64V36H98V64H64V98H36V64H2V36H36Z", cloud: "M28 84Q4 84 6 62 8 46 24 46 22 22 46 20 60 6 76 22 98 24 94 48 100 70 80 84Z"
+    plus: "M36 2H64V36H98V64H64V98H36V64H2V36H36Z", heart: "M50 92 10 52Q-6 30 14 12 34 0 50 22 66 0 86 12 106 30 90 52Z",
+    octagon: "M30 2H70L98 30V70L70 98H30L2 70V30Z", trapezoid: "M22 4H78L98 96H2Z", para: "M26 4H98L74 96H2Z", cross: "M18 2 50 34 82 2 98 18 66 50 98 82 82 98 50 66 18 98 2 82 34 50 2 18Z",
+    uarrow: "M32 98V38H6L50 2 94 38H68V98Z", darrow: "M32 2V62H6L50 98 94 62H68V2Z", lrarrow: "M2 50 26 14V34H74V14L98 50 74 86V66H26V86Z",
+    bolt: "M58 2 14 56H46L38 98 86 40H54Z", moon: "M64 4Q20 14 20 50 20 86 64 96 30 96 12 70 0 50 12 30 30 4 64 4Z", flag: "M6 2V98M6 6H90L74 30 90 54H6", cloud: "M28 84Q4 84 6 62 8 46 24 46 22 22 46 20 60 6 76 22 98 24 94 48 100 70 80 84Z"
   };
-  const SHAPES = { rect: "Rectangle", round: "Rounded box", ellipse: "Circle / oval", line: "Line", triangle: "Triangle", rtri: "Right triangle", diamond: "Diamond", pentagon: "Pentagon", hexagon: "Hexagon", star: "Star", arrow: "Arrow →", larrow: "Arrow ←", chevron: "Chevron", plus: "Plus", bubble: "Speech bubble", cloud: "Cloud" };
+  const SHAPES = { rect: "Rectangle", round: "Rounded box", ellipse: "Circle / oval", line: "Line", triangle: "Triangle", rtri: "Right triangle", diamond: "Diamond", pentagon: "Pentagon", hexagon: "Hexagon", star: "Star", arrow: "Arrow →", larrow: "Arrow ←", chevron: "Chevron", plus: "Plus", bubble: "Speech bubble", cloud: "Cloud",
+    heart: "Heart", octagon: "Octagon", trapezoid: "Trapezoid", para: "Parallelogram", cross: "Cross ✕", uarrow: "Arrow ↑", darrow: "Arrow ↓", lrarrow: "Arrow ↔", bolt: "Lightning", moon: "Moon", flag: "Flag" };
   const fillOf = e => { const a = color(e.fill), b = color(e.fill2); return a && b ? `linear-gradient(${+e.gang || 135}deg,${a},${b})` : a || "transparent"; };
+  let play = false; // true only on the students' viewer / Present – videos then play
   function elHtml(e, edit) {
-    const fx = `${e.rot ? `transform:rotate(${+e.rot}deg);` : ""}${e.op != null && e.op < 1 ? `opacity:${Math.max(0.05, +e.op)};` : ""}${e.shadow ? "filter:drop-shadow(0 8px 14px rgba(0,0,0,.28));" : ""}`;
+    const flip = e.t !== "text" && e.t !== "table" ? `${e.flipH ? " scaleX(-1)" : ""}${e.flipV ? " scaleY(-1)" : ""}` : "";
+    const tf = `${e.rot ? `rotate(${+e.rot}deg)` : ""}${flip}`.trim();
+    const filt = `${e.shadow ? "drop-shadow(0 8px 14px rgba(0,0,0,.28)) " : ""}${e.t === "img" ? `${e.bri != null && +e.bri !== 100 ? `brightness(${+e.bri}%) ` : ""}${e.con != null && +e.con !== 100 ? `contrast(${+e.con}%) ` : ""}${e.sat != null && +e.sat !== 100 ? `saturate(${+e.sat}%) ` : ""}${e.gray ? "grayscale(1) " : ""}` : ""}`.trim();
+    const fx = `${tf ? `transform:${tf};` : ""}${e.op != null && e.op < 1 ? `opacity:${Math.max(0.05, +e.op)};` : ""}${filt ? `filter:${filt};` : ""}`;
     const box = `left:${e.x}px;top:${e.y}px;width:${e.w}px;height:${e.h}px;z-index:${e.z || 1};${fx}`;
     const a = `class="sk-el sk-${e.t}${e.anim ? " sk-anim-" + esc(e.anim) : ""}" data-id="${esc(e.id)}"${e.link && !edit ? ` data-link="${esc(e.link)}"` : ""} style="${box}"`;
     if (e.t === "text") {
@@ -58,6 +71,10 @@
       const r = e.shape === "ellipse" ? "50%" : e.shape === "round" ? (e.rad ? +e.rad + "px" : "24px") : (e.rad ? +e.rad + "px" : "0");
       return `<div ${a}><div style="width:100%;height:100%;box-sizing:border-box;background:${fillOf(e)};border-radius:${r};${s && sw ? `border:${sw}px solid ${s};` : ""}"></div></div>`;
     }
+    if (e.t === "video") { const v = /^[\w-]{11}$/.test(e.vid || "") ? e.vid : "";
+      if (!v) return `<div ${a}><div class="sk-noimg">Video</div></div>`;
+      return play ? `<div ${a}><iframe src="https://www.youtube-nocookie.com/embed/${v}?rel=0&modestbranding=1&playsinline=1" title="Video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="width:100%;height:100%;border:0;border-radius:8px;background:#000"></iframe></div>`
+        : `<div ${a}><div style="position:relative;width:100%;height:100%;background:#000 url('https://img.youtube.com/vi/${v}/hqdefault.jpg') center/cover;border-radius:8px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:90px;height:64px;border-radius:16px;background:#E00;color:#fff;display:grid;place-items:center;font-size:34px">▶</span></div></div>`; }
     if (e.t === "table") {
       const rows = (e.rows || []).map((r, ri) => `<tr>${r.map((c, ci) => { const h = e.head && ri === 0;
         return `<td data-r="${ri}" data-c="${ci}" style="border:1px solid ${color(e.border) || "#D9D2C2"};${h ? `background:${color(e.headFill) || "#1F3A93"};color:${color(e.headColor) || "#fff"};font-weight:700;` : ""}"${edit ? ' class="sk-cell"' : ""}>${clean(c)}</td>`; }).join("")}</tr>`).join("");
@@ -70,7 +87,9 @@
   function render(slide, host, opt = {}) {
     host.classList.add("sk-host");
     const els = (slide.els || []).slice().sort((p, q) => (p.z || 1) - (q.z || 1));
+    play = !!opt.play;
     host.innerHTML = `<div class="sk-stage" style="background:${color(slide.bg) || "#FFFFFF"}">${els.map(e => elHtml(e, opt.edit)).join("")}
+      ${opt.num ? `<div class="sk-num" aria-hidden="true">${+opt.num}</div>` : ""}
       ${opt.wm ? `<div class="sk-wm" aria-hidden="true"><img src="assets/logo-mark.png" alt=""><span>SSCAspirants_Official</span></div>` : ""}</div>`;
     fit(host);
     return host.firstChild;
@@ -118,11 +137,11 @@
       T({ x: 70, y: 150, w: 1140, h: 520, html: "<ol><li>Point</li><li>Point</li><li>Point</li></ol>", fs: 30 })] }) },
     blank: { name: "Blank", make: () => ({ bg: "#FFFFFF", els: [] }) }
   };
-  const newDeck = title => ({ title: title || "Untitled slides", slides: [TEMPLATES.blank.make()] });
+  const newDeck = title => ({ title: title || "Untitled slides", slides: [TEMPLATES.cover.make(), TEMPLATES.topic.make()] });
 
   // ---------- slide viewer (students) ----------
   function viewer(deck, host, opt = {}) {
-    const slides = deck.slides || [];
+    const slides = (deck.slides || []).filter(s => !s.hide);
     let i = 0;
     host.innerHTML = `<div class="sk-view"><div class="sk-screen"></div>
       <div class="sk-bar"><button class="btn btn-out" type="button" data-k="prev" aria-label="Previous slide">‹ Prev</button>
@@ -131,7 +150,7 @@
       <button class="btn btn-out" type="button" data-k="fs">Full screen</button>
       ${opt.download ? `<button class="btn btn-out" type="button" data-k="pdf">Download PDF</button>` : ""}</div></div>`;
     const view = host.firstChild, scr = view.querySelector(".sk-screen");
-    const go = k => { const old = i; i = Math.max(0, Math.min(slides.length - 1, k)); const sl = slides[i] || { els: [] }; render(sl, scr, { wm: !opt.noWm });
+    const go = k => { const old = i; i = Math.max(0, Math.min(slides.length - 1, k)); const sl = slides[i] || { els: [] }; render(sl, scr, { wm: !opt.noWm, play: true, num: deck.num ? i + 1 : 0 });
       const st = scr.querySelector(".sk-stage"); if (sl.tr && sl.tr !== "none" && old !== i) { st.classList.add("sk-tr-" + sl.tr + (i < old ? "-back" : "")); }
       st.querySelectorAll("[class*='sk-anim-']").forEach((el, n) => el.style.animationDelay = (0.15 + n * 0.35) + "s");
       st.querySelectorAll("[data-link]").forEach(el => { el.style.cursor = "pointer"; el.onclick = () => { const u = el.dataset.link; if (/^https?:\/\//i.test(u)) window.open(u, "_blank", "noopener"); else if (/^\d+$/.test(u)) go(+u - 1); else if (/^[\w./#?=&-]+$/.test(u)) location.href = u; }; });
@@ -156,8 +175,9 @@
   function printDeck(deck) {
     let box = document.getElementById("sk-print");
     if (!box) { box = document.createElement("div"); box.id = "sk-print"; document.body.appendChild(box); }
-    box.innerHTML = (deck.slides || []).map(() => `<div class="sk-page"><div class="sk-pagein"></div></div>`).join("");
-    box.querySelectorAll(".sk-pagein").forEach((h, k) => { render(deck.slides[k], h, { wm: true }); h.style.height = ""; h.querySelector(".sk-stage").style.transform = ""; });
+    const list = (deck.slides || []).filter(s => !s.hide);
+    box.innerHTML = list.map(() => `<div class="sk-page"><div class="sk-pagein"></div></div>`).join("");
+    box.querySelectorAll(".sk-pagein").forEach((h, k) => { render(list[k], h, { wm: true, num: deck.num ? k + 1 : 0 }); h.style.height = ""; h.querySelector(".sk-stage").style.transform = ""; });
     printNow("sk-printing", deck.title);
   }
   function printNow(cls, title) {
@@ -185,9 +205,10 @@
         if (e.t === "img" && src(e.src)) { try { s.addImage({ ...box, data: await dataUrl(src(e.src)) }); } catch (er) {} }
         if (e.t === "shape") {
           if (e.shape === "line") s.addShape(p.ShapeType.line, { x: box.x, y: box.y + box.h / 2, w: box.w, h: 0, line: { color: hex(e.stroke || e.fill || "#1F3A93"), width: Math.max(1, (+e.sw || 4) * 0.75) } });
-          else s.addShape(({ ellipse: p.ShapeType.ellipse, round: p.ShapeType.roundRect, triangle: p.ShapeType.triangle, rtri: p.ShapeType.rtTriangle, diamond: p.ShapeType.diamond, hexagon: p.ShapeType.hexagon, pentagon: p.ShapeType.pentagon, star: p.ShapeType.star5, arrow: p.ShapeType.rightArrow, larrow: p.ShapeType.leftArrow, chevron: p.ShapeType.chevron, plus: p.ShapeType.plus, bubble: p.ShapeType.wedgeRoundRectCallout, cloud: p.ShapeType.cloud })[e.shape] || p.ShapeType.rect,
-            { ...box, fill: color(e.fill) ? { color: hex(e.fill) } : { type: "none" }, line: color(e.stroke) && +e.sw ? { color: hex(e.stroke), width: +e.sw * 0.75 } : { type: "none" }, rectRadius: e.shape === "round" ? 0.25 : undefined, rotate: +e.rot || 0 });
+          else s.addShape(({ ellipse: p.ShapeType.ellipse, round: p.ShapeType.roundRect, triangle: p.ShapeType.triangle, rtri: p.ShapeType.rtTriangle, diamond: p.ShapeType.diamond, hexagon: p.ShapeType.hexagon, pentagon: p.ShapeType.pentagon, star: p.ShapeType.star5, arrow: p.ShapeType.rightArrow, larrow: p.ShapeType.leftArrow, chevron: p.ShapeType.chevron, plus: p.ShapeType.plus, bubble: p.ShapeType.wedgeRoundRectCallout, cloud: p.ShapeType.cloud, heart: p.ShapeType.heart, octagon: p.ShapeType.octagon, trapezoid: p.ShapeType.trapezoid, para: p.ShapeType.parallelogram, cross: p.ShapeType.mathMultiply, uarrow: p.ShapeType.upArrow, darrow: p.ShapeType.downArrow, lrarrow: p.ShapeType.leftRightArrow, bolt: p.ShapeType.lightningBolt, moon: p.ShapeType.moon, flag: p.ShapeType.wave })[e.shape] || p.ShapeType.rect,
+            { ...box, fill: color(e.fill) ? { color: hex(e.fill) } : { type: "none" }, line: color(e.stroke) && +e.sw ? { color: hex(e.stroke), width: +e.sw * 0.75 } : { type: "none" }, rectRadius: e.shape === "round" ? 0.25 : undefined, rotate: +e.rot || 0, flipH: !!e.flipH, flipV: !!e.flipV });
         }
+        if (e.t === "video" && /^[\w-]{11}$/.test(e.vid || "")) s.addText("▶ Watch video", { ...box, hyperlink: { url: "https://www.youtube.com/watch?v=" + e.vid }, fontSize: 24, color: "FFFFFF", fill: { color: "CC0000" }, align: "center", valign: "middle" });
         if (e.t === "table") s.addTable((e.rows || []).map((r, ri) => r.map(c => ({ text: toText(c), options: e.head && ri === 0 ? { bold: true, color: hex(e.headColor || "#FFFFFF"), fill: { color: hex(e.headFill || "#1F3A93") } } : {} }))),
           { ...box, fontSize: Math.round((+e.fs || 20) * 0.75), color: hex(e.color || "#1E2433"), border: { type: "solid", color: hex(e.border || "#D9D2C2"), pt: 0.75 } });
       }

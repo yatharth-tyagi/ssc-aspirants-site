@@ -1,3 +1,4 @@
+window.__pp = window.__pp || (() => "/api/me/photo?v=" + Date.now());
 // SSCAspirants_Official – shared layout (side menu, top bar, reading mode, search)
 // Every page has <body data-page="..." data-title="..."> and its content in <main id="content">.
 // This script wraps that content with the side menu and top bar, so the menu lives in ONE place.
@@ -15,10 +16,79 @@ window.SSCSeriesUrl = function (t) {
   const tab = { "Full mock test": "mock", "Section-wise test": "sectional", "Subject-wise test": "subject", "Chapter test": "subject", "PYQ paper": "pyq" }[t.type] || "mock";
   return ex.page + (t.tier && t.tier !== "t1" ? "?tier=" + encodeURIComponent(t.tier) : "") + "#" + tab;
 };
+// ---- app (PWA): faster repeat visits, works on weak internet, "Install app" ----
+(function () {
+  const host = location.hostname;
+  if ("serviceWorker" in navigator && (/(^|\.)sscaspirants-official\.(in|com)$/.test(host) || /\.pages\.dev$/.test(host)))
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); window.__installEvt = e; document.dispatchEvent(new Event("ssc-installable")); });
+})();
+// ---- words and colours the owner can change in Admin → Website (Texts & labels, Colours & fonts) ----
+// Every label: [group, key, default]. Pages use SSCL("key") in code, or data-l="key" on an element.
+window.SSC_LABEL_DEFS = [
+  ["Home dashboard", "dash.study", "My study"], ["Home dashboard", "dash.streak0", "🔥 Start your streak today"], ["Home dashboard", "dash.streakN", "🔥 {n}-day streak"],
+  ["Home dashboard", "dash.studySub", "Small daily steps get the selection."], ["Home dashboard", "dash.live", "Today's live test"], ["Home dashboard", "dash.liveNone", "No live test right now"],
+  ["Home dashboard", "dash.liveNoneSub", "New tests are added every week."], ["Home dashboard", "dash.liveBtn0", "See live tests"], ["Home dashboard", "dash.liveBtn", "▶ Start test"],
+  ["Home dashboard", "dash.prog", "Notes progress"], ["Home dashboard", "dash.progDone", "{done} of {total} chapters done"], ["Home dashboard", "dash.cont", "Continue reading"],
+  ["Home dashboard", "dash.contNone", "Start with Indian Polity"], ["Home dashboard", "dash.contNoneSub", "Chapter-wise notes with memory tricks and a quick check."],
+  ["Home dashboard", "dash.contBtn0", "Open notes"], ["Home dashboard", "dash.contBtn", "Continue →"], ["Home dashboard", "dash.contHere", "you stopped here"], ["Home dashboard", "dash.pyq", "PYQ papers"],
+  ["Home dashboard", "dash.quiz", "Daily quiz"], ["Home dashboard", "dash.quizT", "Today's 5-minute quiz"], ["Home dashboard", "dash.quizSub", "Keep your streak alive – a new quiz every day."],
+  ["Home dashboard", "dash.quizBtn", "Play now"], ["Home dashboard", "dash.board", "Leaderboard"],
+  ["Jobs page", "jobs.title", "Jobs update"], ["Jobs page", "jobs.sub", "Latest govt jobs, admit cards, results and exam dates – with official links"],
+  ["Jobs page", "jobs.search", "Search jobs, admit cards, results…"], ["Jobs page", "jobs.all", "All"], ["Jobs page", "jobs.boxJob", "Latest jobs"], ["Jobs page", "jobs.boxAdmit", "Admit card"],
+  ["Jobs page", "jobs.boxResult", "Result & answer key"], ["Jobs page", "jobs.empty", "Nothing here yet."], ["Jobs page", "jobs.cal", "Exam calendar"], ["Jobs page", "jobs.calSub", "Important dates, soonest first"],
+  ["Jobs page", "jobs.calEmpty", "Dates will show here."], ["Jobs page", "jobs.back", "← All job updates"], ["Jobs page", "jobs.dates", "Important dates"], ["Jobs page", "jobs.details", "Details"],
+  ["Jobs page", "jobs.links", "Important links"], ["Jobs page", "jobs.lastDate", "Last date"], ["Jobs page", "jobs.warn", "Always check the official notification before applying. Dates and details can change."],
+  ["Courses", "crs.full", "Complete course"], ["Courses", "crs.subject", "Subject course"], ["Courses", "crs.free", "Free"], ["Courses", "crs.joined", "✓ Joined"],
+  ["Courses", "crs.fAll", "All courses"], ["Courses", "crs.fFull", "Complete courses"], ["Courses", "crs.fSubject", "Subject courses"], ["Courses", "crs.fMine", "My courses"],
+  ["Courses", "crs.joinFree", "Join free"], ["Courses", "crs.enroll", "Enroll now"], ["Courses", "crs.demo", "Free demo lessons are open – try before you join."],
+  ["Courses", "crs.payMsg", "Online payment is starting soon. Follow @SSCAspirants_Official for the launch."], ["Courses", "crs.login", "Please log in to join."],
+  ["Courses", "crs.youJoined", "✓ You have joined"], ["Courses", "crs.tabLessons", "Lessons"], ["Courses", "crs.tabLive", "Live classes"], ["Courses", "crs.tabAbout", "About"],
+  ["Courses", "crs.markDone", "Mark as done"], ["Courses", "crs.done", "✓ Done"], ["Courses", "crs.next", "Next ›"], ["Courses", "crs.locked", "Join the course to open this lesson"],
+  ["Courses", "crs.videoSoon", "Video coming soon"], ["Courses", "crs.readNotes", "Read notes"], ["Courses", "crs.startTest", "Start test"], ["Courses", "crs.openPdf", "Open PDF"],
+  ["Doubts & revision", "dbt.title", "💬 Ask a doubt"], ["Doubts & revision", "dbt.sub", "Stuck somewhere? Ask here – the subject teacher will answer."], ["Doubts & revision", "dbt.ph", "Write your doubt clearly…"],
+  ["Doubts & revision", "dbt.btn", "Ask doubt"], ["Doubts & revision", "dbt.mine", "Your doubts here"], ["Doubts & revision", "dbt.wait", "⏳ Waiting for the teacher's answer"],
+  ["Doubts & revision", "dbt.sent", "Sent! You'll see the answer here."], ["Doubts & revision", "dbt.login", "Please log in to ask a doubt."],
+  ["Doubts & revision", "rev.add", "☆ Add to revision list"], ["Doubts & revision", "rev.in", "★ In your revision list"], ["Doubts & revision", "note.finish", "Finished this chapter?"],
+  ["Doubts & revision", "note.complete", "✓ Mark as complete"], ["Doubts & revision", "note.undo", "↺ Mark as not complete"], ["Doubts & revision", "note.completed", "✓ You have completed this chapter."],
+  ["Test screen", "test.online", "SSCAspirants_Official · Online Examination"], ["Test screen", "test.system", "System Name:"], ["Test screen", "test.cand", "Candidate Name"], ["Test screen", "test.subject", "Subject"],
+  ["Test screen", "test.roll", "Roll No."], ["Test screen", "test.login", "Login"], ["Test screen", "test.practice", "Practice mode – no password needed."], ["Test screen", "test.signin", "Sign In"],
+  ["Test screen", "test.thisTest", "This test"], ["Test screen", "test.agree", "I have read the instructions and I am ready to begin."], ["Test screen", "test.begin", "I am ready to begin"],
+  ["Test screen", "test.ins", "Instructions"], ["Test screen", "test.qp", "Question Paper"], ["Test screen", "test.pause", "Pause"], ["Test screen", "test.fs", "Full screen"],
+  ["Test screen", "test.markNext", "Mark for Review & Next"], ["Test screen", "test.clear", "Clear Response"], ["Test screen", "test.back", "Back"], ["Test screen", "test.saveNext", "Save & Next"],
+  ["Test screen", "test.submitTest", "Submit test"], ["Test screen", "test.submitSec", "Submit section & next"], ["Test screen", "test.keep", "Keep working"],
+  ["Test screen", "test.nv", "Not visited"], ["Test screen", "test.na", "Not answered"], ["Test screen", "test.a", "Answered"], ["Test screen", "test.m", "Marked for review"],
+  ["Test screen", "test.am", "Answered & marked for review (will be evaluated)"]
+];
+(function () {
+  const S = window.SITE || {}, L = S.labels || {}, D = {};
+  window.SSC_LABEL_DEFS.forEach(([, k, v]) => D[k] = v);
+  // SSCL("key", { n: 3 }) → the owner's text (or the default), with {n} filled in
+  window.SSCL = (k, vars) => { let s = (L[k] != null && L[k] !== "" ? L[k] : D[k] != null ? D[k] : k) + ""; if (vars) s = s.replace(/\{(\w+)\}/g, (m, x) => vars[x] != null ? vars[x] : m); return s; };
+  window.SSCLabels = root => (root || document).querySelectorAll("[data-l]").forEach(el => { const v = SSCL(el.dataset.l); if (el.dataset.lAttr) el.setAttribute(el.dataset.lAttr, v); else el.textContent = v; });
+  // colours and fonts (light mode; exam colours also in dark mode)
+  const T = S.theme || {}, hex = c => /^#[0-9a-f]{6}$/i.test(c || "") ? c : "";
+  const FONT_OK = ["Inter", "Poppins", "Hind", "Mukta", "Roboto", "Open Sans", "Lato", "Nunito", "Noto Sans", "Baloo 2", "Montserrat", "Rubik"];
+  let css = "";
+  const light = { pri: "--pri", gold: "--gold", bg: "--bg", side: "--side", ink: "--ink" }, both = { ans: "--ans", nans: "--nans", mrk: "--mrk" };
+  const lv = Object.entries(light).filter(([k]) => hex(T[k])).map(([k, v]) => `${v}:${T[k]}`), bv = Object.entries(both).filter(([k]) => hex(T[k])).map(([k, v]) => `${v}:${T[k]}`);
+  if (hex(T.pri)) lv.push(`--pri-soft:${T.pri}1f`);
+  if (hex(T.side)) lv.push(`--side-active:color-mix(in srgb,${T.side} 75%,#ffffff)`);
+  if (lv.length) css += `:root{${lv.join(";")}}`;
+  if (bv.length) css += `:root,html[data-read="dark"]{${bv.join(";")}}`;
+  const fonts = [T.font, T.head].filter(f => FONT_OK.includes(f) && !/^(Inter|Poppins|Hind)$/.test(f));
+  if (fonts.length) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "https://fonts.googleapis.com/css2?" + fonts.map(f => "family=" + f.replace(/ /g, "+") + ":wght@400;500;600;700").join("&") + "&display=swap"; document.head.appendChild(l); }
+  if (FONT_OK.includes(T.font)) css += `body,button,input,select,textarea{font-family:"${T.font}",system-ui,sans-serif}`;
+  if (FONT_OK.includes(T.head)) css += `h1,h2,h3,.sec-head h2{font-family:"${T.head}","${T.font || "Inter"}",sans-serif!important}`;
+  if (css) { const st = document.createElement("style"); st.id = "ssc-theme"; st.textContent = css; document.head.appendChild(st); }
+  window.SSC_FONTS = FONT_OK;
+})();
 (function () {
   const IG = "https://www.instagram.com/sscaspirants_official/";
   const NAV = [
-    ["index.html", "Home", "home", '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
+    ["home.html", "Home", "home", '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
+    ["jobs.html", "Jobs Update", "jobs", '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>'],
+    ["courses.html", "Courses", "courses", '<path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10v5c0 2 3 4 6 4s6-2 6-4v-5M22 8v6"/>'],
     ["mock-tests.html", "Mock Tests", "tests", '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/>'],
     ["live-tests.html", "Live Tests", "live", '<circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/>'],
     ["notes.html", "Notes", "notes", '<path d="M4 5h7v14H4zM13 5h7v14h-7z"/>'],
@@ -26,7 +96,7 @@ window.SSCSeriesUrl = function (t) {
     ["rank-calculator.html", "Rank Calculator", "rank", '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 11h2M14 11h2M8 15h2M14 15h2M8 19h2M14 19h2"/>'],
     ["daily-quiz.html", "Daily Quiz", "daily", '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14l2 2 4-4"/>'],
     ["leaderboard.html", "Leaderboard", "leaderboard", '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'],
-    ["index.html#about", "About", "about", '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>']
+    ["home.html#about", "About", "about", '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>']
   ];
   // subjects/chapters hidden in Admin → Website are left out everywhere students look
   if (window.SUBJECTS && !/^(admin|admin-team|slide-editor|docs-editor)(\.html)?$/.test(location.pathname.split("/").pop()))
@@ -70,6 +140,7 @@ window.SSCSeriesUrl = function (t) {
   const page = document.body.dataset.page || "";
   const title = document.body.dataset.title || "SSCAspirants_Official";
   const content = document.getElementById("content");
+  SSCLabels();
   if (!content || document.body.dataset.shell === "off") { window.SSC = { store, svg, esc, applyRead }; return; }
 
   // ---- build the shell ----
@@ -77,12 +148,9 @@ window.SSCSeriesUrl = function (t) {
   shell.className = "shell";
   shell.innerHTML = `
     <aside id="side" aria-label="Main menu">
-      <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span><b data-shell="brand">${SH.brand ? esc(SH.brand) : "SSCAspirants<wbr>_Official"}</b></span></a>
+      <a class="brand" href="home.html"><img src="assets/logo.png" alt=""><span><b data-shell="brand">${SH.brand ? esc(SH.brand) : "SSCAspirants<wbr>_Official"}</b></span></a>
       <nav aria-label="Main">${navItems().map(x =>
         `<a class="side-link" href="${esc(x.h)}"${x.id && x.id === page ? ' aria-current="page"' : ""}${x.ext ? ' target="_blank" rel="noopener"' : ""}>${svg(x.ic)}<span>${esc(x.n)}</span></a>`).join("")}</nav>
-      <div class="side-label">Exams</div>
-      <nav aria-label="Exams" class="side-exams">${shownExams().map(e =>
-        `<a class="side-link small" href="${e.page}"${"exam-" + e.id === page ? ' aria-current="page"' : ""}><span class="side-ab">${e.short}</span>${e.name}</a>`).join("")}</nav>
       <div id="sideAcct"></div>
       <a class="side-ig" href="${IG}" target="_blank" rel="noopener">${svg('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>')}Follow on Instagram</a>
     </aside>
@@ -91,42 +159,49 @@ window.SSCSeriesUrl = function (t) {
       <header class="top" style="position:sticky">
         <button class="icon-btn" id="ham" type="button" aria-label="Open or close menu" aria-controls="side" aria-expanded="true">${svg('<path d="M4 6h16M4 12h16M4 18h16"/>')}<span class="ham-label">Menu</span></button>
         ${page === "home" ? "" : `<button class="icon-btn nav-ic" id="backNav" type="button" aria-label="Back" title="Back">${svg('<path d="M15 18l-6-6 6-6"/>')}</button>
-        <a class="icon-btn nav-ic" id="homeNav" href="index.html" aria-label="Home" title="Home">${svg('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>')}</a>`}
+        <a class="icon-btn nav-ic" id="homeNav" href="home.html" aria-label="Home" title="Home">${svg('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>')}</a>`}
         <h1>${title}</h1>
         <button class="icon-btn only-compact" id="searchBtn" type="button" aria-label="Search" aria-expanded="false">${svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>')}</button>
-        <button class="icon-btn only-compact" id="readBtn" type="button" aria-label="Reading mode and text size" aria-expanded="false" style="font-weight:700">Aa</button>
+        <button class="icon-btn only-compact" id="readBtn" type="button" aria-label="Reading mode and text size" aria-expanded="false" title="Light / dark and text size">${svg('<path d="M3 19l5-13 5 13M4.8 14.5h6.4"/><path d="M15 19l3-8 3 8M15.9 16.5h4.2"/>', 22)}</button>
         <label class="search" for="q">${svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 18)}
           <input id="q" type="search" placeholder="Search notes, tests, PYQs" autocomplete="off"></label>
         <div class="read-ctl">
-          <div class="seg" role="group" aria-label="Reading mode">
-            <button type="button" data-read="light" title="Light">Light</button>
-            <button type="button" data-read="dark" title="Dark – for night">Dark</button>
+          <div class="theme-sw" role="group" aria-label="Reading mode">
+            <button type="button" data-read="light" title="Light mode" aria-label="Light mode">${svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>', 18)}<span class="lbl">Light</span></button>
+            <button type="button" data-read="dark" title="Dark mode – for night" aria-label="Dark mode">${svg('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>', 18)}<span class="lbl">Dark</span></button>
           </div>
-          <div class="seg" role="group" aria-label="Text size">
-            <button type="button" id="smaller" aria-label="Smaller text">A−</button>
-            <button type="button" id="bigger" aria-label="Bigger text">A+</button>
+          <div class="size-ctl" role="group" aria-label="Text size">
+            <button type="button" id="smaller" title="Smaller text" aria-label="Smaller text"><span class="a-sm">A</span><span class="pm">−</span></button>
+            <button type="button" id="bigger" title="Bigger text" aria-label="Bigger text"><span class="a-lg">A</span><span class="pm">+</span></button>
           </div>
         </div>
         <a class="avatar" id="avatar" href="account.html" hidden aria-label="Account details"></a>
         <div class="results" id="results" role="listbox" aria-label="Search results"></div>
       </header>
     </div>`;
+  // "Install app" appears in the menu when the browser allows installing
+  const addInstall = () => { if (!window.__installEvt || document.getElementById("installApp")) return;
+    const a = document.createElement("button"); a.type = "button"; a.id = "installApp"; a.className = "side-link"; a.style.cssText = "border:0;background:#ffffff14;width:100%;text-align:left;font:inherit;cursor:pointer;margin-top:8px";
+    a.innerHTML = svg('<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 6v8M9 11l3 3 3-3"/>') + "<span>Install app</span>";
+    a.onclick = async () => { const ev = window.__installEvt; if (!ev) return; ev.prompt(); try { await ev.userChoice; } catch (e) {} window.__installEvt = null; a.remove(); };
+    const ig = shell.querySelector(".side-ig"); ig.parentNode.insertBefore(a, ig); };
+  document.addEventListener("ssc-installable", addInstall); setTimeout(addInstall, 0);
   const main = shell.querySelector(".main");
   document.body.insertBefore(shell, document.body.firstChild);
+  // ---- notice bar (Admin → Website → Notice bar) ----
+  const NB = SITE.notice;
+  if (NB && NB.on && NB.text) { const k = "ssc-nb:" + [...NB.text].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+    if (store.get(k, "") !== "x") { const d = document.createElement("div"); d.className = "notice-bar nb-" + (/^(gold|red|green)$/.test(NB.tone) ? NB.tone : "blue"); d.setAttribute("role", "status");
+      const lk = NB.link && /^(https?:\/\/|[\w./#?=&-]+$)/i.test(NB.link) ? NB.link : "";
+      d.innerHTML = `<span>📢 ${esc(NB.text)}</span>${lk ? `<a href="${esc(lk)}"${/^https?:/i.test(lk) ? ' target="_blank" rel="noopener"' : ""}>${esc(NB.btn || "See more")} →</a>` : ""}<button type="button" aria-label="Close notice">✕</button>`;
+      d.querySelector("button").onclick = () => { store.set(k, "x"); d.remove(); }; main.appendChild(d); } }
   main.appendChild(content);
   const foot = document.createElement("footer");
   foot.className = "foot"; foot.id = "about";
-  foot.innerHTML = `<span data-shell="foot1">${SH.foot1 != null ? clean(SH.foot1) : `© ${new Date().getFullYear()} SSCAspirants_Official · Created by <b>Yatharth Tyagi</b>`}</span>
+  foot.innerHTML = `<span data-shell="foot1">${SH.foot1 != null ? clean(SH.foot1) : `© ${new Date().getFullYear()} SSCAspirants_Official · Created by an idiot and created for idiots`}</span>
     <span data-shell="foot2">${SH.foot2 != null ? clean(SH.foot2) : `Notes, mock tests and PYQs for SSC exams · <a href="${IG}" target="_blank" rel="noopener">@SSCAspirants_Official</a>`}</span>`;
   foot.insertAdjacentHTML("beforeend", `<span class="foot-links"><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a> · <a href="contact.html">Contact</a></span>`);
   main.appendChild(foot);
-  // visitor who is not logged in (free notes and free tests): no menu, only the logo and Log in / Register
-  if (window.SSC_GUEST) {
-    document.body.classList.add("guest");
-    const here = encodeURIComponent(location.pathname + location.search);
-    shell.querySelector(".top h1").insertAdjacentHTML("beforebegin", `<a class="guest-brand" href="/login"><img src="assets/logo.png" alt=""><b>SSCAspirants_Official</b></a>`);
-    shell.querySelector("#avatar").insertAdjacentHTML("beforebegin", `<a class="btn btn-out guest-btn" href="/login?next=${here}">Log in</a><a class="btn btn-pri guest-btn" href="/login?next=${here}#register">Register</a>`);
-  }
 
   // ---- page edits made with "✎ Edit page" (stored in data/site.js) ----
   const pageId = (location.pathname.split("/").pop() || "index").replace(/\.html$/, "") || "index";
@@ -174,20 +249,27 @@ window.SSCSeriesUrl = function (t) {
   // exams hidden in Admin → Website disappear from the exam lists too
   (window.EXAMS || []).filter(e => e.hide).forEach(e => content.querySelectorAll(`a[href="${e.page}"]`).forEach(a => { if (a.classList.contains("exam")) a.hidden = true; }));
 
+  // ---- a test always opens in its own tab, like the real exam window ----
+  document.addEventListener("click", e => { const a = e.target.closest && e.target.closest('a[href^="test.html"]'); if (a && !a.target) { a.target = "_blank"; a.rel = "noopener"; } }, true);
+
   // ---- back: previous page on this site, otherwise the page this one belongs to ----
   const bk = document.getElementById("backNav");
   if (bk) bk.addEventListener("click", () => {
     let same = false; try { same = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (e) {}
-    if (same && history.length > 1) history.back(); else location.href = document.body.dataset.back || "index.html";
+    if (same && history.length > 1) history.back(); else location.href = document.body.dataset.back || "home.html";
   });
 
   // ---- hamburger: desktop collapses the menu, phone slides it in ----
   const ham = document.getElementById("ham"), side = document.getElementById("side");
   const mobile = () => window.matchMedia("(max-width:719px)").matches;
-  if (!mobile() && store.get("ssc-nav", "open") === "closed") document.body.classList.add("nav-closed");
+  // Home: the side menu stays open on computers and tablets (no hamburger); other pages remember open / closed
+  const homeFixed = page === "home";
+  if (homeFixed) document.body.classList.add("home-fixed");
+  if (!homeFixed && !mobile() && store.get("ssc-nav", "open") === "closed") document.body.classList.add("nav-closed");
   const sync = () => ham.setAttribute("aria-expanded", mobile() ? document.body.classList.contains("nav-open") : !document.body.classList.contains("nav-closed"));
   ham.addEventListener("click", () => {
     if (mobile()) document.body.classList.toggle("nav-open");
+    else if (homeFixed) return;
     else { document.body.classList.toggle("nav-closed"); store.set("ssc-nav", document.body.classList.contains("nav-closed") ? "closed" : "open"); }
     sync();
   });
@@ -243,27 +325,46 @@ window.SSCSeriesUrl = function (t) {
   });
   document.addEventListener("click", e => { if (!e.target.closest(".search") && !e.target.closest("#results")) res.classList.remove("show"); });
 
+  // ---- name watermark on notes and course lessons (Admin → Website → Name watermark) ----
+  window.SSCWatermark = function () {
+    const W = SITE.wm || {}, d = window.__me; if (W.on === false || !d) return;
+    const who = d.user || d.admin; if (!who) return;
+    const t = String(W.text || "{name} · {email}").replace(/\{name\}/g, who.name || "").replace(/\{email\}/g, who.email || "")
+      .replace(/\{date\}/g, new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })).trim();
+    if (!t) return;
+    const op = { light: .07, medium: .12, strong: .2 }[W.strength] || .12, x = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const svgT = `<svg xmlns="http://www.w3.org/2000/svg" width="340" height="200"><text x="170" y="100" text-anchor="middle" transform="rotate(-24 170 100)" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#6b7280" fill-opacity="${op}">${x(t)}</text></svg>`;
+    const bg = `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgT)}")`;
+    const els = []; if (W.notes !== false) els.push(...document.querySelectorAll("article.protected")); if (W.courses !== false) els.push(...document.querySelectorAll("#player"));
+    els.forEach(el => { let o = el.querySelector(":scope > .wm-name"); if (!o) { o = document.createElement("div"); o.className = "wm-name"; o.setAttribute("aria-hidden", "true");
+      if (getComputedStyle(el).position === "static") el.style.position = "relative"; el.appendChild(o); } o.style.backgroundImage = bg; });
+  };
+  // lessons and notes redraw their content, so keep the watermark layer in place
+  new MutationObserver(() => { document.querySelectorAll("article.protected,#player").forEach(el => { if (!el.querySelector(":scope > .wm-name")) window.SSCWatermark(); }); })
+    .observe(document.documentElement, { childList: true, subtree: true });
+
   // ---- account: who is logged in (student account and/or admin account – separate logins) ----
-  const logout = async () => { try { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }); } catch (e) {} location.href = "/login"; };
+  const logout = async () => { try { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }); } catch (e) {} location.href = "index.html"; };
   const paintAvatar = u => {
     const av = document.getElementById("avatar");
-    av.innerHTML = u.photo ? `<img src="/api/me/photo?v=${u.photo}" alt="">` : esc((u.name || u.email).trim().charAt(0).toUpperCase());
+    av.innerHTML = u.photo ? `<img src="${window.__pp()}" alt="">` : esc((u.name || u.email).trim().charAt(0).toUpperCase());
     av.title = u.name + " – Account details"; av.hidden = false;
   };
   fetch("/api/auth/me", { credentials: "same-origin" }).then(r => r.status === 401 ? { out: true } : r.json()).then(d => {
+    window.__me = d; window.SSCWatermark && window.SSCWatermark();
     const sa = document.getElementById("sideAcct");
-    if (!d.user && !d.admin) { if (d.out) sa.innerHTML = `<div class="side-label">Account</div><a class="side-link" href="/login">${svg('<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>')}Log in</a>`; return; }
+    if (!d.user && !d.admin) { if (d.out) sa.innerHTML = `<div class="side-label">Account</div><a class="side-link" href="index.html">${svg('<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>')}Log in</a>`; return; }
     let h = `<div class="side-label">Account</div>`;
     if (d.user) {
       paintAvatar(d.user);
       h += `<a class="side-link" href="account.html"${page === "account" ? ' aria-current="page"' : ""}>${svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>')}Account details</a>`;
-      h += `<a class="side-link" href="saved.html"${page === "saved" ? ' aria-current="page"' : ""}>${svg('<path d="M6 3h12v18l-6-4-6 4z"/>')}Saved questions</a>`;
+      h += `<a class="side-link" href="saved.html"${page === "saved" ? ' aria-current="page"' : ""}>${svg('<path d="M6 3h12v18l-6-4-6 4z"/>')}Revision &amp; saved</a>`;
     }
     if (d.admin) h += `<a class="side-link" href="admin.html"${page === "admin" || page === "admin-team" ? ' aria-current="page"' : ""}>${svg('<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>')}Admin panel</a>`;
     if (d.user) h += `<button class="side-link" type="button" id="logoutBtn">${svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>')}Log out</button>`;
     sa.innerHTML = h;
     if (d.user) document.getElementById("logoutBtn").addEventListener("click", logout);
-    if (d.admin && !/^(admin|admin-team)$/.test(pageId)) {
+    if (d.admin && d.admin.role !== "teacher" && !/^(admin|admin-team)$/.test(pageId)) {
       const eb = document.createElement("button"); eb.className = "icon-btn"; eb.type = "button"; eb.id = "editPageBtn"; eb.title = "Edit this page (admin)"; eb.style.cssText = "width:auto;padding:0 12px;font-weight:700;color:var(--pri)";
       eb.textContent = "✎ Edit page"; document.querySelector(".top h1").after(eb);
       const go = () => { if (window.SSCEditor) return window.SSCEditor.start(); const sc = document.createElement("script"); sc.src = "assets/editpage.js"; sc.onload = () => window.SSCEditor.start(); document.body.appendChild(sc); };

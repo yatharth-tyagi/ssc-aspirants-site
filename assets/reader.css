@@ -87,11 +87,12 @@ body.shield .protected{filter:blur(14px)}
 .donebar.on b{color:var(--ok)}
 @media print{.donebar{display:none!important}}
 .doc .docbg{border-radius:14px;padding:clamp(14px,3vw,28px);color:#1E2433}
-.donebar[hidden]{display:none}
-.lockbox{z-index:3}
 
-/* the reading page uses the full width of the screen */
-.content.note-page{max-width:none;gap:18px}
-.note-page .protected{max-width:none}
-.note-page .protected p{max-width:none}
-.lockbox.soonbox::before{content:none}
+/* Doc editor extras: checklist, code box, contents, footnotes, equations, headings */
+.doc ul.chk{list-style:none;padding-left:4px}
+.doc pre{background:#141B38;color:#E8ECF8;padding:12px 14px;border-radius:10px;font:14px/1.5 'Courier New',monospace;white-space:pre-wrap;overflow-x:auto}
+.doc .toc{border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:12px 0}
+.doc .footnotes{font-size:.9em;opacity:.85}
+.doc math{font-size:1.1em}
+.doc h5{font-size:1rem;margin:16px 0 6px}
+.doc img[style*="float"]{max-width:50%}

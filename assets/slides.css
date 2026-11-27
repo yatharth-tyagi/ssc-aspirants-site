@@ -54,3 +54,8 @@
 @media (prefers-reduced-motion:reduce){[class*="sk-anim-"],[class*="sk-tr-"]{animation:none!important}}
 #canvas [class*="sk-anim-"],.th [class*="sk-anim-"],#sk-print [class*="sk-anim-"]{animation:none}
 .sk-txt>div{min-height:1em}
+
+/* slide number (Design → Slide numbers) */
+.sk-num{position:absolute;right:24px;bottom:16px;z-index:9000;min-width:44px;height:36px;padding:0 10px;border-radius:18px;background:#141B38cc;color:#fff;font:700 20px/36px Inter,sans-serif;text-align:center}
+.sk-txt mark{background:#FFE066;color:inherit;padding:0 2px;border-radius:2px}
+.sk-txt math{font-size:1.05em}

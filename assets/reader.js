@@ -12,24 +12,19 @@
     return doc.body.innerHTML;
   }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const id = new URLSearchParams(location.search).get("id"), GUEST = !!window.SSC_GUEST;
+  const id = new URLSearchParams(location.search).get("id");
   const n = window.NOTES && window.NOTES[id];
   const box = document.getElementById("note");
   if (!n) { box.innerHTML = '<h1>Note not found</h1><p><a href="notes.html">Back to all notes</a></p>'; return; }
   const sub = (window.SUBJECTS || []).find(s => s.chapters.some(c => c.id === id)) || { id: "polity", name: "Notes", chapters: [] };
-  const list = sub.chapters.filter(c => window.NOTES[c.id] && !window.NOTES[c.id].soonLock);
+  const list = sub.chapters.filter(c => window.NOTES[c.id]);
   const i = list.findIndex(c => c.id === id), prev = list[i - 1], next = list[i + 1];
   const chNo = sub.chapters.findIndex(c => c.id === id) + 1;
-  const subEx = sub.exam && (window.EXAMS || []).find(e => e.id === sub.exam);
-  const subHref = subEx ? subEx.page + "#notes" : "notes.html#" + sub.id, subName = subEx ? subEx.name + " · " + sub.name : sub.name;
   document.title = n.title + " – SSCAspirants_Official";
   document.getElementById("crumb").textContent = "Chapter " + chNo;
-  const cs = document.getElementById("crumbSub"); cs.textContent = subName; cs.href = subHref;
-  // set to "Coming soon" in Admin: only the name shows
-  if (n.soonLock) { box.innerHTML = `<div class="note-meta"><span class="pill">${esc(sub.name)} · Chapter ${chNo}</span></div><h1>${esc(n.title)}</h1>${n.intro ? `<p>${esc(n.intro)}</p>` : ""}
-    <div class="lockbox soonbox"><div aria-hidden="true" style="font-size:1.8rem">⏳</div><div class="lk-h">Coming soon</div><p class="muted">This chapter will open soon.</p><div class="acts"><a class="btn btn-out" href="${esc(subHref)}">← All ${esc(subName)} notes</a></div></div>`; return; }
+  const cs = document.getElementById("crumbSub"); cs.textContent = sub.name; cs.href = "notes.html#" + sub.id;
   const head = (n.tableHead || []).filter(Boolean);
-  const pager = `<div class="pager">${prev ? `<a class="btn btn-out" href="note.html?id=${prev.id}">← ${esc(prev.title)}</a>` : `<a class="btn btn-out" href="${esc(subHref)}">← All ${esc(subName)} notes</a>`}
+  const pager = `<div class="pager">${prev ? `<a class="btn btn-out" href="note.html?id=${prev.id}">← ${esc(prev.title)}</a>` : `<a class="btn btn-out" href="notes.html#${sub.id}">← All ${esc(sub.name)} notes</a>`}
       ${next ? `<a class="btn btn-pri" href="note.html?id=${next.id}">${esc(next.title)} →</a>` : ""}</div>`;
   const src = v => { v = String(v || "").trim(); if (!v) return ""; if (/^https:\/\//i.test(v)) return v; if (/^(assets\/|\/assets\/)/.test(v)) return v.replace(/^\//, ""); if (/^[a-z0-9._-]+$/i.test(v)) return "assets/uploads/" + v; return ""; };
   const pic = (v, alt) => { const u = src(v); return u ? `<img class="pq-img" src="${esc(u)}" alt="${esc(alt || "")}" loading="lazy">` : ""; };
@@ -38,7 +33,7 @@
   const hasNotes = !!(n.html || (n.phases && n.phases.length));
   const tabs = [hasNotes && ["notes", "📄", "Notes"], n.deck && ["slides", "📊", "Slides"], n.video && n.video.id && ["video", "▶", "Video"], n.quiz && n.quiz.length && ["practice", "❓", "Practice"]].filter(Boolean);
   const notesHtml = () => {
-    if (n.html) return `<div class="doc">${window.DOMPurify ? DOMPurify.sanitize(n.html) : safeHtml(n.html)}</div>`;
+    if (n.html) return `<div class="doc">${(window.DOMPurify ? DOMPurify.sanitize(n.html) : safeHtml(n.html)).replace(/<img /g, '<img loading="lazy" decoding="async" ')}</div>`;
     return `${(n.phases || []).map(p => `<h2>${esc(p.h)}</h2><ol class="tl">${p.items.map(it => `
       <li><span class="yr">${esc(it.yr)}</span><div><h3>${esc(it.t)}</h3>${it.s ? `<small>${esc(it.s)}</small>` : ""}
       <ul>${it.pts.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div></li>`).join("")}</ol>`).join("")}
@@ -58,21 +53,24 @@
     <h1>${esc(n.title)}</h1>${n.intro ? `<p>${esc(n.intro)}</p>` : ""}
     ${tabs.length > 1 ? `<div class="ntabs" role="tablist" aria-label="Chapter">${tabs.map(([id, ic, l]) => `<button type="button" role="tab" data-v="${id}"><span aria-hidden="true">${ic}</span>${l}</button>`).join("")}</div>` : ""}
     ${tabs.map(([id]) => `<section class="npane" data-pane="${id}"${id === "notes" ? "" : ' data-dyn="1"'}>${panes[id]()}</section>`).join("")}
-    ${n.locked ? `<div class="lockbox"><div aria-hidden="true" style="font-size:1.8rem">🔒</div><div class="lk-h">Read the full chapter</div><p class="muted">This is a preview. Log in or register to read the complete notes.</p>
-      <div class="acts"><a class="btn btn-pri" href="/login?next=${encodeURIComponent(location.pathname + location.search)}#register">Register</a><a class="btn btn-out" href="/login?next=${encodeURIComponent(location.pathname + location.search)}">Log in</a></div></div>` : ""}
-    <div class="donebar" id="doneBar"${GUEST ? " hidden" : ""}><span id="doneTxt">Finished this chapter?</span><button class="btn btn-pri" type="button" id="doneBtn">✓ Mark as complete</button></div>
+    <div class="donebar" id="doneBar"><span id="doneTxt"></span><button class="btn btn-pri" type="button" id="doneBtn"></button><button class="btn btn-out" type="button" id="revBtn"></button></div>
+    <section id="doubtBox" data-dyn="1"></section>
     ${pager}`;
 
   // ---- reading progress (kept in the student's account) ----
   let isDone = false;
   const paintDone = () => { const b = document.getElementById("doneBtn"), bar = document.getElementById("doneBar");
-    b.textContent = isDone ? "↺ Mark as not complete" : "✓ Mark as complete"; b.className = "btn " + (isDone ? "btn-out" : "btn-pri");
-    document.getElementById("doneTxt").innerHTML = isDone ? "<b>✓ You have completed this chapter.</b>" : "Finished this chapter?"; bar.classList.toggle("on", isDone); };
+    b.textContent = isDone ? SSCL("note.undo") : SSCL("note.complete"); b.className = "btn " + (isDone ? "btn-out" : "btn-pri");
+    const dt = document.getElementById("doneTxt"); dt.textContent = isDone ? SSCL("note.completed") : SSCL("note.finish"); dt.style.fontWeight = isDone ? "700" : ""; bar.classList.toggle("on", isDone); };
   const post = body => fetch("/api/me/progress", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => {});
-  if (!GUEST) fetch("/api/me/progress").then(r => r.ok ? r.json() : null).then(d => { if (!d) return; const me = d.progress.find(x => x.chapter === id); isDone = !!(me && me.done); paintDone(); }).catch(() => {});
-  if (!GUEST) post({ chapter: id });
+  let inRev = false; const paintRev = () => { const b = document.getElementById("revBtn"); b.textContent = inRev ? SSCL("rev.in") : SSCL("rev.add"); b.setAttribute("aria-pressed", inRev); };
+  fetch("/api/me/progress").then(r => r.ok ? r.json() : null).then(d => { if (!d) return; const me = d.progress.find(x => x.chapter === id); isDone = !!(me && me.done); paintDone();
+    const rv = d.progress.find(x => x.chapter === "R:" + id); inRev = !!(rv && rv.done); paintRev(); }).catch(() => {});
+  document.getElementById("revBtn").addEventListener("click", () => { inRev = !inRev; paintRev(); post({ chapter: "R:" + id, done: inRev }); });
+  if (window.DoubtBox) DoubtBox.mount(document.getElementById("doubtBox"), { key: "note:" + id, subject: sub.id, where: n.title });
+  post({ chapter: id });
   document.getElementById("doneBtn").addEventListener("click", () => { isDone = !isDone; paintDone(); post({ chapter: id, done: isDone }); });
-  paintDone();
+  paintDone(); paintRev();
 
   // ---- tabs ----
   let deck = null, view = null;
@@ -107,7 +105,7 @@
   wirePractice();
 
   // ---- optional PDF download (notes or slides, whichever is open) ----
-  if (n.pdf && !GUEST && (hasNotes || n.deck)) {
+  if (n.pdf && (hasNotes || n.deck)) {
     box.querySelector(".note-meta").insertAdjacentHTML("beforeend", `<button class="btn btn-out pdf-btn" type="button" id="pdfBtn" style="margin-left:auto;min-height:36px;padding:6px 14px">Download PDF</button>`);
     document.getElementById("pdfBtn").onclick = () => { if (view === "slides" && deck && deck.slides) SlideKit.printDeck(deck); else if (hasNotes) { show("notes"); SlideKit.printNow("note-printing", n.title); } else if (deck && deck.slides) SlideKit.printDeck(deck); };
   }

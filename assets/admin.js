@@ -65,7 +65,7 @@
     writeB64(path, b64FromText(`// ${note}\n// Saved from the admin page on ${new Date().toISOString().slice(0, 10)}.\nwindow.${name} = ${JSON.stringify(value, null, 1)};\n`), `Admin: update ${path}`);
 
   // ---------- data ----------
-  const D = { NOTES: {}, SUBJECTS: [], TESTS: {}, LIVE: [], NEWS: [], EXAMS: [], TOPICS: {}, SITE: {}, DAILY: {} };
+  const D = { NOTES: {}, SUBJECTS: [], TESTS: {}, LIVE: [], NEWS: [], EXAMS: [], TOPICS: {}, SITE: {}, DAILY: {}, INSTR: { general: "", exams: {} }, COURSES: [], JOBS: [] };
   const FILES = {
     NOTES: ["data/notes.js", "NOTES", "All notes content."],
     SUBJECTS: ["data/subjects.js", "SUBJECTS", "Subjects and chapters. ready: true shows a chapter on the site."],
@@ -75,6 +75,9 @@
     EXAMS: ["data/exams.js", "EXAMS", "One entry per exam. Each exam has its own page (e.g. ssc-cgl.html) built from this data. hide: true hides it from the lists."],
     TOPICS: ["data/topics.js", "TOPICS", "Subject-wise (topic-wise) tests for each section. A topic with a link opens that test."],
     DAILY: ["data/daily.js", "DAILY", "Daily quiz: one entry per date (YYYY-MM-DD). Students only see dates up to today."],
+    JOBS: ["data/jobs.js", "JOBS", "Jobs update (Admin → Jobs). Open to everyone. cat: job | admit | result | key | date. Dates are YYYY-MM-DD. links: [[label, url]] – official websites only."],
+    COURSES: ["data/courses.js", "COURSES", "Courses (Admin → Courses). A course has chapters; each chapter has lessons. type: subject | full. price 0 = free. Lessons with free: true are a free demo. Lesson kinds: video { vid } · live { when, link, vid } · notes { note } · pdf { pdf } · test { test }."],
+    INSTR: ["data/instructions.js", "INSTRUCTIONS", "Test instructions shown before every test (Admin → Instructions). general: every exam; exams.<exam id>: extra notes. {exam} {test} {minutes} {questions} {marks} {plus} {minus} {sections} are filled in for each test."],
     SITE: ["data/site.js", "SITE", "Website texts, pictures, menu and sections changed from the admin page (✎ Edit page and Admin → Website)."]
   };
   // date-time box ⇄ time stamp
@@ -83,21 +86,31 @@
   const whenText = t => t && t > Date.now() ? ` · <span class="pill soon">Goes live ${new Date(t).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>` : "";
   const save = k => writeData(FILES[k][0], FILES[k][1], D[k], FILES[k][2]);
 
+  // ---------- who is logged in: owner/admin = everything, teacher = only notes for their subjects ----------
+  let ME = null;
+  const isTeacher = () => !!(ME && ME.role === "teacher");
+  const mySubs = () => (ME && ME.subjects) || [];
+  const meReady = fetch("/api/admin/me").then(r => r.json()).then(d => { ME = d.admin || null; return ME; }).catch(() => null);
+
   // ---------- tabs ----------
   let connected = false;
   const tabs = [...document.querySelectorAll("#atabs [data-t]")];
   function openTab(t) {
     if (!connected && t !== "connect") t = "connect";
+    if (isTeacher() && !teacherTabs().includes(t)) t = "notes";
     tabs.forEach(b => b.setAttribute("aria-selected", b.dataset.t === t));
     document.querySelectorAll("[data-p]").forEach(p => p.hidden = p.dataset.p !== t);
   }
   tabs.forEach(b => b.addEventListener("click", () => openTab(b.dataset.t)));
-  const lockTabs = () => tabs.forEach(b => b.disabled = !connected && b.dataset.t !== "connect");
+  const teacherTabs = () => ["connect", "notes", "tests", "courses", "doubts", ...(ME && ME.canInstr ? ["instr"] : [])];
+  const lockTabs = () => tabs.forEach(b => { b.disabled = !connected && b.dataset.t !== "connect"; b.hidden = isTeacher() && !teacherTabs().includes(b.dataset.t); });
   lockTabs(); openTab("connect");
 
   // ---------- connect (runs by itself when the page opens) ----------
   async function connect() {
     say("Loading your website data…", "info", true);
+    await meReady;
+    if (isTeacher()) { const tl = document.querySelector('.adminbar a[href="admin-team.html"]'); if (tl) tl.hidden = true; $("nDel").hidden = true; }
     try {
       const repo = await (await gh("")).json();
       if (repo.permissions && !repo.permissions.push) throw new Error("The GITHUB_TOKEN in Cloudflare can't save. Give it Contents: Read and write.");
@@ -107,10 +120,14 @@
       Object.assign(D, { NOTES: n, SUBJECTS: s, TESTS: t, LIVE: l, NEWS: w });
       const [ex, tp, si] = await Promise.all([readData("data/exams.js", "EXAMS", window.EXAMS || []), readData("data/topics.js", "TOPICS", window.TOPICS || {}), readData("data/site.js", "SITE", {})]);
       Object.assign(D, { EXAMS: ex, TOPICS: tp, SITE: si || {}, DAILY: (await readData("data/daily.js", "DAILY", {})) || {} });
+      D.COURSES = (await readData("data/courses.js", "COURSES", window.COURSES || [])) || [];
+      D.JOBS = (await readData("data/jobs.js", "JOBS", window.JOBS || [])) || [];
+      D.INSTR = (await readData("data/instructions.js", "INSTRUCTIONS", window.INSTRUCTIONS || null)) || { general: "", exams: {} }; if (!D.INSTR.exams) D.INSTR.exams = {};
       connected = true; lockTabs();
       $("connInfo").textContent = `Connected to ${repo.full_name}. ${Object.keys(n).length} notes chapters, ${Object.keys(t).length} tests, ${l.length} live tests loaded.`;
-      fillSubjects(); drawTests(); drawLive(); drawNews();
-      say("Ready. You can add notes and tests.", "ok");
+      fillSubjects(); nbShow(false); fillInstr(); drawTests(); if (window.AdminCourses) AdminCourses.init(); if (window.AdminExtras) AdminExtras.init(); if (window.AdminJobs) AdminJobs.init(); drawLive(); drawNews();
+      if (isTeacher()) { lockTabs(); say(mySubs().length ? "Ready. You can make notes for: " + D.SUBJECTS.filter(s => mySubs().includes(s.id)).map(s => s.name).join(", ") + "." : "No subject is given to you yet. Ask the owner.", mySubs().length ? "ok" : "err", !mySubs().length); }
+      else say("Ready. You can add notes and tests.", "ok");
       if (!$("atabs").querySelector('[aria-selected="true"]:not([data-t="connect"])')) openTab("notes");
     } catch (e) {
       $("connInfo").textContent = "";
@@ -121,8 +138,8 @@
   setTimeout(connect, 0);
 
   // ---------- who is logged in + admin log out ----------
-  fetch("/api/admin/me").then(r => r.json()).then(d => { if (d.admin) $("whoAdmin").textContent = "Logged in as " + d.admin.name + (d.admin.owner ? " (owner)" : "") + " · " + d.admin.email; }).catch(() => {});
-  $("aLogout").addEventListener("click", async () => { try { await fetch("/api/auth/admin-logout", { method: "POST" }); } catch (e) {} location.href = "/admin-login"; });
+  meReady.then(a => { if (a) $("whoAdmin").textContent = "Logged in as " + a.name + (a.owner ? " (owner)" : a.role === "teacher" ? " (teacher)" : "") + " · " + a.email; });
+  $("aLogout").addEventListener("click", async () => { try { await fetch("/api/auth/admin-logout", { method: "POST" }); } catch (e) {} location.href = "admin-login.html"; });
 
   // =====================================================================
   // NOTES
@@ -167,25 +184,98 @@
     return { list: out, errs };
   }
 
+  // ---------- notes browser: Exam → Subject → Chapter (same look as the students' Notes page) ----------
+  // which subjects belong to an exam, from the section names in its pattern
+  const SEC_SUBS = [[/awareness|knowledge|general studies/i, ["polity", "history", "geography", "economy", "science"]], [/math|quant|numer|arithmetic/i, ["maths"]], [/reason|intelligence/i, ["reasoning"]], [/english/i, ["english"]]];
+  const MAPPED = new Set(SEC_SUBS.flatMap(x => x[1]));
+  const mineOnly = list => list.filter(s => !isTeacher() || mySubs().includes(s.id));
+  function subsForExam(ex) {
+    const secs = [...(ex.pattern || []), ...(ex.tiers || []).flatMap(t => t.pattern || [])].map(r => String(r[0]));
+    const ids = new Set(); SEC_SUBS.forEach(([re, list]) => { if (secs.some(s => re.test(s))) list.forEach(i => ids.add(i)); });
+    let out = D.SUBJECTS.filter(s => ids.has(s.id) || !MAPPED.has(s.id));
+    if (!ids.size) out = D.SUBJECTS.slice();
+    return mineOnly(out);
+  }
+  let nbExam = null, nbSub = null;
+  const crumb = (parts) => parts.map(([label, go], i) => go ? `<button type="button" data-nb="${go}">${E(label)}</button>` : `<b>${E(label)}</b>`).join(" <span>›</span> ");
+  const exOf = id => D.EXAMS.find(x => x.id === id);
+  function nbExams() {
+    nbExam = nbSub = null;
+    $("nbCrumb").innerHTML = crumb([["Notes"]]);
+    const list = D.EXAMS.filter(x => !x.hide && subsForExam(x).length);
+    $("nbBody").innerHTML = `<h3 style="margin:0 0 12px;font:700 1.15rem Poppins,sans-serif">Choose your exam</h3><div class="nb-exams">${list.map(x =>
+      `<button type="button" class="nb-exam" data-nbex="${E(x.id)}"><span class="ic" style="background:${E(x.color || "var(--pri)")}">${E(x.short || x.name)}</span><span><b>${E(x.name)}</b><small>${subsForExam(x).length} subjects · ${E(x.level || "")}</small></span></button>`).join("")}</div>`
+      + (list.length ? "" : `<div class="mt-empty">No subject is given to you yet. Ask the owner.</div>`);
+  }
+  function nbSubjects() {
+    const ex = exOf(nbExam); if (!ex) return nbExams();
+    const subs = subsForExam(ex); if (!subs.some(s => s.id === nbSub)) nbSub = (subs[0] || {}).id;
+    $("nbCrumb").innerHTML = crumb([["Notes", "exams"], [ex.name]]);
+    const s = subs.find(x => x.id === nbSub); if (!s) { $("nbBody").innerHTML = ""; return; }
+    const ready = c => !!D.NOTES[c.id], n = s.chapters.filter(ready).length;
+    $("nbBody").innerHTML = `<div class="notes-wrap"><nav class="card nb-subs" aria-label="Subjects">${subs.map(x => `<button type="button" data-nbsub="${E(x.id)}" aria-pressed="${x.id === nbSub}">${E(x.name)}<span>${E(x.hi || "")}</span><span>${x.chapters.filter(ready).length} of ${x.chapters.length} ready</span></button>`).join("")}</nav>
+      <div class="nb-chaps"><div class="sec-head" style="margin:0;display:block"><h2>${E(s.name)}</h2><p style="margin:2px 0 0">${n} of ${s.chapters.length} chapters ready</p></div>
+      ${s.chapters.map((c, i) => { const r = ready(c), tags = r ? (D.NOTES[c.id].exams || []).join(", ") : "";
+        return `<div class="row"><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="t"><b>${E(c.title)}</b><span>${E(c.sub || "")}</span>${tags ? `<span class="tags">For: ${E(tags)}</span>` : ""}</span>
+        <span class="act">${r ? `<span class="pill ok">Published</span><a class="btn btn-out btn-sm" href="note.html?id=${encodeURIComponent(c.id)}" target="_blank" rel="noopener">👁 Student view</a><button class="btn btn-pri btn-sm" type="button" data-nbch="${E(c.id)}">✎ Edit</button>`
+          : `<span class="pill soon">Coming soon</span><button class="btn btn-pri btn-sm" type="button" data-nbch="${E(c.id)}">✎ Write notes</button>`}</span></div>`; }).join("")}
+      <button type="button" class="nb-new" data-nbch="__new">＋ Add a new chapter to ${E(s.name)}</button></div></div>`;
+  }
+  function nbShow(editor) {
+    $("nBrowse").hidden = editor; $("nEditor").hidden = !editor;
+    if (!editor) { setFs(false); if (nbExam) nbSubjects(); else nbExams(); }
+  }
+  function nbOpen(cid) {
+    const ex = exOf(nbExam), s = D.SUBJECTS.find(x => x.id === nbSub); if (!s) return;
+    $("nSub").value = s.id; fillChapters(cid);
+    if (cid === "__new" && ex && !$("nExams").value.trim()) $("nExams").value = ex.name;
+    const c = s.chapters.find(x => x.id === cid);
+    $("nbCrumb2").innerHTML = crumb([["Notes", "exams"], [ex ? ex.name : "Exam", "subs"], [s.name, "subs"], [c ? c.title : "New chapter"]]);
+    nbShow(true); $("nEditor").scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+  document.addEventListener("click", e => {
+    const go = e.target.closest("[data-nb]"); if (go) { if (go.dataset.nb === "exams") nbExam = null; nbShow(false); return; }
+    const ex = e.target.closest("[data-nbex]"); if (ex) { nbExam = ex.dataset.nbex; nbSub = null; nbSubjects(); return; }
+    const sb = e.target.closest("[data-nbsub]"); if (sb) { nbSub = sb.dataset.nbsub; nbSubjects(); return; }
+    const ch = e.target.closest("[data-nbch]"); if (ch) nbOpen(ch.dataset.nbch);
+  });
+
+  // shared with assets/admin-courses.js
+  window.AdminAPI = { D, save, say, E, slug, isTeacher, mySubs, me: () => ME, writeB64, b64FromBytes, confirmBox: m => confirmBox(m) };
+
+  // ---------- test instructions ----------
+  const IOK = /^(H3|H4|P|UL|OL|LI|B|STRONG|I|EM|U|S|BR|MARK|SUB|SUP|DIV|SPAN)$/;
+  const cleanI = h => { const d = new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html"), r = d.body.firstChild;
+    (function w(el) { [...el.children].forEach(n => { if (!IOK.test(n.tagName)) { if (/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|IMG|SVG|FORM|INPUT|LINK|META)$/.test(n.tagName)) { n.remove(); return; } w(n); n.replaceWith(...n.childNodes); return; }
+      [...n.attributes].forEach(x => n.removeAttribute(x.name)); w(n); }); })(r); return r.innerHTML.replace(/<span>|<\/span>/g, ""); };
+  let iKey = "general";
+  function fillInstr() {
+    $("iExam").innerHTML = `<option value="general">Common – all exams</option>` + D.EXAMS.filter(x => !x.hide).map(x => `<option value="${E(x.id)}">${E(x.name)} – extra notes</option>`).join("");
+    $("iExam").value = iKey; loadInstr();
+  }
+  const loadInstr = () => { iKey = $("iExam").value; $("iEdit").innerHTML = cleanI(iKey === "general" ? D.INSTR.general : D.INSTR.exams[iKey] || ""); };
+  $("iExam").addEventListener("change", loadInstr);
+  $("iBar").addEventListener("mousedown", e => { if (e.target.closest("button")) e.preventDefault(); });
+  $("iBar").addEventListener("click", e => { const b = e.target.closest("[data-ic]"); if (!b) return; const c = b.dataset.ic; $("iEdit").focus();
+    if (c === "h3" || c === "p") document.execCommand("formatBlock", false, "<" + c + ">");
+    else if (c === "mark") { const s = getSelection(); if (s.rangeCount && !s.isCollapsed) { const m = document.createElement("mark"); try { m.appendChild(s.getRangeAt(0).extractContents()); s.getRangeAt(0).insertNode(m); } catch (er) {} } }
+    else document.execCommand(c); });
+  $("iSave").addEventListener("click", async () => {
+    const h = cleanI($("iEdit").innerHTML).trim();
+    if (iKey === "general") D.INSTR.general = h; else if (h) D.INSTR.exams[iKey] = h; else delete D.INSTR.exams[iKey];
+    try { say("Saving instructions…", "info", true); await save("INSTR"); say("Instructions saved. Students see them in about a minute.", "ok"); }
+    catch (e) { say(e.status === 403 ? "Not allowed: ask the owner to let you edit test instructions." : "Could not save: " + e.message, "err"); }
+  });
+
   // ---------- chapter picker ----------
   let nCid = "", docLoaded = false, pptLoaded = false, nTab = "doc", pQs = [], pOpen = -1;
-  // Exam → Subject → Chapter. "Main notes" = the Notes page in the menu; each exam has its own subjects (shown in the Notes tab of that exam's page).
-  const nExamNow = () => $("nExam").value || "";
-  const subsOf = exam => D.SUBJECTS.filter(s => (s.exam || "") === exam);
-  function fillSubjects(keepSub) {
-    const ex = $("nExam"), was = ex.value;
-    ex.innerHTML = `<option value="">Main notes (Notes page)</option>` + D.EXAMS.map(e => `<option value="${E(e.id)}">${E(e.name)} – exam page</option>`).join("");
-    ex.value = [...ex.options].some(o => o.value === was) ? was : "";
-    const list = subsOf(nExamNow());
-    $("nSub").innerHTML = (list.length ? list.map(s => `<option value="${E(s.id)}">${E(s.name)}</option>`).join("") : `<option value="">No subjects yet</option>`) + `<option value="__newsub">+ New subject</option>`;
-    if (keepSub && list.some(s => s.id === keepSub)) $("nSub").value = keepSub;
+  function fillSubjects() {
+    $("nSub").innerHTML = D.SUBJECTS.filter(s => !isTeacher() || mySubs().includes(s.id)).map(s => `<option value="${E(s.id)}">${E(s.name)}</option>`).join("");
     fillChapters();
   }
-  $("nExam").addEventListener("change", () => fillSubjects());
   function fillChapters(keep) {
-    const s = subsOf(nExamNow()).find(x => x.id === $("nSub").value);
-    if (!s) { $("nChap").innerHTML = `<option value="">Add a subject first</option>`; loadChapter(); return; }
-    $("nChap").innerHTML = s.chapters.map((c, i) => `<option value="${E(c.id)}">${i + 1}. ${E(c.title)}${D.NOTES[c.id] ? (D.NOTES[c.id].soon ? " · Coming soon" : " ✓") : ""}</option>`).join("") + `<option value="__new">+ New chapter</option>`;
+    const s = D.SUBJECTS.find(x => x.id === $("nSub").value) || (isTeacher() ? null : D.SUBJECTS[0]); if (!s) { $("nChap").innerHTML = ""; return; }
+    $("nChap").innerHTML = s.chapters.map((c, i) => `<option value="${E(c.id)}">${i + 1}. ${E(c.title)}${D.NOTES[c.id] ? " ✓" : ""}</option>`).join("") + `<option value="__new">+ New chapter</option>`;
     if (keep) $("nChap").value = keep;
     loadChapter();
   }
@@ -199,7 +289,7 @@
     nCid = cid === "__new" ? "" : cid;
     $("nTitle").value = n.title || (c ? c.title : ""); $("nDesc").value = c ? c.sub || "" : "";
     $("nRead").value = n.read || ""; $("nExams").value = (n.exams || []).join(", "); $("nIntro").value = n.intro || "";
-    $("nPdf").checked = !!n.pdf; $("nFree").checked = !!n.free; $("nAccess").value = D.NOTES[cid] ? (n.soon ? "soon" : "open") : "soon"; whenSet("nWhen", n.publishAt); $("nDel").hidden = !D.NOTES[cid];
+    $("nPdf").checked = !!n.pdf; whenSet("nWhen", n.publishAt); $("nDel").hidden = !D.NOTES[cid] || isTeacher();
     $("nDet").open = cid === "__new"; $("nDetInfo").textContent = cid === "__new" ? "– type the new chapter's title here" : "";
     $("vUrl").value = n.video ? "https://www.youtube.com/watch?v=" + n.video.id : ""; $("vTitle").value = n.video ? n.video.title || "" : ""; drawVideo();
     pQs = JSON.parse(JSON.stringify(n.quiz || [])); pOpen = -1; drawP();
@@ -207,15 +297,7 @@
     docLoaded = pptLoaded = false; $("docFrame").src = "about:blank"; $("pptFrame").src = "about:blank";
     openNt(nTab, userPick ? true : undefined); paintStatus();
   }
-  $("nSub").addEventListener("change", () => {
-    if ($("nSub").value !== "__newsub") return fillChapters();
-    const exam = nExamNow(), exName = exam ? (D.EXAMS.find(e => e.id === exam) || {}).name : "";
-    const n = (prompt(`New subject${exName ? " for " + exName : ""} (e.g. General Awareness)`) || "").trim();
-    if (!n) return fillSubjects();
-    let id = slug((exam ? exam + "-" : "") + n), k = 2; const base = id; while (D.SUBJECTS.some(s => s.id === id)) id = base + "-" + k++;
-    D.SUBJECTS.push(exam ? { id, name: n, hi: "", exam, chapters: [] } : { id, name: n, hi: "", chapters: [] });
-    fillSubjects(id); say(`Subject "${n}" added. Publish a chapter in it to save it.`, "info");
-  });
+  $("nSub").addEventListener("change", () => fillChapters());
   $("nChap").addEventListener("change", () => loadChapter(true));
   $("nTitle").addEventListener("input", paintStatus);
 
@@ -287,7 +369,8 @@
 
   // ---------- publish the whole chapter ----------
   $("nSave").addEventListener("click", async () => {
-    const s = subsOf(nExamNow()).find(x => x.id === $("nSub").value); if (!s) return say("Pick a subject first (or choose + New subject).", "err");
+    const s = D.SUBJECTS.find(x => x.id === $("nSub").value); if (!s) return;
+    if (isTeacher() && !mySubs().includes(s.id)) return say("You can only publish notes for your own subject.", "err");
     const title = $("nTitle").value.trim(); if (!title) { $("nDet").open = true; $("nTitle").focus(); return say("Give the chapter a title (Chapter details).", "err"); }
     for (let i = 0; i < pQs.length; i++) { const p = pProblem(pQs[i]); if (p) { openNt("practice"); pOpen = i; drawP(); return say(`Practice question ${i + 1} ${p}.`, "err"); } }
     const vid = ytId($("vUrl").value); if ($("vUrl").value.trim() && !vid) { openNt("video"); return say("The YouTube link is not right.", "err"); }
@@ -305,8 +388,6 @@
     if (vid) note.video = { id: vid, title: $("vTitle").value.trim() };
     if (pQs.length) note.quiz = pQs.map(q => { const c = { ...q }; ["img", "wimg", "tag", "why"].forEach(k => { if (!c[k]) delete c[k]; }); return c; });
     if ($("nPdf").checked) note.pdf = true;
-    if ($("nFree").checked) note.free = true;
-    if ($("nAccess").value === "soon") note.soon = true;
     const nw = whenVal("nWhen"); if (nw && nw > Date.now()) note.publishAt = nw;
     try {
       say("Publishing… saving slides", "info", true);
@@ -323,8 +404,9 @@
       if (doc) doc.saved();
       const keepTab = nTab, wasDoc = docLoaded, wasPpt = pptLoaded;
       fillChapters(cid); if (wasDoc) openNt("doc"); if (wasPpt) openNt("ppt"); openNt(keepTab);
-      say(`Published "${title}". Live in about a minute at note.html?id=${cid}${note.soon ? " – students see it as Coming soon" : ""}`, "ok");
-    } catch (e) { say("Could not publish: " + e.message, "err"); }
+      { const ex = exOf(nbExam); $("nbCrumb2").innerHTML = crumb([["Notes", "exams"], [ex ? ex.name : "Exam", "subs"], [s.name, "subs"], [title]]); }
+      say(`Published "${title}". Live in about a minute at note.html?id=${cid}`, "ok");
+    } catch (e) { say(e.status === 403 ? "Not allowed: you can only change notes of your own subject." : e.status === 409 ? "Someone else changed the notes just now. Press Reload data on Status, then publish again." : "Could not publish: " + e.message, "err"); }
   });
 
   $("nDel").addEventListener("click", async () => {
@@ -364,7 +446,7 @@
   function drawTests() {
     fillFilters();
     const fe = $("mfExam").value, ft = $("mfTier").value, fy = $("mfType").value;
-    const all = Object.entries(D.TESTS);
+    const all = Object.entries(D.TESTS).filter(([, t]) => !isTeacher() || mySubs().includes(t.subject));
     const exams = [...D.EXAMS.map(x => x.id), "all"].filter(id => !fe || id === fe);
     let html = "";
     exams.forEach(eid => {
@@ -379,7 +461,7 @@
     });
     $("tList").innerHTML = html || `<div class="mt-empty">No tests yet. Press ＋ New test to make your first one.</div>`;
   }
-  const testItem = ([id, t]) => `<div class="item"><span class="t"><b>${E(t.title)}${t.soon ? ' <span class="pill soon">Coming soon</span>' : ""}</b><span>${t.questions.length} questions · ${t.minutes} min · +${t.plus}/−${t.minus}${t.section ? " · " + E(t.section) : ""}${t.year ? " · " + E(t.year) + (t.shift ? " " + E(t.shift) : "") : ""}${whenText(t.publishAt)}</span></span>
+  const testItem = ([id, t]) => `<div class="item"><span class="t"><b>${E(t.title)}</b><span>${t.questions.length} questions · ${t.minutes} min · +${t.plus}/−${t.minus}${t.section ? " · " + E(t.section) : ""}${t.year ? " · " + E(t.year) + (t.shift ? " " + E(t.shift) : "") : ""}${whenText(t.publishAt)}</span></span>
       <a class="btn btn-out btn-sm" href="test.html?id=${encodeURIComponent(id)}" target="_blank" rel="noopener">Open</a>
       <button class="btn btn-out btn-sm" type="button" data-edit="${E(id)}">Edit</button><button class="btn btn-out btn-sm" type="button" data-copy="${E(id)}">Copy</button><button class="btn btn-del btn-sm" type="button" data-del="${E(id)}">Delete</button></div>`;
   $("tList").addEventListener("click", async e => {
@@ -387,8 +469,8 @@
     if (ed) { edTo(tEdHome); loadTest(ed.dataset.edit); }
     if (cp) { edTo(tEdHome); loadTest(cp.dataset.copy); editing = null; $("tTitle").value += " (copy)"; $("tFormTitle").textContent = "New test (copy)"; $("tOpen").hidden = true; }
     if (del) { const id = del.dataset.del; if (!confirmBox(`Delete the test "${D.TESTS[id].title}"? Students' old results stay saved.`)) return;
-      delete D.TESTS[id]; D.LIVE = D.LIVE.filter(l => l.link !== "test.html?id=" + id);
-      try { await save("TESTS"); await save("LIVE"); drawTests(); drawLive(); if (editing === id) closeEd(); say("Test deleted.", "ok"); } catch (er) { say("Could not delete: " + er.message, "err"); } }
+      delete D.TESTS[id]; const hadLive = D.LIVE.some(l => l.link === "test.html?id=" + id); D.LIVE = D.LIVE.filter(l => l.link !== "test.html?id=" + id);
+      try { await save("TESTS"); if (hadLive && !isTeacher()) await save("LIVE"); drawTests(); drawLive(); if (editing === id) closeEd(); say("Test deleted.", "ok"); } catch (er) { say("Could not delete: " + er.message, "err"); } }
   });
 
   // ---------- step 1: where it goes ----------
@@ -626,22 +708,30 @@
   function openEd() { $("tEd").hidden = false; $("tEd").scrollIntoView({ behavior: "smooth", block: "start" }); }
   function closeEd() { $("tEd").hidden = true; editing = null; }
   $("tClose").addEventListener("click", () => { if (tQs.length && !confirmBox("Close without publishing? Unpublished changes will be lost.")) return; closeEd(); });
+  // subject of a test (teachers: only their own subjects, only subject-wise / chapter tests)
+  function fillSubjSel(v) {
+    const list = D.SUBJECTS.filter(s => !isTeacher() || mySubs().includes(s.id));
+    $("tSubj").innerHTML = (isTeacher() ? "" : `<option value="">– none –</option>`) + list.map(s => `<option value="${E(s.id)}">${E(s.name)}</option>`).join("");
+    if (v != null && list.some(s => s.id === v)) $("tSubj").value = v;
+    if (isTeacher()) { [...$("tType").options].forEach(o => o.hidden = !/^(Subject-wise test|Chapter test)$/.test(o.value)); if (!/^(Subject-wise test|Chapter test)$/.test($("tType").value)) { $("tType").value = "Subject-wise test"; typeUi(); } $("tLiveW").hidden = true; $("tLive").checked = false; }
+  }
   function resetTest() {
     editing = null; tQs = []; tSecs = []; openQ = -1; qLang = "en"; $("tFormTitle").textContent = "New test"; $("tOpen").hidden = true;
     fillExamSel(); const fe = $("mfExam").value; if (fe) $("tExam").value = fe; fillTierSel($("mfTier").value);
     $("tType").value = $("mfType").value || "Full mock test"; typeUi();
     ["tTitle", "tYear", "tShift"].forEach(k => $(k).value = ""); $("tMin").value = 60; $("tPlus").value = 2; $("tMinus").value = 0.5;
-    $("tLive").checked = true; $("tSect").checked = false; $("tStrict").checked = false; $("tFree").checked = false; $("tAccess").value = "soon"; whenSet("tWhen", null);
-    if (curTier()) $("tPreset").click(); else { drawSecs(); drawQs(); }
+    $("tLive").checked = true; $("tSect").checked = false; $("tStrict").checked = false; whenSet("tWhen", null);
+    fillSubjSel("");
+    if (curTier() && !isTeacher()) $("tPreset").click(); else { drawSecs(); drawQs(); }
   }
   $("tNew").addEventListener("click", () => { edTo(tEdHome); resetTest(); openEd(); });
   function loadTest(id) {
     const t = D.TESTS[id]; editing = id; tQs = JSON.parse(JSON.stringify(t.questions)); openQ = -1; qLang = "en";
     fillExamSel(); $("tExam").value = examById(t.exam) || t.exam === "all" ? t.exam : "all"; fillTierSel(t.tier || "t1");
-    $("tType").value = t.type; typeUi(); if (t.section) fillSecPick(t.section);
+    $("tType").value = t.type; typeUi(); if (t.section) fillSecPick(t.section); fillSubjSel(t.subject || "");
     $("tFormTitle").textContent = "Edit test"; $("tTitle").value = t.title; $("tYear").value = t.year || ""; $("tShift").value = t.shift || "";
     $("tMin").value = t.minutes; $("tPlus").value = t.plus; $("tMinus").value = t.minus; $("tLive").checked = D.LIVE.some(l => l.link === "test.html?id=" + id);
-    $("tSect").checked = !!t.sectional; $("tStrict").checked = !!t.strict; $("tFree").checked = !!t.free; $("tAccess").value = t.soon ? "soon" : "open"; whenSet("tWhen", t.publishAt);
+    $("tSect").checked = !!t.sectional; $("tStrict").checked = !!t.strict; whenSet("tWhen", t.publishAt);
     const names = t.sections && t.sections.length ? t.sections.map(s => s.name) : [...new Set(tQs.map(q => q.section).filter(Boolean))];
     tSecs = names.map(n => ({ name: n, minutes: ((t.sections || []).find(s => s.name === n) || {}).minutes || 0, n: (t.plan || {})[n] || 0 }));
     $("tOpen").href = "test.html?id=" + encodeURIComponent(id); $("tOpen").hidden = false;
@@ -652,15 +742,15 @@
     if (!tQs.length) return say("Add questions first (step 3).", "err");
     for (let i = 0; i < tQs.length; i++) { const p = qProblem(tQs[i]); if (p) { openQ = i; drawQs(); return say(`Question ${i + 1} ${p}.`, "err"); } }
     let id = editing; if (!id) { id = slug(title); let k = 2; while (D.TESTS[id]) id = slug(title) + "-" + k++; }
-    const exam = $("tExam").value, type = $("tType").value, tr = curTier();
+    const exam = $("tExam").value, type = $("tType").value, tr = curTier(), subj = $("tSubj").value;
+    if (isTeacher() && !mySubs().includes(subj)) return say("Choose your subject for this test (step 1).", "err");
     const qs = tQs.map(q => { const c = { ...q }; ["topic", "qh", "whyh", "img", "wimg"].forEach(k => { if (!c[k]) delete c[k]; }); if (c.optsh && !c.optsh.some(Boolean)) delete c.optsh; if (c.oimg && !c.oimg.some(Boolean)) delete c.oimg; if (!c.section) c.section = "General"; return c; });
     const t = { title, exam, type, minutes: +$("tMin").value || 60, plus: +$("tPlus").value || 1, minus: +$("tMinus").value || 0, questions: qs };
     if (tr && exam !== "all") t.tier = tr.id;
+    if (subj) t.subject = subj;
     if (type === "Section-wise test") t.section = $("tSecPick").value;
     if (type === "PYQ paper") { if ($("tYear").value.trim()) t.year = $("tYear").value.trim(); if ($("tShift").value.trim()) t.shift = $("tShift").value.trim(); }
     if ($("tStrict").checked) t.strict = true;
-    if ($("tFree").checked) t.free = true; else delete t.free;
-    if ($("tAccess").value === "soon") t.soon = true; else delete t.soon;
     const tw = whenVal("tWhen"); if (tw && tw > Date.now()) t.publishAt = tw;
     const order = tSecs.map(s => s.name); qs.sort((a, b) => { const x = order.indexOf(a.section), y = order.indexOf(b.section); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); });
     if (tSecs.length) t.plan = Object.fromEntries(tSecs.filter(s => s.n).map(s => [s.name, s.n]));
@@ -673,12 +763,12 @@
     const link = "test.html?id=" + id, entry = { name: title, type, exams: examName(exam) + (tr && exam !== "all" && tiersOf(exam).length > 1 ? " · " + tr.name : ""), questions: qs.length, minutes: t.minutes, marking: `+${t.plus} / −${t.minus}`, link };
     if (t.publishAt) entry.publishAt = t.publishAt;
     const i = D.LIVE.findIndex(l => l.link === link);
-    if ($("tLive").checked) { if (i >= 0) D.LIVE[i] = entry; else D.LIVE.unshift(entry); } else if (i >= 0) D.LIVE.splice(i, 1);
+    if (!isTeacher()) { if ($("tLive").checked) { if (i >= 0) D.LIVE[i] = entry; else D.LIVE.unshift(entry); } else if (i >= 0) D.LIVE.splice(i, 1); }
     try {
       say("Publishing test… (1 of 2)", "info", true); await save("TESTS");
-      say("Publishing test… (2 of 2)", "info", true); await save("LIVE");
+      if (!isTeacher()) { say("Publishing test… (2 of 2)", "info", true); await save("LIVE"); }
       editing = id; tQs = JSON.parse(JSON.stringify(qs)); drawQs(); drawTests(); drawLive(); $("tFormTitle").textContent = "Edit test"; $("tOpen").href = link; $("tOpen").hidden = false;
-      say(`Published "${title}" with ${qs.length} questions under ${examName(exam)}${tr && exam !== "all" ? " → " + tr.name : ""} → ${type}. Live in about a minute.${t.soon ? " Students see it as Coming soon." : ""}`, "ok");
+      say(`Published "${title}" with ${qs.length} questions under ${examName(exam)}${tr && exam !== "all" ? " → " + tr.name : ""} → ${type}. Live in about a minute.`, "ok");
     } catch (e) { say("Could not publish: " + e.message, "err"); }
   });
   $("tSect").addEventListener("change", () => { if ($("tSect").checked && tSecs.length) $("tMin").value = tSecs.reduce((a, s) => a + (s.minutes || 0), 0) || $("tMin").value; });
@@ -750,15 +840,15 @@
   // =====================================================================
   // WEBSITE (menu, name, footer, exams, subjects, topics, page edits)
   // =====================================================================
-  const NAVD = [["index.html", "Home"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["rank-calculator.html", "Rank Calculator"], ["daily-quiz.html", "Daily Quiz"], ["leaderboard.html", "Leaderboard"], ["index.html#about", "About"]];
+  const NAVD = [["home.html", "Home"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["pyq.html", "PYQ Papers"], ["rank-calculator.html", "Rank Calculator"], ["daily-quiz.html", "Daily Quiz"], ["leaderboard.html", "Leaderboard"], ["home.html#about", "About"]];
   let navRows = [];
   function drawWebsite() {
-    const pages = [["index.html", "Home"], ["privacy.html", "Privacy Policy"], ["terms.html", "Terms of Use"], ["contact.html", "Contact"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["rank-calculator.html", "Rank Calculator"], ["pyq.html", "PYQ Papers"], ["rank-calculator.html", "Rank Calculator"], ["daily-quiz.html", "Daily quiz"], ["leaderboard.html", "Leaderboard"], ["account.html", "Account details"], ...D.EXAMS.map(x => [x.page, x.name + " page"])];
+    const pages = [["home.html", "Home"], ["privacy.html", "Privacy Policy"], ["terms.html", "Terms of Use"], ["contact.html", "Contact"], ["mock-tests.html", "Mock Tests"], ["live-tests.html", "Live Tests"], ["notes.html", "Notes"], ["rank-calculator.html", "Rank Calculator"], ["pyq.html", "PYQ Papers"], ["rank-calculator.html", "Rank Calculator"], ["daily-quiz.html", "Daily quiz"], ["leaderboard.html", "Leaderboard"], ["account.html", "Account details"], ...D.EXAMS.map(x => [x.page, x.name + " page"])];
     const edited = (D.SITE.pages || {});
     $("wPages").innerHTML = pages.map(([u, n]) => `<div class="item"><span class="t"><b>${E(n)}</b><span>${E(u)}${edited[u.replace(/\.html$/, "")] ? " · has your edits" : ""}</span></span><a class="btn btn-out btn-sm" href="${E(u)}?edit=1" target="_blank" rel="noopener">✎ Edit page</a></div>`).join("");
     const sh = D.SITE.shell || {};
     $("wBrand").value = sh.brand || ""; $("wEmail").value = sh.email || ""; $("wFoot1").value = sh.foot1 ? sh.foot1.replace(/<[^>]+>/g, "") : ""; $("wFoot2").value = sh.foot2 ? sh.foot2.replace(/<[^>]+>/g, "") : "";
-    $("wFoot1").placeholder = "© SSCAspirants_Official · Created by Yatharth Tyagi"; $("wFoot2").placeholder = "Notes, mock tests and PYQs for SSC exams · @SSCAspirants_Official";
+    $("wFoot1").placeholder = "© SSCAspirants_Official · Created by an idiot and created for idiots"; $("wFoot2").placeholder = "Notes, mock tests and PYQs for SSC exams · @SSCAspirants_Official";
     const nv = sh.nav || {};
     navRows = NAVD.map(([h, n]) => ({ h, n: (nv[h] && nv[h].label) || n, def: n, hide: !!(nv[h] && nv[h].hide), own: false }))
       .concat((sh.links || []).map(l => ({ h: l.href, n: l.label, hide: !!l.hide, own: true })));
@@ -847,7 +937,7 @@
   };
   // subjects and chapters
   function drawSubs() {
-    $("wSubs").innerHTML = D.SUBJECTS.map((s, si) => `<details class="item" data-s="${si}" style="display:block"><summary style="cursor:pointer;font-weight:700">${E(s.name)} ${s.hide ? '<span class="pill soon">Hidden</span>' : ""} <span class="muted" style="font-weight:400">· ${s.exam ? E((D.EXAMS.find(e => e.id === s.exam) || { name: s.exam }).name) + " page · " : ""}${s.chapters.length} chapters</span></summary>
+    $("wSubs").innerHTML = D.SUBJECTS.map((s, si) => `<details class="item" data-s="${si}" style="display:block"><summary style="cursor:pointer;font-weight:700">${E(s.name)} ${s.hide ? '<span class="pill soon">Hidden</span>' : ""} <span class="muted" style="font-weight:400">· ${s.chapters.length} chapters</span></summary>
       <div class="form" style="margin-top:10px"><label class="f">Subject name<input data-sk="name" value="${E(s.name)}"></label><label class="f">Hindi name<input data-sk="hi" value="${E(s.hi || "")}"></label></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0"><label style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" data-sk="show" ${s.hide ? "" : "checked"}> Show subject</label>
         <button class="btn btn-out btn-sm" type="button" data-sm="-1" ${si ? "" : "disabled"}>↑ Subject</button><button class="btn btn-out btn-sm" type="button" data-sm="1" ${si < D.SUBJECTS.length - 1 ? "" : "disabled"}>↓ Subject</button>
