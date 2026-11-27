@@ -7,7 +7,8 @@
 <title>SSC Previous Year Papers – SSCAspirants_Official</title>
 <meta name="description" content="Mock tests on the latest Eduquity CBT pattern, chapter-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 
@@ -50,7 +51,7 @@ function draw(){
   const l=ALL.filter(([,t])=>(!ex||t.exam===ex||t.exam==="all")&&(!tr||(t.tier||"t1")===tr)&&(!yr||String(t.year)===yr));
   if(!l.length){$("list").innerHTML=`<div class="card" style="text-align:center;border-style:dashed"><b>Papers for this choice are coming soon.</b><p class="muted" style="margin:4px 0 0">New papers appear here as soon as they are published.</p></div>`;return;}
   const groups={}; l.forEach(x=>{const t=x[1], e=EX.find(e=>e.id===t.exam), k=(e?e.name:"All SSC exams")+(t.year?" "+t.year:"");(groups[k]=groups[k]||[]).push(x);});
-  $("list").innerHTML=Object.entries(groups).map(([k,v])=>`<h2 style="font-size:1.2rem;margin-top:10px">${E(k)}</h2>`+`<div class="ptests">`+v.map(([id,t])=>t.soonLock?`<div class="card ptest"><span class="pill soon">Coming soon</span><b>${E(t.title)}</b><div class="meta"><span>${t.shift?E(t.shift):""}</span><span>${t.questions.length} questions</span><span>${t.minutes} min</span><span>+${t.plus} / −${t.minus}</span></div><span class="btn off" aria-disabled="true">Coming soon</span></div>`:`<div class="card ptest" data-tcard="${E(id)}"><span class="pill ok">Available</span><b>${E(t.title)}</b><div class="meta"><span>${t.shift?E(t.shift):""}</span><span>${t.questions.length} questions</span><span>${t.minutes} min</span><span>+${t.plus} / −${t.minus}</span></div><a class="btn btn-pri" href="test.html?id=${encodeURIComponent(id)}">Start test</a></div>`).join("")+`</div>`).join("");
+  $("list").innerHTML=Object.entries(groups).map(([k,v])=>`<h2 style="font-size:1.2rem;margin-top:10px">${E(k)}</h2>`+`<div class="ptests">`+v.map(([id,t])=>`<div class="card ptest" data-tcard="${E(id)}"><span class="pill ok">Available</span><b>${E(t.title)}</b><div class="meta"><span>${t.shift?E(t.shift):""}</span><span>${t.questions.length} questions</span><span>${t.minutes} min</span><span>+${t.plus} / −${t.minus}</span></div><a class="btn btn-pri" href="test.html?id=${encodeURIComponent(id)}">Start test</a></div>`).join("")+`</div>`).join("");
   if(window.SSCTestCards) SSCTestCards();
 }
 $("fExam").addEventListener("change",()=>{history.replaceState(null,"","#"+$("fExam").value);tiers();draw();});

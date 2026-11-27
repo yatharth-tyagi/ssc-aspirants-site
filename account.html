@@ -6,7 +6,8 @@
 <title>Account details – SSCAspirants_Official</title>
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 
@@ -70,7 +71,7 @@
 <script>
 (function () {
   const $ = id => document.getElementById(id), E = SSC.esc;
-  const big = u => { $("aBig").innerHTML = u.photo ? `<img src="/api/me/photo?v=${u.photo}" alt="Your photo">` : E((u.name || u.email).charAt(0).toUpperCase()); $("phDel").hidden = !u.photo; };
+  const big = u => { $("aBig").innerHTML = u.photo ? `<img src="${window.__pp()}" alt="Your photo">` : E((u.name || u.email).charAt(0).toUpperCase()); $("phDel").hidden = !u.photo; };
   let me = null;
   const show = d => {
     const u = d.user;

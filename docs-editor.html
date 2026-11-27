@@ -6,7 +6,8 @@
 <title>Docs editor – SSCAspirants_Official</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="stylesheet" href="assets/ribbon.css">
@@ -128,6 +129,7 @@ dialog select,dialog input[type=text],dialog input[type=number]{min-height:42px;
 
 <script src="assets/site.js"></script>
 <script src="assets/ribbon.js"></script>
+<script src="assets/edit-plus.js"></script>
 <script>
 (function () {
 const $ = id => document.getElementById(id), E = SSC.esc, page = $("page");
@@ -171,9 +173,9 @@ const restoreSel = () => { if (!savedRange) return; const s = getSelection(); if
 function paintState() {
   ["bold", "italic", "underline", "strikeThrough", "superscript", "subscript", "insertUnorderedList", "insertOrderedList", "justifyLeft", "justifyCenter", "justifyRight", "justifyFull"].forEach(c => {
     const b = document.querySelector(`.tb[data-c="${c}"]`); if (b) { let st = false; try { st = document.queryCommandState(c); } catch (e) {} b.setAttribute("aria-pressed", st); } });
-  const blk = blockOf(); $("style").value = blk && /^(H2|H3|H4|BLOCKQUOTE)$/.test(blk.tagName) ? blk.tagName.toLowerCase() : "p";
+  const blk = blockOf(); $("style").value = blk && /^(H1|H2|H3|H4|H5|BLOCKQUOTE|PRE)$/.test(blk.tagName) ? blk.tagName.toLowerCase() : "p";
 }
-const blockOf = () => { const s = getSelection(); let n = s.anchorNode; while (n && n !== page) { if (n.nodeType === 1 && /^(P|H2|H3|H4|BLOCKQUOTE|LI|DIV|TD|TH)$/.test(n.tagName)) return n; n = n.parentNode; } return null; };
+const blockOf = () => { const s = getSelection(); let n = s.anchorNode; while (n && n !== page) { if (n.nodeType === 1 && /^(P|H1|H2|H3|H4|H5|PRE|BLOCKQUOTE|LI|DIV|TD|TH)$/.test(n.tagName)) return n; n = n.parentNode; } return null; };
 document.querySelector(".tools").addEventListener("mousedown", e => { if (e.target.closest(".tb")) e.preventDefault(); });
 document.querySelector(".tools").addEventListener("click", e => {
   const b = e.target.closest("[data-c]"); if (!b) return; const c = b.dataset.c;
@@ -198,7 +200,7 @@ function wrapStyle(prop, val) {
   changed();
 }
 const FONTS = { Inter: "Inter,sans-serif", Poppins: "Poppins,sans-serif", Hind: "Hind,sans-serif", Merriweather: "Merriweather,serif", Georgia: "Georgia,serif", "Courier New": "'Courier New',monospace" };
-$("font").onchange = e => { if (e.target.value) wrapStyle("fontFamily", FONTS[e.target.value]); e.target.value = ""; };
+$("font").onchange = e => { const v = e.target.value; if (v) wrapStyle("fontFamily", FONTS[v] || `'${v}',sans-serif`); e.target.value = ""; };
 $("size").onchange = e => { if (e.target.value) wrapStyle("fontSize", e.target.value + "px"); e.target.value = ""; };
 // pop-ups: colours, boxes, symbols, line spacing, case, shading, page width
 const BOXES = { info: "ℹ Note", trick: "💡 Memory trick", imp: "⚠ Important", exam: "🎯 Asked in exam", formula: "🧮 Formula", example: "✏ Example", def: "📖 Definition" };
@@ -220,6 +222,17 @@ document.querySelector(".tools").addEventListener("click", e => {
 });
 
 // pictures (made smaller, saved to the website)
+async function pictureData(f) {
+  const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("That file isn't a picture.")); i.src = URL.createObjectURL(f); });
+  const r = Math.min(1, 1400 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+  c.width = Math.round(img.naturalWidth * r); c.height = Math.round(img.naturalHeight * r); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  const png = /png|gif|webp/.test(f.type), data = c.toDataURL(png ? "image/png" : "image/jpeg", 0.88);
+  return { data, path: `assets/uploads/doc-${Date.now().toString(36)}.${png ? "png" : "jpg"}` };
+}
+async function replaceImage(im, f) {
+  try { stat("Replacing picture…"); const { data, path } = await pictureData(f); im.src = data; im.dataset.path = path; changed();
+    await write(path, data.split(",")[1], "Admin: notes picture"); stat("Picture saved"); } catch (er) { stat("Could not replace: " + er.message); }
+}
 $("imgFile").onchange = async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
   try { stat("Adding picture…");
@@ -367,7 +380,7 @@ $("pGo").onclick = async () => {
     const same = s.chapters.find(c => !NOTES[c.id] && (c.id === slug(t) || c.title.toLowerCase() === t.toLowerCase())); // reuse a "coming soon" chapter
     if (same) id = same.id; else { id = slug(t); const all = SUBS.flatMap(x => x.chapters.map(c => c.id)); let k = 2; const base = id; while (all.includes(id)) id = base + "-" + k++; s.chapters.push({ id, title: t, sub: "" }); } }
   const c = s.chapters.find(x => x.id === id); title = title || c.title; c.title = title; c.sub = $("pDesc").value.trim(); c.ready = true;
-  if (!page.innerText.trim() && !page.querySelector("img,table")) return $("pMsg").textContent = "The document is empty.";
+  if (!page.innerText.trim() && !page.querySelector("img,table,math")) return $("pMsg").textContent = "The document is empty.";
   const old = NOTES[id] || {};
   const n = { subject: s.id, title, read: $("pRead").value.trim() || "10 min read", exams: $("pExams").value.split(",").map(x => x.trim()).filter(Boolean), intro: "", html: finalHtml() };
   if (old.deck) n.deck = old.deck; if (old.quiz) n.quiz = old.quiz; if ($("pPdf").checked) n.pdf = true; if (old.publishAt) n.publishAt = old.publishAt;
@@ -385,9 +398,10 @@ $("pGo").onclick = async () => {
 };
 $("saveTop").onclick = () => $("saveBtn").click(); $("pubTop").onclick = () => $("pubBtn").click();
 // inside the admin Notes tab: the admin page reads the document and publishes it with the chapter
+window.DocAPI = { page, exec, changed, write, stat, restoreSel, blockOf, wrapStyle, cell, safe, curImg: () => curImg, replaceImage };
 window.SSCEmbed = {
   html: () => finalHtml(),
-  empty: () => !page.innerText.trim() && !page.querySelector("img,table"),
+  empty: () => !page.innerText.trim() && !page.querySelector("img,table,math"),
   dirty: () => dirty,
   saved: () => { dirty = false; try { localStorage.removeItem(DRAFT()); } catch (e) {} stat("Published ✓"); },
   ready: false
@@ -395,5 +409,6 @@ window.SSCEmbed = {
 open().then(() => { window.SSCEmbed.ready = true; });
 })();
 </script>
+<script src="assets/doc-plus.js"></script>
 </body>
 </html>

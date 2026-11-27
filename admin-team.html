@@ -6,7 +6,8 @@
 <title>Admin team &amp; students – SSCAspirants_Official</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 
@@ -23,28 +24,35 @@
 .mini{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--pri);color:var(--pri-ink);font-weight:700;overflow:hidden}
 .mini img{width:100%;height:100%;object-fit:cover}
 .btn-sm{min-height:36px;padding:6px 14px;font-size:.9rem}
-.fgrid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin:14px 0}
+.fgrid{display:grid;grid-template-columns:1fr 1fr 150px auto;gap:10px;align-items:end;margin:14px 0}
 .fgrid label{display:grid;gap:6px;font-weight:600;font-size:.92rem}
-.fgrid input,#uQ{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:400 16px "Inter",sans-serif;padding:0 12px}
+.fgrid input,.fgrid select,#uQ{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:400 16px "Inter",sans-serif;padding:0 12px}
 #uQ{width:100%;box-sizing:border-box;margin:10px 0 14px}
 .note{background:var(--gold-soft);border-radius:12px;padding:12px 16px;margin:10px 0}
 .note code{background:var(--surface);padding:2px 8px;border-radius:6px;font-size:1rem}
 .amsg{display:none;border-radius:10px;padding:10px 14px;margin:10px 0}.amsg.show{display:block}.amsg.err{background:#FDECEA;color:#B42318}.amsg.ok{background:#E8F5EC;color:#1E7A3C}
 .pill{font-size:.75rem}
+.subs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.subs label{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--surface);font-weight:600;font-size:.9rem;cursor:pointer}
+.subs input{width:18px;height:18px}
+.subedit{flex-basis:100%}
 @media (max-width:640px){.fgrid{grid-template-columns:1fr}}
 </style>
 <p><a href="admin.html">← Back to admin panel</a></p>
 <section class="card" style="margin-bottom:20px">
-  <div class="sec-head"><h2>Admin team</h2><p>Admin accounts are separate from student accounts. They log in at <b>/admin-login</b>.</p></div>
+  <div class="sec-head"><h2>Admin team</h2><p>Admin and teacher accounts are separate from student accounts. They log in at <b>/admin-login</b>. A teacher can only make notes for the subjects you tick.</p></div>
   <div class="amsg" id="tMsg" role="alert"></div>
   <div id="addBox" hidden>
     <div class="fgrid">
       <label>Name<input id="nName" maxlength="60"></label>
       <label>Email<input id="nEmail" type="email" maxlength="120"></label>
-      <button class="btn btn-pri" id="nAdd" type="button">Add admin</button>
+      <label>Role<select id="nRole"><option value="teacher">Teacher</option><option value="admin">Admin (full access)</option></select></label>
+      <button class="btn btn-pri" id="nAdd" type="button">Add</button>
     </div>
+    <div id="nSubsW"><p class="muted" style="margin:0 0 8px">Subjects this teacher can make notes for:</p><div class="subs" id="nSubs"></div>
+      <label class="subs" style="margin-top:-4px"><span style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" id="nInstr" style="width:18px;height:18px"> Can edit test instructions</span></label></div>
   </div>
-  <p class="muted" id="notOwner" hidden>Only the owner can add or remove admins.</p>
+  <p class="muted" id="notOwner" hidden>Only the owner can add or remove admins and teachers.</p>
   <div class="note" id="tTemp" hidden></div>
   <div class="list" id="tList"><p class="muted">Loading…</p></div>
 </section>
@@ -66,25 +74,42 @@
   const say = (t, k = "err") => { const m = $("tMsg"); m.textContent = t; m.className = "amsg show " + k; };
   const post = async (url, body) => { const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || "Error " + r.status); return d; };
   let owner = false;
+  const SUBS = window.SUBJECTS || [];
+  const subName = id => (SUBS.find(s => s.id === id) || {}).name || id;
+  const subBoxes = (pre, on) => SUBS.map(s => `<label><input type="checkbox" data-sub="${E(s.id)}" ${on.includes(s.id) ? "checked" : ""}>${E(s.name)}</label>`).join("");
+  const ticked = el => [...el.querySelectorAll("[data-sub]:checked")].map(x => x.dataset.sub);
+  $("nSubs").innerHTML = subBoxes("n", []);
+  $("nRole").addEventListener("change", () => { $("nSubsW").hidden = $("nRole").value !== "teacher"; });
   const tempBox = (el, who, temp, extra) => { el.hidden = false; el.innerHTML = `Password for <b>${E(who)}</b>: <code>${E(temp)}</code><br><small>Send it to them privately. ${extra}</small>`; };
 
   async function team() {
     try {
       const [me, d] = await Promise.all([fetch("/api/admin/me").then(r => r.json()), fetch("/api/admin/team").then(r => r.json())]);
+      if (me.admin && me.admin.role === "teacher") { location.replace("admin.html"); return; }
       owner = !!(me.admin && me.admin.owner); $("addBox").hidden = !owner; $("notOwner").hidden = owner;
-      $("tList").innerHTML = d.admins.map(a => `<div class="item"><span class="t"><b>${E(a.name)} ${a.owner ? '<span class="pill ok">Owner</span>' : '<span class="pill">Admin</span>'}</b>
-        <span>${E(a.email)} · ${a.owner ? "logs in with ADMIN_PASSWORD" : "added " + day(a.created)} · last login ${day(a.last)}</span></span>
+      $("tList").innerHTML = d.admins.map(a => { const tch = a.role === "teacher", subs = a.subjects || [];
+        return `<div class="item"><span class="t"><b>${E(a.name)} ${a.owner ? '<span class="pill ok">Owner</span>' : tch ? '<span class="pill">Teacher</span>' : '<span class="pill">Admin</span>'}</b>
+        <span>${E(a.email)} · ${a.owner ? "logs in with ADMIN_PASSWORD" : "added " + day(a.created)} · last login ${day(a.last)}</span>
+        ${tch ? `<span>Notes for: <b>${subs.length ? subs.map(x => E(subName(x))).join(", ") : "no subject yet"}</b>${a.canInstr ? " · can edit test instructions" : ""}</span>` : ""}</span>
+        ${owner && tch ? `<button class="btn btn-out btn-sm" data-act="subs" data-id="${a.id}" data-name="${E(a.name)}">Change subjects</button>` : ""}
         ${owner && !a.owner ? `<button class="btn btn-out btn-sm" data-act="reset" data-id="${a.id}" data-name="${E(a.name)}">Reset password</button>
-        <button class="btn btn-out btn-sm" data-act="remove" data-id="${a.id}" data-name="${E(a.name)}">Remove</button>` : ""}</div>`).join("");
+        <button class="btn btn-out btn-sm" data-act="remove" data-id="${a.id}" data-name="${E(a.name)}">Remove</button>` : ""}
+        ${tch ? `<div class="subedit" data-subedit="${a.id}" hidden><div class="subs">${subBoxes("e" + a.id, subs)}</div><label class="subs"><span style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" data-instr ${a.canInstr ? "checked" : ""} style="width:18px;height:18px"> Can edit test instructions</span></label><button class="btn btn-pri btn-sm" data-act="subsave" data-id="${a.id}" data-name="${E(a.name)}">Save subjects</button></div>` : ""}</div>`; }).join("");
     } catch (e) { $("tList").innerHTML = `<p class="muted">Admin tools work on the live website.</p>`; }
   }
   $("nAdd").addEventListener("click", async () => {
-    try { const name = $("nName").value.trim(), d = await post("/api/admin/team", { action: "add", name, email: $("nEmail").value.trim() });
-      tempBox($("tTemp"), name, d.temp, "They log in at sscaspirants-official.in/admin-login."); $("nName").value = $("nEmail").value = ""; say("Admin added.", "ok"); team();
+    const role = $("nRole").value, subjects = role === "teacher" ? ticked($("nSubs")) : [], canInstr = role === "teacher" && $("nInstr").checked;
+    if (role === "teacher" && !subjects.length) return say("Tick at least one subject for the teacher.");
+    try { const name = $("nName").value.trim(), d = await post("/api/admin/team", { action: "add", name, email: $("nEmail").value.trim(), role, subjects, canInstr });
+      tempBox($("tTemp"), name, d.temp, "They log in at sscaspirants-official.in/admin-login."); $("nName").value = $("nEmail").value = ""; $("nSubs").innerHTML = subBoxes("n", []);
+      say(role === "teacher" ? "Teacher added." : "Admin added.", "ok"); team();
     } catch (e) { say(e.message); }
   });
   $("tList").addEventListener("click", async e => {
     const b = e.target.closest("[data-act]"); if (!b) return;
+    if (b.dataset.act === "subs") { const box = $("tList").querySelector(`[data-subedit="${b.dataset.id}"]`); box.hidden = !box.hidden; return; }
+    if (b.dataset.act === "subsave") { const subjects = ticked(b.closest("[data-subedit]")); if (!subjects.length) return say("Tick at least one subject.");
+      try { await post("/api/admin/team", { action: "subjects", id: +b.dataset.id, subjects, canInstr: !!b.closest("[data-subedit]").querySelector("[data-instr]:checked") }); say("Subjects saved for " + b.dataset.name + ".", "ok"); team(); } catch (er) { say(er.message); } return; }
     if (b.dataset.act === "remove" && !confirm("Remove " + b.dataset.name + " from the admin team?")) return;
     if (b.dataset.act === "reset" && !confirm("Reset the password for " + b.dataset.name + "?")) return;
     try { const d = await post("/api/admin/team", { action: b.dataset.act, id: +b.dataset.id });

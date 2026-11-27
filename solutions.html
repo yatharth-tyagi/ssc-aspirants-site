@@ -6,7 +6,8 @@
 <title>Solutions – SSCAspirants_Official</title>
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=Hind:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
@@ -153,7 +154,7 @@ html[data-read="dark"] .wrapS::before,html[data-read="dark"] .qmain::before{mix-
   <img src="assets/logo.png" alt="">
   <div class="nm" id="nm">Solutions<small>SSCAspirants_Official</small></div>
   <button class="tb" type="button" id="langBtn" hidden>हिन्दी</button>
-  <a class="tb" href="index.html" title="Home"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span class="lbl">Home</span></a>
+  <a class="tb" href="home.html" title="Home"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span class="lbl">Home</span></a>
   <a class="tb" id="seriesLink" href="mock-tests.html" title="Back to test series"><span class="lbl">Test series</span></a>
   <a class="tb" id="backBtn" href="#">← Analytics</a>
 </header>
@@ -171,8 +172,6 @@ const $ = id => document.getElementById(id), E = SSC.esc, P = new URLSearchParam
 const KEY = (P.get("id") || "polity-ch1-4").replace(/[^a-z0-9_-]/gi, ""), N = +P.get("n") || 0;
 // ---------- the test's questions (same as test.html) ----------
 let T = window.TESTS && TESTS[KEY];
-const toLogin = reg => "/login?next=" + encodeURIComponent(location.pathname + location.search) + (reg ? "#register" : "");
-if (window.SSC_GUEST && !T) { location.replace(toLogin()); break main; }
 if (!T && KEY === "polity-ch1-4") { const qs = []; SUBJECTS.find(s => s.id === "polity").chapters.map(c => c.id).filter(id => NOTES[id]).forEach(id => (NOTES[id].quiz || []).forEach(q => qs.push({ ...q, section: "Indian Polity", topic: NOTES[id].title })));
   T = { title: "Indian Polity – Chapters 1 to 4", plus: 2, minus: 0.5, sectional: false, questions: qs }; }
 if (!T) { $("main").innerHTML = `<div class="card"><p>This test was not found.</p><a class="btn btn-pri" href="mock-tests.html">See mock tests</a></div>`; break main; }
@@ -185,7 +184,6 @@ $("nm").innerHTML = E(T.title) + "<small>Solutions · SSCAspirants_Official</sma
 $("backBtn").href = (KEY === "polity-ch1-4" ? "test.html?view=result" : "test.html?id=" + encodeURIComponent(KEY) + "&view=result");
 $("seriesLink").innerHTML = "‹ " + $("seriesLink").innerHTML; $("seriesLink").href = KEY === "polity-ch1-4" ? "notes.html#polity" : SSCSeriesUrl(T);
 if (N) $("backBtn").href += "&n=" + N;
-if (window.SSC_GUEST) { $("seriesLink").href = toLogin(); $("seriesLink").innerHTML = '<span class="lbl">Log in</span>'; $("seriesLink").title = "Log in"; document.querySelector('.sbar a[href="index.html"]').href = toLogin(); }
 
 // ---------- pictures and maths ----------
 const src = s => { s = String(s || "").trim(); if (!s) return ""; if (/^https:\/\//i.test(s)) return s; if (/^(assets\/|\/assets\/)/.test(s)) return s.replace(/^\//, ""); if (/^[a-z0-9._-]+$/i.test(s)) return "assets/uploads/" + s; return ""; };

@@ -7,7 +7,8 @@
 <title>Live Tests – SSCAspirants_Official</title>
 <meta name="description" content="Mock tests on the latest Eduquity CBT pattern, chapter-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 
@@ -36,13 +37,10 @@
 <script>
 {
 const E=SSC.esc, L=window.LIVE_TESTS||[];
-document.getElementById("liveTests").innerHTML=L.length?L.map(t=>{const tk=decodeURIComponent((/[?&]id=([^&]+)/.exec(t.link)||[,"polity-ch1-4"])[1]),soon=!!(window.TESTS&&TESTS[tk]&&TESTS[tk].soonLock);return soon?`<div class="card" data-title="${E(t.name)}"><span class="pill soon">Coming soon</span>
+document.getElementById("liveTests").innerHTML=L.length?L.map(t=>`<div class="card" data-tcard="${E((/[?&]id=([^&]+)/.exec(t.link)||[,"polity-ch1-4"])[1])}" data-title="${E(t.name)}"><span class="pill ok"><span class="ldot"></span>Live now</span>
 <b style="font-size:1.08rem">${E(t.name)}</b><div class="meta"><span>${E(t.type)}</span><span>${E(t.exams)}</span></div>
 <div class="meta"><span>${t.questions} questions</span><span>${t.minutes} min</span><span>${E(t.marking)}</span></div>
-<span class="btn off" aria-disabled="true">Coming soon</span></div>`:`<div class="card" data-tcard="${E(tk)}" data-title="${E(t.name)}"><span class="pill ok"><span class="ldot"></span>Live now</span>
-<b style="font-size:1.08rem">${E(t.name)}</b><div class="meta"><span>${E(t.type)}</span><span>${E(t.exams)}</span></div>
-<div class="meta"><span>${t.questions} questions</span><span>${t.minutes} min</span><span>${E(t.marking)}</span></div>
-<a class="btn btn-pri" href="${t.link}">Start test</a></div>`;}).join(""):`<p class="muted">New live tests are coming soon.</p>`;
+<a class="btn btn-pri" href="${t.link}">Start test</a></div>`).join(""):`<p class="muted">New live tests are coming soon.</p>`;
 if(window.SSCTestCards) SSCTestCards();
 }
 </script>

@@ -7,13 +7,14 @@
 <title>My saved questions – SSCAspirants_Official</title>
 <meta name="description" content="Mock tests on the latest Eduquity CBT pattern, chapter-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 
 <script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
 </head>
-<body data-page="saved" data-title="Saved questions" data-back="account.html">
+<body data-page="saved" data-title="Revision &amp; saved" data-back="account.html">
 <main id="content" class="content">
 <style>
 .sv-top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
@@ -37,6 +38,7 @@
 .svq img{display:block;max-width:100%;max-height:340px;border-radius:10px;border:1px solid var(--line);margin:6px 0;background:#fff}
 .sv-empty{text-align:center;padding:30px 18px;border:1px dashed var(--line);border-radius:14px;background:var(--surface)}
 </style>
+<section class="card" data-dyn="1"><div class="sec-head"><h2>My revision list</h2><p>Chapters you added with ☆ on the notes page – revise them before the exam</p></div><div id="revList"><p class="muted">Loading…</p></div></section>
 <section class="card"><div class="sec-head"><h2>My saved questions</h2><p>Questions you saved with ☆ in tests and solutions – on every device</p></div>
 <div class="sv-top"><label for="sTest">Test<select id="sTest"><option value="">All tests</option></select></label><label for="sFind">Search<input id="sFind" type="search" placeholder="Type a word"></label></div>
 <div class="sv-count" id="sCount"></div></section>
@@ -48,6 +50,16 @@
 <script src="data/tests.js"></script>
 <script src="data/site.js"></script>
 <script src="assets/site.js"></script>
+<script>
+{
+const E=SSC.esc,N=window.NOTES||{},S=window.SUBJECTS||[];
+const sub=id=>S.find(s=>s.chapters.some(c=>c.id===id));
+fetch("/api/me/progress").then(r=>r.ok?r.json():null).then(d=>{const box=document.getElementById("revList");
+  const L=((d&&d.progress)||[]).filter(p=>/^R:/.test(p.chapter)&&p.done).map(p=>p.chapter.slice(2)).filter(id=>N[id]);
+  box.innerHTML=L.length?`<div style="display:flex;flex-direction:column;gap:8px">${L.map(id=>{const s=sub(id);return `<div class="row"><span class="t"><b>${E(N[id].title)}</b><span>${E(s?s.name:"")}</span></span><a class="btn btn-pri" href="note.html?id=${encodeURIComponent(id)}">Revise</a></div>`;}).join("")}</div>`
+    :`<p class="muted" style="margin:0">Nothing here yet. Open any chapter in Notes and press ☆ Add to revision list.</p>`;}).catch(()=>{});
+}
+</script>
 <script>
 {
 const E=SSC.esc, $=id=>document.getElementById(id), L=k=>String.fromCharCode(65+k);

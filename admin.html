@@ -6,7 +6,8 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Admin – SSCAspirants_Official</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light"}catch(e){}</script>
@@ -127,6 +128,30 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
 .bank label input{margin-top:3px;width:18px;height:18px;flex:none}
 .bank small{display:block;color:var(--muted)}
 @media(max-width:640px){.qc-row{grid-template-columns:1fr}.mt-step{gap:8px}.mt-n{width:28px;height:28px}.mt-sec{grid-template-columns:minmax(0,1fr) 70px 70px 36px}.opt2{grid-template-columns:auto 28px minmax(0,1fr) auto}.opt2 .ibtn.im{grid-column:3}}
+/* notes browser: Exam → Subject → Chapter, same look as the students' Notes page */
+.nb-crumb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 16px;font-size:.95rem;color:var(--muted)}
+.nb-crumb button{border:0;background:none;padding:4px 2px;color:var(--pri);font:600 .95rem Inter,sans-serif;cursor:pointer}
+.nb-crumb b{color:var(--ink)}
+.nb-exams{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.nb-exam{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;color:var(--ink);text-align:left;cursor:pointer;font:inherit;transition:transform .15s,border-color .15s,box-shadow .15s}
+.nb-exam:hover{border-color:var(--pri);transform:translateY(-3px);box-shadow:var(--shadow)}
+.nb-exam .ic{flex:none;width:54px;height:54px;border-radius:14px;color:#fff;display:grid;place-items:center;font:700 .8rem Poppins,sans-serif;box-shadow:inset 0 -3px 0 #0000002a}
+.nb-exam b{display:block}.nb-exam small{font-size:.88rem;color:var(--muted)}
+.notes-wrap{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.nb-subs{flex:1 1 230px;max-width:280px;display:flex;flex-direction:column;gap:4px}
+.nb-subs button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);padding:10px 14px;border-radius:10px;min-height:44px;font:inherit;cursor:pointer}
+.nb-subs button span{font-size:.85rem;color:var(--muted)}
+.nb-subs button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink)}
+.nb-subs button[aria-pressed="true"] span{color:var(--pri-ink);opacity:.85}
+.nb-chaps{flex:999 1 520px;display:flex;flex-direction:column;gap:10px}
+.nb-chaps .row .tags{display:block;font-size:.8rem;color:var(--muted);margin-top:2px}
+.nb-chaps .row .act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.nb-new{border:2px dashed var(--line);border-radius:14px;background:transparent;color:var(--pri);font:600 1rem Inter,sans-serif;min-height:56px;cursor:pointer}
+.nb-new:hover{border-color:var(--pri)}
+@media(max-width:700px){.nb-subs{max-width:none;flex-direction:row;overflow-x:auto}.nb-subs button{flex:none}}
+.ibar{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 8px}.ibar button{min-height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:600}
+.iedit{min-height:340px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 18px;outline:none;line-height:1.7}
+.iedit:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-soft)}.iedit h3{font:700 1.02rem Poppins,sans-serif;color:var(--pri);margin:14px 0 6px}
 .adminbar span{margin-right:auto;color:var(--muted);font-size:.92rem;min-width:0;word-break:break-word}
 </style>
 </head>
@@ -140,6 +165,10 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
   <button type="button" role="tab" data-t="connect">Status</button>
   <button type="button" role="tab" data-t="notes">Notes</button>
   <button type="button" role="tab" data-t="tests">Mock tests</button>
+  <button type="button" role="tab" data-t="instr">Instructions</button>
+  <button type="button" role="tab" data-t="courses">Courses</button>
+  <button type="button" role="tab" data-t="doubts">Doubts</button>
+  <button type="button" role="tab" data-t="jobs">Jobs</button>
   <button type="button" role="tab" data-t="live">Live tests</button>
   <button type="button" role="tab" data-t="news">What's new</button>
   <button type="button" role="tab" data-t="daily">Daily quiz</button>
@@ -194,9 +223,11 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
 
 <!-- NOTES -->
 <section class="card" data-p="notes" hidden>
-  <div class="sec-head"><h2>Notes</h2><p>Pick a chapter, then add a document, slides, a video and practice questions – publish all together</p></div>
-  <div class="nt-top">
-    <label class="f" for="nExam">Exam<select id="nExam"></select></label>
+  <div class="sec-head"><h2>Notes</h2><p>Choose an exam, then a subject and a chapter – laid out just like students see it</p></div>
+  <div id="nBrowse"><nav class="nb-crumb" id="nbCrumb" aria-label="Where you are"></nav><div id="nbBody"></div></div>
+  <div id="nEditor" hidden>
+  <nav class="nb-crumb" id="nbCrumb2" aria-label="Where you are"></nav>
+  <div class="nt-top" hidden>
     <label class="f" for="nSub">Subject<select id="nSub"></select></label>
     <label class="f" for="nChap">Chapter<select id="nChap"></select></label>
   </div>
@@ -209,8 +240,6 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
       <label class="f wide" for="nIntro">Introduction (optional, shown at the top)<textarea id="nIntro" style="min-height:70px;font-family:inherit"></textarea></label>
       <label class="f" for="nWhen">Publish on (optional)<small>Empty = publish now</small><input id="nWhen" type="datetime-local"></label>
       <label class="f ck2" for="nPdf"><input id="nPdf" type="checkbox"> Allow students to download PDF</label>
-      <label class="f" for="nAccess">Students can<select id="nAccess"><option value="open">Read this chapter</option><option value="soon">Only see it as "Coming soon"</option></select></label>
-      <label class="f ck2" for="nFree"><input id="nFree" type="checkbox"> Free – anyone can read the full chapter without logging in (otherwise visitors see only a preview)</label>
     </div></details>
   <div class="nt-tabs" role="tablist" aria-label="Chapter content" id="ntabs">
     <button type="button" role="tab" data-nt="doc"><span class="nt-ic">📄</span><b>Doc</b><small id="stDoc"></small></button>
@@ -235,9 +264,40 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
   </div>
   <div class="bar nt-pub">
     <button class="btn btn-pri" id="nSave" type="button">Publish chapter</button>
-    <a class="btn btn-out" id="nView" href="notes.html" target="_blank" rel="noopener">Open chapter page</a>
+    <a class="btn btn-out" id="nView" href="notes.html" target="_blank" rel="noopener">👁 Student view</a>
     <button class="btn btn-del" id="nDel" type="button">Delete chapter notes</button>
   </div>
+  </div>
+</section>
+
+<!-- JOBS UPDATE -->
+<section class="card" data-p="jobs" hidden>
+  <div class="sec-head"><h2>Jobs update</h2><p>Latest jobs, admit cards, results, answer keys and exam dates – open to everyone on jobs.html</p></div>
+  <div id="jobBody"></div>
+</section>
+
+<!-- DOUBTS -->
+<section class="card" data-p="doubts" hidden>
+  <div class="sec-head"><h2>Students' doubts</h2><p id="dbHint">Answer doubts from notes and course lessons</p></div>
+  <div class="ftabs" id="dbF" style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-pri btn-sm" type="button" data-s="open">Waiting</button><button class="btn btn-out btn-sm" type="button" data-s="all">All</button></div>
+  <div id="dbList"><p class="muted">Loading…</p></div>
+</section>
+
+<!-- COURSES -->
+<section class="card" data-p="courses" hidden>
+  <div class="sec-head"><h2>Courses</h2><p>Subject courses and complete courses: chapters → lessons (video, live class, notes, PDF, test)</p></div>
+  <div id="crsBody"></div>
+</section>
+
+<!-- TEST INSTRUCTIONS -->
+<section class="card" data-p="instr" hidden>
+  <div class="sec-head"><h2>Test instructions</h2><p>Shown to students before every test, SSC style</p></div>
+  <div class="nt-top"><label class="f" for="iExam">Which instructions<select id="iExam"></select></label></div>
+  <div class="ibar" id="iBar"><button type="button" data-ic="h3">Heading</button><button type="button" data-ic="bold"><b>B</b></button><button type="button" data-ic="italic"><i>I</i></button><button type="button" data-ic="underline"><u>U</u></button>
+    <button type="button" data-ic="insertUnorderedList">• List</button><button type="button" data-ic="insertOrderedList">1. List</button><button type="button" data-ic="mark">Highlight</button><button type="button" data-ic="p">Normal text</button></div>
+  <div class="iedit" id="iEdit" contenteditable="true" spellcheck="true"></div>
+  <p class="muted" style="font-size:.88rem;margin:8px 0 0">These words change by themselves for each test: <code>{exam}</code> <code>{test}</code> <code>{minutes}</code> <code>{questions}</code> <code>{marks}</code> <code>{plus}</code> <code>{minus}</code> <code>{sections}</code></p>
+  <div class="bar nt-pub"><button class="btn btn-pri" id="iSave" type="button">Save instructions</button></div>
 </section>
 
 <!-- MOCK TESTS -->
@@ -259,6 +319,7 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
         <label class="f" for="tExam">Exam<select id="tExam"></select></label>
         <label class="f" for="tTier" id="tTierW">Tier<select id="tTier"></select></label>
         <label class="f" for="tType">Type<select id="tType"><option>Full mock test</option><option>Section-wise test</option><option>Subject-wise test</option><option>Chapter test</option><option>PYQ paper</option></select></label>
+        <label class="f" for="tSubj">Subject<small>for subject-wise and chapter tests</small><select id="tSubj"></select></label>
         <label class="f" for="tSecPick" id="tSecPickW" hidden>Section<select id="tSecPick"></select></label>
         <label class="f" for="tYear" id="tYearW" hidden>Year<input id="tYear" inputmode="numeric" placeholder="2025"></label>
         <label class="f" for="tShift" id="tShiftW" hidden>Date / shift<input id="tShift" placeholder="12 Sep 2025 · Shift 1"></label>
@@ -275,10 +336,8 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
         <div class="f wide">Sections<small>Name, time and how many questions you plan. Questions are sorted into these sections.</small>
           <div id="tSecs" class="mt-secs"></div>
           <div><button class="btn btn-out btn-sm" type="button" id="tSecAdd">＋ Add section</button></div></div>
-        <label class="f ck2" for="tLive"><input id="tLive" type="checkbox" checked> Show in Live tests</label>
+        <label class="f ck2" for="tLive" id="tLiveW"><input id="tLive" type="checkbox" checked> Show in Live tests</label>
         <label class="f ck2" for="tStrict"><input id="tStrict" type="checkbox"> Live exam mode (no Pause button)</label>
-        <label class="f" for="tAccess">Students can<select id="tAccess"><option value="open">Take this test</option><option value="soon">Only see it as "Coming soon"</option></select></label>
-        <label class="f ck2" for="tFree"><input id="tFree" type="checkbox"> Free – anyone can take this test without logging in</label>
         <label class="f" for="tWhen">Publish on (optional)<small>Empty = publish now</small><input id="tWhen" type="datetime-local"></label>
       </div></div></div>
 
@@ -341,9 +400,15 @@ body.nt-fs .status{position:fixed;left:12px;right:12px;bottom:12px;z-index:400}
 </main>
 <script src="data/subjects.js"></script>
 <script src="data/exams.js"></script>
+<script src="data/instructions.js"></script>
+<script src="data/courses.js"></script>
+<script src="data/jobs.js"></script>
 <script src="data/site.js"></script>
 <script src="assets/site.js"></script>
 <script src="data/topics.js"></script>
 <script src="assets/admin.js"></script>
+<script src="assets/admin-courses.js"></script>
+<script src="assets/admin-extras.js"></script>
+<script src="assets/admin-jobs.js"></script>
 </body>
 </html>

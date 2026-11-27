@@ -7,7 +7,8 @@
 <title>SSC Notes – Subject-wise | SSCAspirants_Official</title>
 <meta name="description" content="Mock tests on the latest Eduquity CBT pattern, chapter-wise notes and previous year papers for SSC CGL, CHSL, MTS, GD, CPO and more.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 
@@ -46,14 +47,12 @@
 <script>
 {
 const subs=document.getElementById("subs"),chaps=document.getElementById("chaps"),E=SSC.esc;
-const SUBJECTS=window.SUBJECTS.filter(s=>!s.exam); // exam-wise subjects show on their exam page (Notes tab)
-let cur=(location.hash||"#polity").slice(1); if(!SUBJECTS.some(s=>s.id===cur)) cur=SUBJECTS.some(s=>s.id==="polity")?"polity":(SUBJECTS[0]||{}).id;
-const ready=c=>!!(window.NOTES&&NOTES[c.id]&&!NOTES[c.id].soonLock);
+let cur=(location.hash||"#polity").slice(1); if(!SUBJECTS.some(s=>s.id===cur)) cur="polity";
+const ready=c=>!!(window.NOTES&&NOTES[c.id]);
 let PR={}; // chapter → {done, seen} from the student's account
 const doneIn=s=>s.chapters.filter(c=>ready(c)&&PR[c.id]&&PR[c.id].done).length;
 function draw(){
   subs.innerHTML=SUBJECTS.map(s=>{const r=s.chapters.filter(ready).length,d=doneIn(s);return `<button type="button" data-s="${s.id}" aria-pressed="${s.id===cur}">${E(s.name)}<span>${s.hi}</span>${r&&d?`<span class="sp">✓ ${d}/${r} done</span>`:""}</button>`;}).join("");
-  if(!SUBJECTS.length){chaps.innerHTML=`<div class="card"><p class="muted" style="margin:0">Notes are coming soon.</p></div>`;return;}
   const s=SUBJECTS.find(x=>x.id===cur), n=s.chapters.filter(ready).length, d=doneIn(s), pc=n?Math.round(d/n*100):0;
   chaps.innerHTML=`<div class="sec-head" style="margin:0;display:block"><h2>${E(s.name)}</h2><p style="margin:2px 0 0">${n} of ${s.chapters.length} chapters ready${n?` · <b>${d} completed (${pc}%)</b>`:""}</p>${n?`<div class="pbar2" aria-label="${pc}% completed"><i style="width:${pc}%"></i></div>`:""}</div>`+
     s.chapters.map((c,i)=>{const dn=ready(c)&&PR[c.id]&&PR[c.id].done; return `<div class="row${dn?" dn":""}"><span class="num">${dn?"✓":String(i+1).padStart(2,"0")}</span><span class="t"><b>${E(c.title)}</b><span>${E(c.sub)}</span></span>${ready(c)

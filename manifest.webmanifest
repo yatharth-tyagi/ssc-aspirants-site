@@ -1,0 +1,22 @@
+{
+  "name": "SSCAspirants_Official – SSC notes, mock tests and courses",
+  "short_name": "SSC Aspirants",
+  "description": "Mock tests in the real SSC exam interface, chapter-wise notes, PYQs and courses.",
+  "start_url": "home.html?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAF8F3",
+  "theme_color": "#141B38",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Mock tests", "url": "mock-tests.html" },
+    { "name": "Notes", "url": "notes.html" },
+    { "name": "Courses", "url": "courses.html" },
+    { "name": "Daily quiz", "url": "daily-quiz.html" }
+  ]
+}

@@ -6,7 +6,8 @@
 <title>Admin login – SSCAspirants_Official</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141B38"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <script>try{document.documentElement.dataset.read=localStorage.getItem("ssc-read")==="dark"?"dark":"light";document.documentElement.style.setProperty("--scale",localStorage.getItem("ssc-scale")||1)}catch(e){}</script>
@@ -83,7 +84,7 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
       <button class="btn btn-pri" id="go" type="submit">Log in to admin</button>
     </form>
     <p class="small">Forgot your admin password? Ask the site owner to reset it from <b>Admin team</b>.</p>
-    <p class="foot2">© <span id="yr"></span> SSCAspirants_Official · Created by <b>Yatharth Tyagi</b><br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a> · <a href="contact.html">Contact</a></p>
+    <p class="foot2">© <span id="yr"></span> SSCAspirants_Official · Created by an idiot and created for idiots<br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a> · <a href="contact.html">Contact</a></p>
   </div>
 </main>
 <script src="assets/site.js"></script>
@@ -91,7 +92,7 @@ body{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
 (function () {
   const $ = id => document.getElementById(id);
   const qs = new URLSearchParams(location.search);
-  const next = /^\/(?![\/\\])/.test(qs.get("next") || "") ? qs.get("next") : "/admin";
+  const next = /^\/(?![\/\\])/.test(qs.get("next") || "") ? qs.get("next") : "admin.html";
   $("yr").textContent = new Date().getFullYear();
   const root = document.documentElement, mb = $("modeBtn");
   const paintMode = () => { const d = root.dataset.read === "dark"; mb.textContent = d ? "☀" : "☾"; mb.title = d ? "Light mode" : "Dark mode"; };
